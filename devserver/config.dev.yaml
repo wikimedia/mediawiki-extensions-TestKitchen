@@ -1,7 +1,7 @@
 logging:
   level: trace
 service:
-  name: mpic
+  name: test-kitchen
   port: 8086
   cors: "*"
   max_body_size: 100kb
@@ -10,13 +10,13 @@ listeners:
   action_api_basepath: https://meta.wikimedia.org
 database:
   engine: mysql
-  host: xlab-db
+  host: test-kitchen-db
   username: maria
-  database: mpic
+  database: test-kitchen-db
   port: 3306
 
 # Part 3 of disabling authentication: If the following Identity Provider (IdP) config isn't
-# provided, then xLab will throw an error and exit
+# provided, then Test Kitchen will throw an error and exit
 idp:
   oidc_url: https://idp-test.wikimedia.org/oidc
-  client_id: mpic_next
+  client_id: test-kitchen_next

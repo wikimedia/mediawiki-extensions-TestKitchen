@@ -1,12 +1,11 @@
 <?php
 
-namespace MediaWiki\Extension\MetricsPlatform;
+namespace MediaWiki\Extension\TestKitchen;
 
-use MediaWiki\Extension\MetricsPlatform\XLab\ConfigsFetcher;
 use MediaWiki\MediaWikiServices;
 
 class Services {
 	public static function getConfigsFetcher(): ConfigsFetcher {
-		return MediaWikiServices::getInstance()->getService( 'MetricsPlatform.XLab.ConfigsFetcher' );
+		return MediaWikiServices::getInstance()->getService( 'TestKitchen.ConfigsFetcher' );
 	}
 }

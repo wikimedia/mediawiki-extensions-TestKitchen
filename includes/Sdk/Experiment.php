@@ -1,0 +1,90 @@
+<?php
+
+namespace MediaWiki\Extension\TestKitchen\Sdk;
+
+use Wikimedia\MetricsPlatform\MetricsClient;
+use Wikimedia\Stats\StatsFactory;
+
+/**
+ * Represents an enrollment experiment for the current user
+ */
+class Experiment implements ExperimentInterface {
+	private const BASE_STREAM = 'test_kitchen.web_base';
+	private const BASE_SCHEMA_ID = '/analytics/test_kitchen/web/base/2.0.0';
+
+	public function __construct(
+		private readonly ?MetricsClient $metricsClient,
+		private readonly ?StatsFactory $statsFactory,
+		private readonly ?array $experimentConfig = null
+	) {
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function getAssignedGroup(): ?string {
+		return $this->experimentConfig['assigned'] ?? null;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function isAssignedGroup( ...$groups ): bool {
+		return in_array( $this->getAssignedGroup(), $groups, true );
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function send( string $action, ?array $interactionData = null ): void {
+		// Only submit the event if experiment details exist and are valid.
+		if ( $this->isEnrolled() ) {
+			$interactionData = array_merge(
+				$interactionData ?? [],
+				[ 'experiment' => $this->experimentConfig ]
+			);
+			$this->metricsClient->submitInteraction(
+				self::BASE_STREAM,
+				self::BASE_SCHEMA_ID,
+				$action,
+				$interactionData
+			);
+			if ( $this->experimentConfig !== null ) {
+				// Increment the total number of events sent for each experiment (T401706).
+				$this->incrementExperimentEventsSentTotal( $this->experimentConfig['enrolled'] );
+			}
+		}
+	}
+
+	/**
+	 * Get the config for the experiment.
+	 *
+	 * @return array|null
+	 */
+	public function getExperimentConfig(): ?array {
+		return $this->experimentConfig;
+	}
+
+	/**
+	 * Checks if the user is enrolled in an experiment group.
+	 *
+	 * @return bool
+	 */
+	private function isEnrolled(): bool {
+		return $this->experimentConfig && $this->getAssignedGroup() !== null;
+	}
+
+	/**
+	 * Increment experiment send event counts.
+	 *
+	 * @param string $experimentName
+	 */
+	private function incrementExperimentEventsSentTotal( string $experimentName ): void {
+		if ( $this->statsFactory ) {
+			$this->statsFactory->withComponent( 'TestKitchen' )
+				->getCounter( 'experiment_events_sent_total' )
+				->setLabel( 'experiment', $experimentName )
+				->increment();
+		}
+	}
+}

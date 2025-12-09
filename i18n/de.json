@@ -4,7 +4,7 @@
 			"Brettchenweber"
 		]
 	},
-	"metricsplatform-desc": "Dies ist die Metrics-Plattform-Erweiterung",
-	"metricsplatform-xlab-non-successful-response": "Die xLab-API hat eine nicht erfolgreiche Antwort zurückgegeben.",
-	"metricsplatform-xlab-api-empty-response-body": "Die xLab-API hat eine Antwort mit leerem Inhalt zurückgegeben."
+	"testkitchen-desc": "Dies ist die Metrics-Plattform-Erweiterung",
+	"testkitchen-non-successful-response": "Die Test-Kitchen-API hat eine nicht erfolgreiche Antwort zurückgegeben.",
+	"testkitchen-api-empty-response-body": "Die Test-Kitchen-API hat eine Antwort mit leerem Inhalt zurückgegeben."
 }

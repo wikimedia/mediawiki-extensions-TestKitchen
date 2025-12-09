@@ -4,5 +4,5 @@
 			"Naitsa"
 		]
 	},
-	"metricsplatform-xlab-non-successful-response": "xLab API'en returnerede et ikke-succesfuldt svar."
+	"testkitchen-non-successful-response": "Test Kitchen API'en returnerede et ikke-succesfuldt svar."
 }

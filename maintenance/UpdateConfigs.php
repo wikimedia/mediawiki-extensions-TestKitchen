@@ -1,10 +1,10 @@
 <?php
 
-namespace MediaWiki\Extension\MetricsPlatform\Maintenance;
+namespace MediaWiki\Extension\TestKitchen\Maintenance;
 
 // @codeCoverageIgnoreStart
 use MediaWiki\Config\Config;
-use MediaWiki\Extension\MetricsPlatform\XLab\ConfigsFetcher;
+use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 use MediaWiki\Maintenance\Maintenance;
 
 $IP = getenv( 'MW_INSTALL_PATH' );
@@ -18,9 +18,10 @@ class UpdateConfigs extends Maintenance {
 	public function __construct() {
 		parent::__construct();
 
-		$this->requireExtension( 'MetricsPlatform' );
+		$this->requireExtension( 'TestKitchen' );
 		$this->addDescription(
-			'Fetches instrument and experiment configs from xLab and updates the backing store if they have changed.'
+			'Fetches instrument and experiment configs from Test Kitchen ' .
+			'and updates the backing store if they have changed.'
 		);
 	}
 
@@ -28,15 +29,15 @@ class UpdateConfigs extends Maintenance {
 		/** @var Config $config */
 		$config = $this->getConfig();
 
-		if ( !$config->has( 'MetricsPlatformInstrumentConfiguratorBaseUrl' ) ) {
+		if ( !$config->has( 'TestKitchenInstrumentConfiguratorBaseUrl' ) ) {
 			$this->fatalError( <<<'MSG'
-$wgMetricsPlatformInstrumentConfiguratorBaseUrl is not set. Please set it to the URL of an xLab instance that is
+$wgTestKitchenInstrumentConfiguratorBaseUrl is not set. Please set it to the URL of an Test Kitchen instance that is
 contactable from this host.
 MSG );
 		}
 
 		/** @var ConfigsFetcher $configsFetcher */
-		$configsFetcher = $this->getServiceContainer()->getService( 'MetricsPlatform.XLab.ConfigsFetcher' );
+		$configsFetcher = $this->getServiceContainer()->getService( 'TestKitchen.ConfigsFetcher' );
 
 		$this->output( 'Updating instrument configs...' );
 		$configsFetcher->updateInstrumentConfigs();

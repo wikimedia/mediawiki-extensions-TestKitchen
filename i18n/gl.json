@@ -4,7 +4,7 @@
 			"Toliño"
 		]
 	},
-	"metricsplatform-desc": "Esta é a extensión de métricas da plataforma",
-	"metricsplatform-xlab-non-successful-response": "A API de xLab devolveu unha resposta non exitosa.",
-	"metricsplatform-xlab-api-empty-response-body": "A API de xLab devolveu unha resposta cun corpo baleiro."
+	"testkitchen-desc": "Esta é a extensión de métricas da plataforma",
+	"testkitchen-non-successful-response": "A API de Test Kitchen devolveu unha resposta non exitosa.",
+	"testkitchen-api-empty-response-body": "A API de Test Kitchen devolveu unha resposta cun corpo baleiro."
 }

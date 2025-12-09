@@ -4,7 +4,7 @@
 			"Bjankuloski06"
 		]
 	},
-	"metricsplatform-desc": "Ова е додатокот Подлога за мерила",
-	"metricsplatform-xlab-non-successful-response": "Приложникот xLab даде неуспешен одговор.",
-	"metricsplatform-xlab-api-empty-response-body": "Прилогот xLab API даде одговор со празна содржина."
+	"testkitchen-desc": "Ова е додатокот Подлога за мерила",
+	"testkitchen-non-successful-response": "Приложникот Test Kitchen даде неуспешен одговор.",
+	"testkitchen-api-empty-response-body": "Прилогот Test Kitchen API даде одговор со празна содржина."
 }

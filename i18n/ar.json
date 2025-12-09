@@ -5,7 +5,7 @@
 			"NEHAOUA"
 		]
 	},
-	"metricsplatform-desc": "هذا هو امتداد منصة المقاييس",
-	"metricsplatform-xlab-non-successful-response": "أرجعت واجهة برمجة التطبيقات xLab استجابة غير ناجحة.",
-	"metricsplatform-xlab-api-empty-response-body": "أرجعت واجهة برمجة التطبيقات xLab استجابة بنص فارغ."
+	"testkitchen-desc": "هذا هو امتداد منصة المقاييس",
+	"testkitchen-non-successful-response": "أرجعت واجهة برمجة التطبيقات Test Kitchen استجابة غير ناجحة.",
+	"testkitchen-api-empty-response-body": "أرجعت واجهة برمجة التطبيقات Test Kitchen استجابة بنص فارغ."
 }

@@ -1,31 +1,25 @@
 services:
-  xlab-db:
+  test-kitchen-db:
     image: mariadb:11.3.2
-    container_name: xlab-db
+    container_name: test-kitchen-db
     restart: always
     volumes:
       - ./db:/docker-entrypoint-initdb.d
     environment:
-      MYSQL_HOST: xlab-db
+      MYSQL_HOST: test-kitchen-db
       MYSQL_PORT: 3306
       MYSQL_USER: maria
       MYSQL_PASSWORD: maria
-      MYSQL_DB: mpic
+      MYSQL_DB: test-kitchen
       MYSQL_ROOT_PASSWORD: maria
-  xlab:
+  test-kitchen:
     build: ./
-    container_name: xlab
+    container_name: test-kitchen
     restart: always
     volumes:
       - ./config.dev.yaml:/srv/service/config.dev.yaml
     environment:
       DATABASE_PASSWORD: maria
-
-      # Logging to the Server Admin Log (SAL) is disabled in config.dev.yaml. If the SAL_PASSWORD
-      # env variable is set, then xLab will throw an error and exit. If the SAL_PASSWORD env
-      # variable is not set, then xLab will log an error and run
-      # SAL_PASSWORD: sal_password
-
       IDP_CLIENT_SECRET: idp_client_secret
       SESSION_SECRET: session_secret
       CSRF_SECRET: csrf_secret

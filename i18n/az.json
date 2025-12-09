@@ -4,7 +4,7 @@
 			"Nemoralis"
 		]
 	},
-	"metricsplatform-desc": "Bu, Metrik Platformasının genişləndirilməsidir",
-	"metricsplatform-xlab-non-successful-response": "xLab API uğursuz cavab qaytardı.",
-	"metricsplatform-xlab-api-empty-response-body": "xLab API boş cavab qaytardı."
+	"testkitchen-desc": "Bu, Metrik Platformasının genişləndirilməsidir",
+	"testkitchen-non-successful-response": "Test Kitchen API uğursuz cavab qaytardı.",
+	"testkitchen-api-empty-response-body": "Test Kitchen API boş cavab qaytardı."
 }

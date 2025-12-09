@@ -1,13 +1,13 @@
 {
-	"name": "MetricsPlatform",
+	"name": "TestKitchen",
 	"author": [
 		"[https://www.mediawiki.org/wiki/Data_Platform_Engineering/Data_Products Data Products]",
 		"Sam Smith",
 		"Santiago Faci",
 		"Clare Ming"
 	],
-	"url": "https://www.mediawiki.org/wiki/Extension:MetricsPlatform",
-	"descriptionmsg": "metricsplatform-desc",
+	"url": "https://www.mediawiki.org/wiki/Extension:TestKitchen",
+	"descriptionmsg": "testkitchen-desc",
 	"license-name": "GPL-2.0-or-later",
 	"type": "other",
 	"requires": {
@@ -18,86 +18,86 @@
 		}
 	},
 	"AutoloadNamespaces": {
-		"MediaWiki\\Extension\\MetricsPlatform\\": "includes/"
+		"MediaWiki\\Extension\\TestKitchen\\": "includes/"
 	},
 	"AutoloadClasses": {
-		"MediaWiki\\Extension\\MetricsPlatform\\XLab\\ConfigsFetcher": "includes/XLab/ConfigsFetcher.php",
-		"MediaWiki\\Extension\\MetricsPlatform\\InstrumentConfigsFetcher": "includes/XLab/ConfigsFetcher.php"
+		"MediaWiki\\Extension\\TestKitchen\\ConfigsFetcher": "includes/ConfigsFetcher.php",
+		"MediaWiki\\Extension\\TestKitchen\\InstrumentConfigsFetcher": "includes/ConfigsFetcher.php"
 	},
 	"config": {
-		"MetricsPlatformInstrumentConfiguratorBaseUrl": {
+		"TestKitchenInstrumentConfiguratorBaseUrl": {
 			"value": "http://localhost:80"
 		},
-		"MetricsPlatformEnableExperiments": {
+		"TestKitchenEnableExperiments": {
 			"description": "If this is falsy, then all experiment-related behavior is disabled.",
 			"value": false
 		},
-		"MetricsPlatformEnableExperimentConfigsFetching": {
-			"description": "Enable fetching experiment configs from XLab during the request if no experiments are defined in $wgMetricsPlatformExperiments. WARNING: This will degrade performance for logged-in users.",
+		"TestKitchenEnableExperimentConfigsFetching": {
+			"description": "Enable fetching experiment configs from Test Kitchen during the request if no experiments are defined in $wgTestKitchenExperiments. WARNING: This will degrade performance for logged-in users.",
 			"value": false
 		},
-		"MetricsPlatformExperimentEventIntakeServiceUrl": {
+		"TestKitchenExperimentEventIntakeServiceUrl": {
 			"description": "The URL of the EventGate experiment-related event intake service.",
 			"value": "http://localhost:8192/v1/events?hasty=true"
 		},
-		"MetricsPlatformExperimentStreamNames": {
-			"description": "The names of the event streams for experiments configured in xLab.",
+		"TestKitchenExperimentStreamNames": {
+			"description": "The names of the event streams for experiments configured in Test Kitchen.",
 			"value": [
-				"product_metrics.web_base"
+				"test_kitchen.web_base"
 			]
 		},
-		"MetricsPlatformAuthPreserveQueryParamsExperiments": {
+		"TestKitchenAuthPreserveQueryParamsExperiments": {
 			"description": "List of experiment names to use in the AuthPreseveQueryParams hook. For each experiment listed here, AuthPreserveQueryParams will add its assigned group to a query param in the form ?mpo=<experiment1-name:group>;<experiment2-name:group>",
 			"value": []
 		},
-		"MetricsPlatformEnableHeadPixel": {
+		"TestKitchenEnableHeadPixel": {
 			"description": "Enable the head pixel beacon. This is a JavaScript module that emits a page loaded event from the header. This is useful for tracking page load times.",
 			"value": false
 		},
-		"MetricsPlatformHeadPixelMetric": {
+		"TestKitchenHeadPixelMetric": {
 			"description": "The name of the head pixel metric. This is used to emit the initial page load metric to Prometheus.",
 			"value": "mediawiki_page_load_head_pixel_total"
 		}
 	},
 	"HookHandlers": {
-		"XLabMain": {
-			"class": "MediaWiki\\Extension\\MetricsPlatform\\XLab\\Hooks",
+		"TestKitchenMain": {
+			"class": "MediaWiki\\Extension\\TestKitchen\\Hooks",
 			"services": [
 				"MainConfig",
-				"MetricsPlatform.XLab.ConfigsFetcher",
-				"MetricsPlatform.XLab.EnrollmentAuthority",
-				"MetricsPlatform.XLab.ExperimentManager",
-				"MetricsPlatform.Logger"
+				"TestKitchen.ConfigsFetcher",
+				"TestKitchen.EnrollmentAuthority",
+				"TestKitchen.ExperimentManager",
+				"TestKitchen.Logger"
 			]
 		},
-		"XLabPageBeacon": {
-			"class": "MediaWiki\\Extension\\MetricsPlatform\\XLab\\PageBeacon",
+		"TestKitchenPageBeacon": {
+			"class": "MediaWiki\\Extension\\TestKitchen\\PageBeacon",
 			"services": [
 				"MainConfig",
-				"MetricsPlatform.XLab.ExperimentManager"
+				"TestKitchen.ExperimentManager"
 			]
 		}
 	},
 	"Hooks": {
-		"AuthPreserveQueryParams": "XLabMain",
-		"BeforeInitialize": "XLabMain",
+		"AuthPreserveQueryParams": "TestKitchenMain",
+		"BeforeInitialize": "TestKitchenMain",
 		"BeforePageDisplay": [
-			"XLabMain",
-			"XLabPageBeacon"
+			"TestKitchenMain",
+			"TestKitchenPageBeacon"
 		],
-		"ApiBeforeMain": "XLabMain",
-		"APIAfterExecute": "XLabMain"
+		"ApiBeforeMain": "TestKitchenMain",
+		"APIAfterExecute": "TestKitchenMain"
 	},
 	"ResourceModules": {
-		"ext.xLab": {
-			"localBasePath": "modules/ext.xLab",
-			"remoteExtPath": "MetricsPlatform/modules/ext.xLab",
+		"ext.testKitchen": {
+			"localBasePath": "modules/ext.testKitchen",
+			"remoteExtPath": "TestKitchen/modules/ext.testKitchen",
 			"packageFiles": [
 				"index.js",
 				"Experiment.js",
 				{
 					"name": "config.json",
-					"callback": "MediaWiki\\Extension\\MetricsPlatform\\XLab\\ResourceLoader\\Hooks::getConfigForXLabModule"
+					"callback": "MediaWiki\\Extension\\TestKitchen\\ResourceLoader\\Hooks::getConfigForTestKitchenModule"
 				},
 				"Experiments.js"
 			],
@@ -108,17 +108,17 @@
 	},
 	"QUnitTestModule": {
 		"localBasePath": "tests/qunit",
-		"remoteExtPath": "MetricsPlatform/tests/qunit",
+		"remoteExtPath": "TestKitchen/tests/qunit",
 		"scripts": [
-			"ext.xLab/index.test.js",
-			"ext.xLab/Experiment.test.js"
+			"ext.testKitchen/index.test.js",
+			"ext.testKitchen/Experiment.test.js"
 		],
 		"dependencies": [
-			"ext.xLab"
+			"ext.testKitchen"
 		]
 	},
 	"MessagesDirs": {
-		"MetricsPlatform": [
+		"TestKitchen": [
 			"i18n"
 		]
 	},

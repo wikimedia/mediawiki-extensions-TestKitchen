@@ -15,7 +15,7 @@
 			"modules"
 		],
 		"exclude": [
-			"modules/ext.xLab/Experiments.js"
+			"modules/ext.testKitchen/Experiments.js"
 		]
 	},
 	"templates": {
@@ -24,7 +24,7 @@
 			"useLongnameInNav": true
 		},
 		"wmf": {
-			"repository": "https://gerrit.wikimedia.org/g/mediawiki/extensions/MetricsPlatform/",
+			"repository": "https://gerrit.wikimedia.org/g/mediawiki/extensions/TestKitchen/",
 			"linkMap": {
 				"mw.eventLog.submitInteraction": "https://doc.wikimedia.org/EventLogging/master/js/mw.eventLog.html#.submitInteraction"
 			}
