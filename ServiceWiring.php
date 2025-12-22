@@ -3,10 +3,12 @@
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
+use MediaWiki\Extension\TestKitchen\Coordination\Coordinator;
 use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentAuthority;
 use MediaWiki\Extension\TestKitchen\Coordination\EveryoneExperimentsEnrollmentAuthority;
 use MediaWiki\Extension\TestKitchen\Coordination\LoggedInExperimentsEnrollmentAuthority;
 use MediaWiki\Extension\TestKitchen\Coordination\OverridesEnrollmentAuthority;
+use MediaWiki\Extension\TestKitchen\Coordination\UserSplitterInstrumentation;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
@@ -64,6 +66,13 @@ return [
 			$services->getService( 'TestKitchen.Logger' ),
 			EventLogging::getMetricsPlatformClient(),
 			$services->getStatsFactory()
+		);
+	},
+	'TestKitchen.Coordinator' => static function ( MediaWikiServices $services ): Coordinator {
+		return new Coordinator(
+			$services->getMainConfig(),
+			$services->getService( 'TestKitchen.ConfigsFetcher' ),
+			new UserSplitterInstrumentation()
 		);
 	}
 ];

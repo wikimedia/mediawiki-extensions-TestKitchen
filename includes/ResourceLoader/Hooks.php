@@ -67,7 +67,7 @@ class Hooks {
 		$targetedStreams = [];
 
 		foreach ( $instrumentConfigs as $instrumentConfig ) {
-			$instrumentName = $instrumentConfig['slug'];
+			$instrumentName = $instrumentConfig['name'];
 			$targetStreamName = $instrumentConfig['stream_name'];
 			$targetedStreams[] = $targetStreamName;
 

@@ -1,8 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
+			"GuoPC",
 			"Huajing"
 		]
 	},
-	"testkitchen-desc": "这是 Test Kitchen 扩展"
+	"testkitchen-desc": "这是 Test Kitchen 扩展",
+	"testkitchen-non-successful-response": "Test Kitchen API返回了不成功的响应。",
+	"testkitchen-api-empty-response-body": "Test Kitchen API返回了空的响应。"
 }

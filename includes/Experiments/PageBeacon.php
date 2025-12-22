@@ -1,6 +1,6 @@
 <?php
 
-namespace MediaWiki\Extension\TestKitchen;
+namespace MediaWiki\Extension\TestKitchen\Experiments;
 
 use MediaWiki\Config\Config;
 use MediaWiki\Config\ServiceOptions;

@@ -3,7 +3,7 @@
 namespace MediaWiki\Extension\TestKitchen\Tests\Integration\TestKitchen;
 
 use MediaWiki\Context\RequestContext;
-use MediaWiki\Extension\TestKitchen\PageBeacon;
+use MediaWiki\Extension\TestKitchen\Experiments\PageBeacon;
 use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
 use MediaWiki\Output\OutputPage;
@@ -14,6 +14,7 @@ use MockHttpTrait;
 
 /**
  * @group Database
+ * @covers \MediaWiki\Extension\TestKitchen\Experiments\PageBeacon
  */
 class PageBeaconTest extends MediaWikiIntegrationTestCase {
 	use MockHttpTrait;
@@ -44,9 +45,6 @@ class PageBeaconTest extends MediaWikiIntegrationTestCase {
 			->willReturn( $this->mockExperiment );
 	}
 
-	/**
-	 * @covers \MediaWiki\Extension\TestKitchen\PageBeacon
-	 */
 	public function testBeforePageDisplay_addsHeadPixelAndModuleOnView() {
 		$this->context->setRequest( new FauxRequest( [ 'action' => 'view' ], true ) );
 		$this->output->setContext( $this->context );
@@ -65,9 +63,6 @@ class PageBeaconTest extends MediaWikiIntegrationTestCase {
 		);
 	}
 
-	/**
-	 * @covers \MediaWiki\Extension\TestKitchen\PageBeacon
-	 */
 	public function testBeforePageDisplay_skipsWhenPrintable() {
 		// Printable: head pixel and module should be skipped
 		$this->context->setRequest( new FauxRequest( [ 'action' => 'view' ] ) );
@@ -89,9 +84,6 @@ class PageBeaconTest extends MediaWikiIntegrationTestCase {
 		);
 	}
 
-	/**
-	 * @covers \MediaWiki\Extension\TestKitchen\PageBeacon
-	 */
 	public function testBeforePageDisplay_skipsWhenEdit() {
 		// action=edit: RL module should not be added; head pixel also skipped
 		$this->context->setRequest( new FauxRequest( [ 'action' => 'edit' ], true ) );
@@ -112,9 +104,6 @@ class PageBeaconTest extends MediaWikiIntegrationTestCase {
 		);
 	}
 
-	/**
-	 * @covers \MediaWiki\Extension\TestKitchen\PageBeacon
-	 */
 	public function testBeforePageDisplay_userNotInTreatment() {
 		$this->context->setRequest( new FauxRequest( [ 'action' => 'view' ], true ) );
 		$this->output->setContext( $this->context );

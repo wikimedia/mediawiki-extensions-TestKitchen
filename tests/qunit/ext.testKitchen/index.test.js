@@ -91,6 +91,68 @@ QUnit.test( 'getExperiment() - handles overridden experiment', ( assert ) => {
 	assert.strictEqual( e.getAssignedGroup(), 'gooseberry' );
 } );
 
+QUnit.test( 'getExperiment() - informational message non-active experiment', function ( assert ) {
+	mw.config.set( 'wgTestKitchenUserExperiments', {
+		enrolled: [
+			'fruit'
+		],
+		assigned: {
+			fruit: 'gooseberry'
+		},
+		subject_ids: {
+			fruit: 'overridden'
+		},
+		sampling_units: {
+			fruit: 'overridden'
+		},
+		active_experiments: [
+			'fruit'
+		],
+		overrides: [ 'fruit' ]
+	} );
+
+	this.sandbox.mock( console )
+		.expects( 'log' )
+		.once()
+		.withExactArgs(
+			'mw.testKitchen.getExperiment(): The "non-active-experiment" experiment is not active ' +
+			'or the current user is not enrolled in. Is the experiment configured and running?'
+		);
+
+	const { UnenrolledExperiment } = mw.testKitchen;
+
+	const e = mw.testKitchen.getExperiment( 'non-active-experiment' );
+
+	assert.true( e instanceof UnenrolledExperiment );
+} );
+
+QUnit.test( 'getExperiment() - informational message unenrolled logged-in experiment', function ( assert ) {
+	mw.config.set( 'wgTestKitchenUserExperiments', {
+		enrolled: [],
+		assigned: {},
+		subject_ids: {},
+		sampling_units: {},
+		active_experiments: [
+			'fruit'
+		],
+		overrides: []
+	} );
+
+	this.sandbox.mock( console )
+		.expects( 'log' )
+		.once()
+		.withExactArgs(
+			'mw.testKitchen.getExperiment(): The "fruit" experiment is not active ' +
+			'or the current user is not enrolled in. Is the experiment configured and running?'
+		);
+
+	const { UnenrolledExperiment } = mw.testKitchen;
+
+	const e = mw.testKitchen.getExperiment( 'fruit' );
+
+	assert.true( e instanceof UnenrolledExperiment );
+} );
+
 // ---
 
 // Test cases for the overriding feature

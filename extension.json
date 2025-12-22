@@ -71,7 +71,7 @@
 			]
 		},
 		"TestKitchenPageBeacon": {
-			"class": "MediaWiki\\Extension\\TestKitchen\\PageBeacon",
+			"class": "MediaWiki\\Extension\\TestKitchen\\Experiments\\PageBeacon",
 			"services": [
 				"MainConfig",
 				"TestKitchen.ExperimentManager"
