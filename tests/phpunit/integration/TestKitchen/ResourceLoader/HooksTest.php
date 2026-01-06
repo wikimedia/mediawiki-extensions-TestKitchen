@@ -28,7 +28,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			'TestKitchenExperimentEventIntakeServiceUrl' => 'http://foo.bar',
 			'EventLoggingServiceUri' => 'http://baz.qux',
 			'TestKitchenExperimentStreamNames' => [
-				'test_kitchen.web_base',
+				'product_metrics.web_base',
 			]
 		] );
 	}
@@ -56,7 +56,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 						'unit' => 'session',
 						'rate' => 1,
 					],
-					'stream_name' => 'test_kitchen.web_base.foo',
+					'stream_name' => 'product_metrics.web_base.foo',
 					'contextual_attributes' => [
 						'page_namespace_id',
 						'mediawiki_skin',
@@ -68,7 +68,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 						'unit' => 'session',
 						'rate' => 0.5,
 					],
-					'stream_name' => 'test_kitchen.web_base.bar',
+					'stream_name' => 'product_metrics.web_base.bar',
 					'contextual_attributes' => [
 						'mediawiki_database',
 						'performer_is_bot',
@@ -83,7 +83,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 								'page_namespace_id',
 								'mediawiki_skin',
 							],
-							'stream_name' => 'test_kitchen.web_base.foo',
+							'stream_name' => 'product_metrics.web_base.foo',
 						],
 					],
 					'sample' => [
@@ -98,7 +98,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 								'mediawiki_database',
 								'performer_is_bot',
 							],
-							'stream_name' => 'test_kitchen.web_base.bar',
+							'stream_name' => 'product_metrics.web_base.bar',
 						],
 					],
 					'sample' => [
@@ -112,7 +112,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 		// Configs for streams referenced in instrumentConfig.producers.metrics_platform_client.stream_name are copied.
 		yield [
 			[
-				'test_kitchen.web_base' => [
+				'product_metrics.web_base' => [
 					'producers' => [
 						'metrics_platform_client' => [
 							'provide_values' => [
@@ -134,7 +134,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 						'unit' => 'session',
 						'rate' => 1,
 					],
-					'stream_name' => 'test_kitchen.web_base',
+					'stream_name' => 'product_metrics.web_base',
 					'contextual_attributes' => [
 						'page_namespace_id',
 						'mediawiki_skin',
@@ -149,7 +149,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 								'page_namespace_id',
 								'mediawiki_skin',
 							],
-							'stream_name' => 'test_kitchen.web_base',
+							'stream_name' => 'product_metrics.web_base',
 						],
 					],
 					'sample' => [
@@ -157,7 +157,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 						'rate' => 1,
 					],
 				],
-				'test_kitchen.web_base' => [
+				'product_metrics.web_base' => [
 					'producers' => [
 						'metrics_platform_client' => [
 							'provide_values' => [

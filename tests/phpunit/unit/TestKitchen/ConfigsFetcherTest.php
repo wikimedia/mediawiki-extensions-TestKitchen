@@ -280,7 +280,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 				]
 			],
 			"stream_name" => "mediawiki.desktop_ui_interactions",
-			"schema_title" => "analytics/test_kitchen/mediawiki/desktop_ui_interactions/",
+			"schema_title" => "analytics/product_metrics/mediawiki/desktop_ui_interactions/",
 			"contextual_attributes" => [
 				"page_id",
 				"page_title",
@@ -303,8 +303,8 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 					"enwiki"
 				]
 			],
-			"stream_name" => "test_kitchen.web_base",
-			"schema_title" => "analytics/test_kitchen/web/base/",
+			"stream_name" => "product_metrics.web_base",
+			"schema_title" => "analytics/product_metrics/web/base/",
 			"contextual_attributes" => [
 				"page_id",
 				"page_title"

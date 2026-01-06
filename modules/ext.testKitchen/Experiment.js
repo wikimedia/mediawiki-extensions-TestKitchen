@@ -1,7 +1,7 @@
-const SCHEMA_ID = '/analytics/test_kitchen/web/base/2.0.0';
-const STREAM_NAME = 'test_kitchen.web_base';
+const SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
+const STREAM_NAME = 'product_metrics.web_base';
 
-const COORDINATOR_TEST_KITCHEN = 'test-kitchen';
+const COORDINATOR_DEFAULT = 'default';
 const COORDINATOR_FORCED = 'forced';
 
 /**
@@ -53,14 +53,14 @@ class Experiment {
 	 *
 	 * If the user is enrolled in the experiment, then the event is decorated with
 	 * experiment-related data and sent. The experiment-related data are specified and documented in
-	 * [the `fragment/analytics/test_kitchen/experiment` schema fragment][0].
+	 * [the `fragment/analytics/product_metrics/experiment` schema fragment][0].
 	 *
-	 * By default, the analytics event will be sent to the `test_kitchen.web_base` stream and be
-	 * validated with the `/analytics/test_kitchen/web/base/2.0.0` schema. The stream and schema
+	 * By default, the analytics event will be sent to the `product_metrics.web_base` stream and be
+	 * validated with the `/analytics/product_metrics/web/base/2.0.0` schema. The stream and schema
 	 * can be overridden with {@link Experiment#setStream} and {@link Experiment#setSchema},
 	 * respectively.
 	 *
-	 * [0]: https://gitlab.wikimedia.org/repos/data-engineering/schemas-event-secondary/-/blob/master/jsonschema/fragment/analytics/test_kitchen/experiment/current.yaml?ref_type=heads
+	 * [0]: https://gitlab.wikimedia.org/repos/data-engineering/schemas-event-secondary/-/blob/master/jsonschema/fragment/analytics/product_metrics/experiment/current.yaml?ref_type=heads
 	 *
 	 * @see mw.eventLog.submitInteraction
 	 *
@@ -96,10 +96,10 @@ class Experiment {
 	 * @param {string|null} [assignedGroup=null]
 	 * @param {string|null} [subjectId=null] The subject ID for this experiment
 	 * @param {string|null} [samplingUnit=null] The sampling unit for this experiment
-	 * @param {string} [coordinator="test-kitchen"] The name of the system that coordinated the enrollment
+	 * @param {string} [coordinator="default"] The name of the system that coordinated the enrollment
 	 *  of the user into the experiment. This parameter is used as the value for the
 	 *  `experiment.coordinator` field on all analytics events sent via {@link Experiment#send} so
-	 *  it should be one of `test-kitchen`, `custom`, or `forced`
+	 *  it should be one of `default`, `custom`, or `forced`
 	 */
 	constructor(
 		metricsClient,
@@ -114,7 +114,7 @@ class Experiment {
 		this.assignedGroup = assignedGroup || null;
 		this.subjectId = subjectId || null;
 		this.samplingUnit = samplingUnit || null;
-		this.coordinator = coordinator || COORDINATOR_TEST_KITCHEN;
+		this.coordinator = coordinator || COORDINATOR_DEFAULT;
 		this.streamName = STREAM_NAME;
 		this.schemaID = SCHEMA_ID;
 	}

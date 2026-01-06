@@ -43,7 +43,7 @@
 		"TestKitchenExperimentStreamNames": {
 			"description": "The names of the event streams for experiments configured in Test Kitchen.",
 			"value": [
-				"test_kitchen.web_base"
+				"product_metrics.web_base"
 			]
 		},
 		"TestKitchenAuthPreserveQueryParamsExperiments": {

@@ -9,8 +9,8 @@ use Wikimedia\Stats\StatsFactory;
  * Represents an enrollment experiment for the current user
  */
 class Experiment implements ExperimentInterface {
-	private const BASE_STREAM = 'test_kitchen.web_base';
-	private const BASE_SCHEMA_ID = '/analytics/test_kitchen/web/base/2.0.0';
+	private const BASE_STREAM = 'product_metrics.web_base';
+	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
 
 	public function __construct(
 		private readonly ?MetricsClient $metricsClient,

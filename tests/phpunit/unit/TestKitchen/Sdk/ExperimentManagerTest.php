@@ -66,7 +66,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 				'assigned' => 'control',
 				'subject_id' => '603c456f34744aac87bf1f086eb46e8f9f0ba7330f5f72c38e3f8031ccd95397',
 				'sampling_unit' => 'mw-user',
-				'coordinator' => 'test-kitchen'
+				'coordinator' => 'default'
 			]
 		);
 		$actualExperiment = $this->experimentManager->getExperiment( 'dessert' );
