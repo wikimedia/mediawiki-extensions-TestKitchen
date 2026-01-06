@@ -16,7 +16,7 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 			'A',
 			'awaiting',
 			'edge-unique',
-			'test-kitchen'
+			'default'
 		);
 
 		this.loggedInExperiment = new Experiment(
@@ -25,7 +25,7 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 			'B',
 			'0x0ff1ce',
 			'mw-user',
-			'test-kitchen'
+			'default'
 		);
 	}
 } ) );
@@ -53,7 +53,7 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'test-kitchen'
+				coordinator: 'default'
 			}
 		],
 		[
@@ -63,7 +63,7 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'test-kitchen'
+				coordinator: 'default'
 			}
 		]
 	],
@@ -72,8 +72,8 @@ QUnit.test.each(
 
 		assert.strictEqual( this.metricsClient.submitInteraction.called, true );
 		assert.deepEqual( this.metricsClient.submitInteraction.firstCall.args, [
-			'test_kitchen.web_base',
-			'/analytics/test_kitchen/web/base/2.0.0',
+			'product_metrics.web_base',
+			'/analytics/product_metrics/web/base/2.0.0',
 			'Hello, World!',
 			{
 				experiment: expectedExperiment
@@ -92,8 +92,8 @@ QUnit.test( 'send() - overrides experiment field', function ( assert ) {
 
 	assert.strictEqual( this.metricsClient.submitInteraction.called, true );
 	assert.deepEqual( this.metricsClient.submitInteraction.firstCall.args, [
-		'test_kitchen.web_base',
-		'/analytics/test_kitchen/web/base/2.0.0',
+		'product_metrics.web_base',
+		'/analytics/product_metrics/web/base/2.0.0',
 		'Hello, World!',
 		{
 			experiment: {
@@ -101,7 +101,7 @@ QUnit.test( 'send() - overrides experiment field', function ( assert ) {
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'test-kitchen'
+				coordinator: 'default'
 			}
 		}
 	] );
@@ -125,7 +125,7 @@ QUnit.test( 'send() - overriding stream and schema', function ( assert ) {
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'test-kitchen'
+				coordinator: 'default'
 			}
 		}
 	] );
@@ -160,7 +160,7 @@ QUnit.test( 'constructor()', ( assert ) => {
 			assignedGroup: null,
 			subjectId: null,
 			samplingUnit: null,
-			coordinator: 'test-kitchen'
+			coordinator: 'default'
 		}
 	);
 } );

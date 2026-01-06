@@ -157,8 +157,8 @@ class HooksTest
 			],
 			'overrides' => [],
 			'coordinator' => [
-				'experiment_1' => 'test-kitchen',
-				'experiment_2' => 'test-kitchen'
+				'experiment_1' => 'default',
+				'experiment_2' => 'default'
 			]
 		];
 
@@ -225,10 +225,10 @@ class HooksTest
 			],
 			'overrides' => [],
 			'coordinator' => [
-				'experiment_1' => 'test-kitchen',
-				'experiment_2' => 'test-kitchen',
-				'logged-in-experiment-1' => 'test-kitchen',
-				'logged-in-experiment-2' => 'test-kitchen'
+				'experiment_1' => 'default',
+				'experiment_2' => 'default',
+				'logged-in-experiment-1' => 'default',
+				'logged-in-experiment-2' => 'default'
 			]
 		];
 
@@ -331,8 +331,8 @@ class HooksTest
 				'logged-in-experiment-3',
 			],
 			'coordinator' => [
-				'logged-in-experiment-1' => 'test-kitchen',
-				'logged-in-experiment-2' => 'test-kitchen',
+				'logged-in-experiment-1' => 'default',
+				'logged-in-experiment-2' => 'default',
 				'logged-in-experiment-3' => 'forced',
 			]
 		];

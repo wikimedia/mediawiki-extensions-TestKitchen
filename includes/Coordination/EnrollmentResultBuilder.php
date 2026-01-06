@@ -30,7 +30,7 @@ class EnrollmentResultBuilder {
 			$this->overrides[ $experimentName ] = true;
 			$this->coordinator[ $experimentName ] = 'forced';
 		} else {
-			$this->coordinator[ $experimentName ] = 'test-kitchen';
+			$this->coordinator[ $experimentName ] = 'default';
 		}
 	}
 

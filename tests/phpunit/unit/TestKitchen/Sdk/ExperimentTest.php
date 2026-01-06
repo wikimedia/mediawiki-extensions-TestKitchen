@@ -21,17 +21,17 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		'subject_id' => "asdfqwerty",
 		'sampling_unit' => "mw-user",
 		'other_assigned' => [ "another_experiment", "yet_another_experiment" ],
-		'coordinator' => "test-kitchen"
+		'coordinator' => "default"
 	];
 
 	/** @var Experiment */
 	private $experiment;
 
 	/** @var string */
-	private $streamName = 'test_kitchen.web_base';
+	private $streamName = 'product_metrics.web_base';
 
 	/** @var string */
-	private $schemaId = '/analytics/test_kitchen/web/base/2.0.0';
+	private $schemaId = '/analytics/product_metrics/web/base/2.0.0';
 
 	/** @var string */
 	private $action = 'test_action';
