@@ -250,6 +250,17 @@ mw.testKitchen = {
 
 };
 
+/**
+ * @namespace mw.tk
+ * @borrows mw.testKitchen.getExperiment as getExperiment
+ * @borrows mw.testKitchen.getAssignments as getAssignments
+ * @borrows mw.testKitchen.getInstrument as getInstrument
+ * @borrows mw.testKitchen.overrideExperimentGroup as overrideExperimentGroup
+ * @borrows mw.testKitchen.clearExperimentOverride as clearExperimentOverride
+ * @borrows mw.testKitchen.clearExperimentOverrides as clearExperimentOverrides
+ */
+mw.tk = mw.testKitchen;
+
 // JS overriding experimentation feature
 if ( window.QUnit ) {
 	mw.testKitchen = Object.assign( mw.testKitchen, {
