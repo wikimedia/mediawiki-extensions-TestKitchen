@@ -70,10 +70,9 @@
 				"TestKitchen.Logger"
 			]
 		},
-		"TestKitchenPageBeacon": {
-			"class": "MediaWiki\\Extension\\TestKitchen\\Experiments\\PageBeacon",
+		"TestKitchenPageVisit": {
+			"class": "MediaWiki\\Extension\\TestKitchen\\Experiments\\PageVisit",
 			"services": [
-				"MainConfig",
 				"TestKitchen.ExperimentManager"
 			]
 		}
@@ -83,7 +82,7 @@
 		"BeforeInitialize": "TestKitchenMain",
 		"BeforePageDisplay": [
 			"TestKitchenMain",
-			"TestKitchenPageBeacon"
+			"TestKitchenPageVisit"
 		],
 		"ApiBeforeMain": "TestKitchenMain",
 		"APIAfterExecute": "TestKitchenMain"
