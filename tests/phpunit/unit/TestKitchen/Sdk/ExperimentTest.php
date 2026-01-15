@@ -2,17 +2,18 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
+use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
+use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
 use MediaWikiUnitTestCase;
-use Wikimedia\MetricsPlatform\MetricsClient;
 use Wikimedia\Stats\StatsFactory;
 use Wikimedia\Stats\UnitTestingHelper;
+use Wikimedia\Timestamp\ConvertibleTimestamp;
 
 /**
  * @covers \MediaWiki\Extension\TestKitchen\Sdk\Experiment
  */
 class ExperimentTest extends MediaWikiUnitTestCase {
-	private MetricsClient $mockMetricsClient;
 
 	/** @var array */
 	private $experimentConfig = [
@@ -21,17 +22,17 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		'subject_id' => "asdfqwerty",
 		'sampling_unit' => "mw-user",
 		'other_assigned' => [ "another_experiment", "yet_another_experiment" ],
-		'coordinator' => "default"
+		'coordinator' => "default",
+		'stream_name' => 'product_metrics.web_base',
+		'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+		'contextual_attributes' => [
+			'agent_client_platform',
+			'agent_client_platform_family',
+		],
 	];
 
 	/** @var Experiment */
 	private $experiment;
-
-	/** @var string */
-	private $streamName = 'product_metrics.web_base';
-
-	/** @var string */
-	private $schemaId = '/analytics/product_metrics/web/base/2.0.0';
 
 	/** @var string */
 	private $action = 'test_action';
@@ -42,18 +43,22 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		'action_context' => 'test_action_context',
 	];
 
+	private EventSubmitter $eventSubmitter;
+	private EventFactory $eventFactory;
 	private StatsFactory $statsFactory;
 	private UnitTestingHelper $statsHelper;
 
 	public function setUp(): void {
 		parent::setUp();
-		$this->mockMetricsClient = $this->createMock( MetricsClient::class );
+		$this->eventSubmitter = $this->createMock( EventSubmitter::class );
+		$this->eventFactory = $this->createMock( EventFactory::class );
 
 		$this->statsHelper = StatsFactory::newUnitTestingHelper();
 		$this->statsFactory = $this->statsHelper->getStatsFactory();
 
 		$this->experiment = new Experiment(
-			$this->mockMetricsClient,
+			$this->eventSubmitter,
+			$this->eventFactory,
 			$this->statsFactory,
 			$this->experimentConfig
 		);
@@ -66,7 +71,8 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 
 	public function testGetAssignedGroupWithNoExperimentConfig() {
 		$experiment = new Experiment(
-			$this->mockMetricsClient,
+			$this->eventSubmitter,
+			$this->eventFactory,
 			$this->statsFactory,
 			[]
 		);
@@ -83,20 +89,34 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testSendArgumentsDefault() {
-		$this->mockMetricsClient
-			->expects( $this->once() )
-			->method( 'submitInteraction' )
-			->willReturnCallback( function ( $streamName, $schemaId, $action, $interactionData ): bool {
-				$this->assertSame( [
-					$this->streamName,
-					$this->schemaId,
-					$this->action,
-					array_merge( $this->interactionData, [ 'experiment' => $this->experimentConfig ] )
+		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
+		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+
+		$expectedEvent = [
+			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
+			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 ),
+		];
+
+		$this->eventFactory->expects( $this->once() )
+			->method( 'newEvent' )
+			->with(
+				'/analytics/product_metrics/web/base/2.0.0',
+				[
+					'agent_client_platform',
+					'agent_client_platform_family',
 				],
-				[ $streamName, $schemaId, $action, $interactionData ]
-				);
-				return true;
-			} );
+				$this->action,
+				array_merge(
+					$this->interactionData,
+					[ 'experiment' => $expectedExperimentConfig ]
+				)
+			)
+			->willReturn( $expectedEvent );
+
+		$this->eventSubmitter
+			->expects( $this->once() )
+			->method( 'submit' )
+			->with( 'product_metrics.web_base', $expectedEvent );
 
 		$this->experiment->send( $this->action, $this->interactionData );
 
@@ -107,20 +127,31 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testSendArgumentsNoInteractionData() {
-		$this->mockMetricsClient
-			->expects( $this->once() )
-			->method( 'submitInteraction' )
-			->willReturnCallback( function ( $streamName, $schemaId, $action, $experimentConfig ): bool {
-				$this->assertSame( [
-					$this->streamName,
-					$this->schemaId,
-					$this->action,
-					[ 'experiment' => $this->experimentConfig ]
+		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
+		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+
+		$expectedEvent = [
+			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
+			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 ),
+		];
+
+		$this->eventFactory->expects( $this->once() )
+			->method( 'newEvent' )
+			->with(
+				'/analytics/product_metrics/web/base/2.0.0',
+				[
+					'agent_client_platform',
+					'agent_client_platform_family',
 				],
-					[ $streamName, $schemaId, $action, $experimentConfig ]
-				);
-				return true;
-			} );
+				$this->action,
+				[ 'experiment' => $expectedExperimentConfig ]
+			)
+			->willReturn( $expectedEvent );
+
+		$this->eventSubmitter
+			->expects( $this->once() )
+			->method( 'submit' )
+			->with( 'product_metrics.web_base', $expectedEvent );
 
 		$this->experiment->send( $this->action );
 
@@ -130,24 +161,26 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		);
 	}
 
-	public function testSendArgumentsWithMissingExperimentConfig() {
-		$experiment = new Experiment( $this->mockMetricsClient, $this->statsFactory );
+	public function testSendArgumentsWithEmptyExperimentConfig() {
+		$experiment = new Experiment(
+			$this->eventSubmitter,
+			$this->eventFactory,
+			$this->statsFactory,
+			[]
+		);
 
-		$this->mockMetricsClient
+		$this->eventFactory
 			->expects( $this->never() )
-			->method( 'submitInteraction' )
-			->willReturnCallback( function ( $action, $interactionData ): bool {
-				$this->assertSame( [
-					$this->action,
-					array_merge( $this->interactionData, [ 'experiment' => $this->experimentConfig ] )
-				],
-					[ $action, $interactionData ]
-				);
-				return true;
-			} );
+			->method( 'newEvent' );
+
+		$this->eventSubmitter
+			->expects( $this->never() )
+			->method( 'submit' );
 
 		$experiment->send( $this->action, $this->interactionData );
-		$this->assertNull( $experiment->getExperimentConfig() );
+
+		$this->assertSame( null, $experiment->getAssignedGroup() );
+		$this->assertSame( false, $experiment->isAssignedGroup( 'control', 'treatment' ) );
 
 		$this->assertSame(
 			[],

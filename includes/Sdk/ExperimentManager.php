@@ -2,21 +2,28 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
+use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use Psr\Log\LoggerInterface;
-use Wikimedia\MetricsPlatform\MetricsClient;
 use Wikimedia\Stats\StatsFactory;
 
 class ExperimentManager implements ExperimentManagerInterface {
+
+	private const BASE_STREAM = 'product_metrics.web_base';
+	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
+
 	private array $enrollmentResult;
-	private StatsFactory $statsFactory;
+	private array $baseStreamContextualAttributes;
 
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly MetricsClient $metricsPlatformClient,
-		StatsFactory $statsFactory
+		private readonly EventSubmitter $eventSubmitter,
+		private readonly EventFactory $eventFactory,
+		private readonly StatsFactory $statsFactory,
+		StreamConfigs $staticStreamConfigs
 	) {
 		$this->enrollmentResult = [];
-		$this->statsFactory = $statsFactory;
+		$this->baseStreamContextualAttributes =
+			$staticStreamConfigs->getContextualAttributesForStream( self::BASE_STREAM );
 	}
 
 	/**
@@ -50,7 +57,11 @@ class ExperimentManager implements ExperimentManagerInterface {
 			// is not enrolled in it
 			$this->logger->info( 'The current user is not enrolled in ' .
 				'the ' . $experimentName . ' experiment' );
-			return new UnenrolledExperiment();
+			return new UnenrolledExperiment(
+				$this->eventSubmitter,
+				$this->eventFactory,
+				$this->statsFactory
+			);
 		} else {
 			// For now, regarding logged-out experiments, there is no way to distinguish between
 			// an experiment that is not active, doesn't exist or the current user is not enrolled in
@@ -62,7 +73,11 @@ class ExperimentManager implements ExperimentManagerInterface {
 						'experiment' => $experimentName
 					]
 				);
-				return new UnenrolledExperiment();
+				return new UnenrolledExperiment(
+					$this->eventSubmitter,
+					$this->eventFactory,
+					$this->statsFactory
+				);
 			}
 		}
 
@@ -70,17 +85,27 @@ class ExperimentManager implements ExperimentManagerInterface {
 
 		// The experiment enrolment has been overridden
 		if ( $experimentConfig['coordinator'] === 'forced' ) {
-			return new OverriddenExperiment( $this->logger, $experimentConfig );
+			return new OverriddenExperiment(
+				$this->eventSubmitter,
+				$this->eventFactory,
+				$this->statsFactory,
+				$this->logger,
+				$experimentConfig
+			);
 		}
 
-		return new Experiment( $this->metricsPlatformClient, $this->statsFactory, $experimentConfig );
+		return new Experiment(
+			$this->eventSubmitter,
+			$this->eventFactory,
+			$this->statsFactory,
+			$experimentConfig
+		);
 	}
 
 	/**
 	 * Get the current user's experiment enrollment details.
 	 *
 	 * @param string $experimentName
-	 * @return array
 	 */
 	private function getExperimentConfig( string $experimentName ): array {
 		return [
@@ -88,7 +113,10 @@ class ExperimentManager implements ExperimentManagerInterface {
 			'assigned' => $this->enrollmentResult['assigned'][ $experimentName ],
 			'subject_id' => $this->enrollmentResult['subject_ids'][ $experimentName ],
 			'sampling_unit' => $this->enrollmentResult['sampling_units'][ $experimentName ],
-			'coordinator' => $this->enrollmentResult['coordinator'][ $experimentName ]
+			'coordinator' => $this->enrollmentResult['coordinator'][ $experimentName ],
+			'stream_name' => self::BASE_STREAM,
+			'schema_id' => self::BASE_SCHEMA_ID,
+			'contextual_attributes' => $this->baseStreamContextualAttributes,
 		];
 	}
 }

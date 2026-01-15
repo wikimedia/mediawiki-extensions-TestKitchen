@@ -2,20 +2,19 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
-use Wikimedia\MetricsPlatform\MetricsClient;
+use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use Wikimedia\Stats\StatsFactory;
 
 /**
  * Represents an enrollment experiment for the current user
  */
 class Experiment implements ExperimentInterface {
-	private const BASE_STREAM = 'product_metrics.web_base';
-	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
 
 	public function __construct(
-		private readonly ?MetricsClient $metricsClient,
-		private readonly ?StatsFactory $statsFactory,
-		private readonly ?array $experimentConfig = null
+		private readonly EventSubmitter $eventSubmitter,
+		private readonly EventFactory $eventFactory,
+		private readonly StatsFactory $statsFactory,
+		protected readonly array $experimentConfig
 	) {
 	}
 
@@ -39,20 +38,34 @@ class Experiment implements ExperimentInterface {
 	public function send( string $action, ?array $interactionData = null ): void {
 		// Only submit the event if experiment details exist and are valid.
 		if ( $this->isEnrolled() ) {
+			$experimentConfig = $this->experimentConfig;
+
+			$streamName = $experimentConfig['stream_name'];
+			$schemaID = $experimentConfig['schema_id'];
+			$contextualAttributes = $experimentConfig['contextual_attributes'];
+
+			// Extract SDK-specific experiment config
+			$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
+			$experiment = array_intersect_key( $experimentConfig, array_fill_keys( $keys, true ) );
+
 			$interactionData = array_merge(
 				$interactionData ?? [],
-				[ 'experiment' => $this->experimentConfig ]
+				[
+					'experiment' => $experiment,
+				]
 			);
-			$this->metricsClient->submitInteraction(
-				self::BASE_STREAM,
-				self::BASE_SCHEMA_ID,
+
+			$event = $this->eventFactory->newEvent(
+				$schemaID,
+				$contextualAttributes,
 				$action,
 				$interactionData
 			);
-			if ( $this->experimentConfig !== null ) {
-				// Increment the total number of events sent for each experiment (T401706).
-				$this->incrementExperimentEventsSentTotal( $this->experimentConfig['enrolled'] );
-			}
+
+			$this->eventSubmitter->submit( $streamName, $event );
+
+			// Increment the total number of events sent for each experiment (T401706).
+			$this->incrementExperimentEventsSentTotal( $this->experimentConfig['enrolled'] );
 		}
 	}
 
@@ -71,7 +84,7 @@ class Experiment implements ExperimentInterface {
 	 * @return bool
 	 */
 	private function isEnrolled(): bool {
-		return $this->experimentConfig && $this->getAssignedGroup() !== null;
+		return $this->getAssignedGroup() !== null;
 	}
 
 	/**
@@ -80,11 +93,9 @@ class Experiment implements ExperimentInterface {
 	 * @param string $experimentName
 	 */
 	private function incrementExperimentEventsSentTotal( string $experimentName ): void {
-		if ( $this->statsFactory ) {
-			$this->statsFactory->withComponent( 'TestKitchen' )
-				->getCounter( 'experiment_events_sent_total' )
-				->setLabel( 'experiment', $experimentName )
-				->increment();
-		}
+		$this->statsFactory->withComponent( 'TestKitchen' )
+			->getCounter( 'experiment_events_sent_total' )
+			->setLabel( 'experiment', $experimentName )
+			->increment();
 	}
 }

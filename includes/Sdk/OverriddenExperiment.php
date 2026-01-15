@@ -2,7 +2,9 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
+use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use Psr\Log\LoggerInterface;
+use Wikimedia\Stats\StatsFactory;
 
 /**
  * Represents an enrollment experiment that has been overridden for the current user
@@ -10,28 +12,34 @@ use Psr\Log\LoggerInterface;
 class OverriddenExperiment extends Experiment {
 
 	public function __construct(
+		EventSubmitter $eventSubmitter,
+		EventFactory $eventFactory,
+		StatsFactory $statsFactory,
 		private readonly LoggerInterface $logger,
-		private readonly array $experimentConfig
+		array $experimentConfig,
 	) {
-		parent::__construct( null, null, $this->experimentConfig );
+		parent::__construct(
+			$eventSubmitter,
+			$eventFactory,
+			$statsFactory,
+			$experimentConfig
+		);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public function send( string $action, ?array $interactionData = null ): void {
-		if ( $this->experimentConfig ) {
-			$experimentName = $this->experimentConfig['enrolled'];
+		$experimentName = $this->experimentConfig['enrolled'];
 
-			$this->logger->info(
-				$experimentName .
-				': The enrolment for this experiment has been overridden. The following event will not be sent',
-				[
-					'experiment' => $experimentName,
-					'action' => $action,
-					'interaction_data' => $interactionData,
-				]
-			);
-		}
+		$this->logger->info(
+			$experimentName .
+			': The enrolment for this experiment has been overridden. The following event will not be sent',
+			[
+				'experiment' => $experimentName,
+				'action' => $action,
+				'interaction_data' => $interactionData,
+			]
+		);
 	}
 }

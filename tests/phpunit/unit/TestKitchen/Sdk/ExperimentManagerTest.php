@@ -2,14 +2,17 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
+use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
+use MediaWiki\Extension\EventStreamConfig\StreamConfigs as BaseStreamConfigs;
 use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentResultBuilder;
+use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\OverriddenExperiment;
+use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
 use MediaWiki\Extension\TestKitchen\Sdk\UnenrolledExperiment;
 use MediaWikiUnitTestCase;
 use Psr\Log\LoggerInterface;
-use Wikimedia\MetricsPlatform\MetricsClient;
 use Wikimedia\Stats\StatsFactory;
 
 /**
@@ -17,20 +20,43 @@ use Wikimedia\Stats\StatsFactory;
  */
 class ExperimentManagerTest extends MediaWikiUnitTestCase {
 	private LoggerInterface $logger;
-	private MetricsClient $metricsPlatformClient;
-	private ExperimentManager $experimentManager;
+	private EventSubmitter $eventSubmitter;
+	private EventFactory $eventFactory;
 	private StatsFactory $statsFactory;
+	private StreamConfigs $staticStreamConfigs;
+	private ExperimentManager $experimentManager;
 
 	public function setUp(): void {
 		parent::setUp();
 
 		$this->logger = $this->createMock( LoggerInterface::class );
-		$this->metricsPlatformClient = $this->createMock( MetricsClient::class );
+		$this->eventSubmitter = $this->createMock( EventSubmitter::class );
+		$this->eventFactory = $this->createMock( EventFactory::class );
 		$this->statsFactory = StatsFactory::newNull();
+
+		$baseStreamConfigs = new BaseStreamConfigs(
+			[
+				'product_metrics.web_base' => [
+					'producers' => [
+						'metrics_platform_client' => [
+							'provide_values' => [
+								'agent_client_platform',
+								'agent_client_platform_family',
+							]
+						],
+					],
+				],
+			],
+			[]
+		);
+		$this->staticStreamConfigs = new StreamConfigs( $baseStreamConfigs );
+
 		$this->experimentManager = new ExperimentManager(
 			$this->logger,
-			$this->metricsPlatformClient,
-			$this->statsFactory
+			$this->eventSubmitter,
+			$this->eventFactory,
+			$this->statsFactory,
+			$this->staticStreamConfigs
 		);
 
 		$enrollmentResult = new EnrollmentResultBuilder();
@@ -59,14 +85,21 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 	public function testGetExperiment(): void {
 		$expectedExperiment = new Experiment(
-			$this->metricsPlatformClient,
+			$this->eventSubmitter,
+			$this->eventFactory,
 			$this->statsFactory,
 			[
 				'enrolled' => 'dessert',
 				'assigned' => 'control',
 				'subject_id' => '603c456f34744aac87bf1f086eb46e8f9f0ba7330f5f72c38e3f8031ccd95397',
 				'sampling_unit' => 'mw-user',
-				'coordinator' => 'default'
+				'coordinator' => 'default',
+				'stream_name' => 'product_metrics.web_base',
+				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+				'contextual_attributes' => [
+					'agent_client_platform',
+					'agent_client_platform_family',
+				],
 			]
 		);
 		$actualExperiment = $this->experimentManager->getExperiment( 'dessert' );
@@ -76,13 +109,22 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 	public function testGetOverriddenExperiment(): void {
 		$expectedExperiment = new OverriddenExperiment(
+			$this->eventSubmitter,
+			$this->eventFactory,
+			$this->statsFactory,
 			$this->logger,
 			[
 				'enrolled' => 'main-course',
 				'assigned' => 'control',
 				'subject_id' => 'overridden',
 				'sampling_unit' => 'overridden',
-				'coordinator' => 'forced'
+				'coordinator' => 'forced',
+				'stream_name' => 'product_metrics.web_base',
+				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+				'contextual_attributes' => [
+					'agent_client_platform',
+					'agent_client_platform_family',
+				],
 			]
 		);
 		$actualExperiment = $this->experimentManager->getExperiment( 'main-course' );
@@ -102,7 +144,11 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 					'experiment' => 'foo'
 				] );
 
-		$expectedExperiment = new UnenrolledExperiment();
+		$expectedExperiment = new UnenrolledExperiment(
+			$this->eventSubmitter,
+			$this->eventFactory,
+			$this->statsFactory
+		);
 		$actualExperiment = $this->experimentManager->getExperiment( 'foo' );
 
 		$this->assertEquals( $expectedExperiment, $actualExperiment );
@@ -115,7 +161,11 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 				'The current user is not enrolled in the active-but-not-enrolled experiment'
 			);
 
-		$expectedExperiment = new UnenrolledExperiment();
+		$expectedExperiment = new UnenrolledExperiment(
+			$this->eventSubmitter,
+			$this->eventFactory,
+			$this->statsFactory
+		);
 		$actualExperiment = $this->experimentManager->getExperiment( 'active-but-not-enrolled' );
 
 		$this->assertEquals( $expectedExperiment, $actualExperiment );
