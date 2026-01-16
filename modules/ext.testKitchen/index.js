@@ -259,5 +259,3 @@ if ( window.QUnit ) {
 		OverriddenExperiment
 	} );
 }
-
-require( './Experiments.js' );

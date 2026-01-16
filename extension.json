@@ -49,14 +49,6 @@
 		"TestKitchenAuthPreserveQueryParamsExperiments": {
 			"description": "List of experiment names to use in the AuthPreseveQueryParams hook. For each experiment listed here, AuthPreserveQueryParams will add its assigned group to a query param in the form ?mpo=<experiment1-name:group>;<experiment2-name:group>",
 			"value": []
-		},
-		"TestKitchenEnableHeadPixel": {
-			"description": "Enable the head pixel beacon. This is a JavaScript module that emits a page loaded event from the header. This is useful for tracking page load times.",
-			"value": false
-		},
-		"TestKitchenHeadPixelMetric": {
-			"description": "The name of the head pixel metric. This is used to emit the initial page load metric to Prometheus.",
-			"value": "mediawiki_page_load_head_pixel_total"
 		}
 	},
 	"HookHandlers": {
@@ -69,20 +61,13 @@
 				"TestKitchen.ExperimentManager",
 				"TestKitchen.Logger"
 			]
-		},
-		"TestKitchenPageVisit": {
-			"class": "MediaWiki\\Extension\\TestKitchen\\Experiments\\PageVisit",
-			"services": [
-				"TestKitchen.ExperimentManager"
-			]
 		}
 	},
 	"Hooks": {
 		"AuthPreserveQueryParams": "TestKitchenMain",
 		"BeforeInitialize": "TestKitchenMain",
 		"BeforePageDisplay": [
-			"TestKitchenMain",
-			"TestKitchenPageVisit"
+			"TestKitchenMain"
 		],
 		"ApiBeforeMain": "TestKitchenMain",
 		"APIAfterExecute": "TestKitchenMain"
@@ -97,8 +82,7 @@
 				{
 					"name": "config.json",
 					"callback": "MediaWiki\\Extension\\TestKitchen\\ResourceLoader\\Hooks::getConfigForTestKitchenModule"
-				},
-				"Experiments.js"
+				}
 			],
 			"dependencies": [
 				"ext.eventLogging"
