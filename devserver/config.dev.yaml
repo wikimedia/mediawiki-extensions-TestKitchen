@@ -12,11 +12,11 @@ database:
   engine: mysql
   host: test-kitchen-db
   username: maria
-  database: test-kitchen-db
+  database: test_kitchen
   port: 3306
 
 # Part 3 of disabling authentication: If the following Identity Provider (IdP) config isn't
 # provided, then Test Kitchen will throw an error and exit
 idp:
   oidc_url: https://idp-test.wikimedia.org/oidc
-  client_id: test-kitchen_next
+  client_id: test_kitchen_next

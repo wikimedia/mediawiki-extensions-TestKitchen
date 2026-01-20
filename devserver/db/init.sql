@@ -1,8 +1,8 @@
-CREATE DATABASE IF NOT EXISTS mpic;
+CREATE DATABASE IF NOT EXISTS test_kitchen;
 
-GRANT ALL PRIVILEGES ON mpic.* TO 'maria'@'%';
+GRANT ALL PRIVILEGES ON test_kitchen.* TO 'maria'@'%';
 
-USE mpic;
+USE test_kitchen;
 
 CREATE TABLE IF NOT EXISTS instruments (
 	id INT UNSIGNED NOT NULL AUTO_INCREMENT,
