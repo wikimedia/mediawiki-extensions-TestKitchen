@@ -2,10 +2,10 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use MediaWiki\Extension\EventStreamConfig\StreamConfigs as BaseStreamConfigs;
 use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentResultBuilder;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
+use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\OverriddenExperiment;
@@ -20,7 +20,7 @@ use Wikimedia\Stats\StatsFactory;
  */
 class ExperimentManagerTest extends MediaWikiUnitTestCase {
 	private LoggerInterface $logger;
-	private EventSubmitter $eventSubmitter;
+	private EventSender $eventSender;
 	private EventFactory $eventFactory;
 	private StatsFactory $statsFactory;
 	private StreamConfigs $staticStreamConfigs;
@@ -30,7 +30,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		parent::setUp();
 
 		$this->logger = $this->createMock( LoggerInterface::class );
-		$this->eventSubmitter = $this->createMock( EventSubmitter::class );
+		$this->eventSender = $this->createMock( EventSender::class );
 		$this->eventFactory = $this->createMock( EventFactory::class );
 		$this->statsFactory = StatsFactory::newNull();
 
@@ -53,7 +53,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 		$this->experimentManager = new ExperimentManager(
 			$this->logger,
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->staticStreamConfigs
@@ -85,7 +85,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 	public function testGetExperiment(): void {
 		$expectedExperiment = new Experiment(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->staticStreamConfigs,
@@ -110,7 +110,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 	public function testGetOverriddenExperiment(): void {
 		$expectedExperiment = new OverriddenExperiment(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->staticStreamConfigs,
@@ -145,7 +145,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			);
 
 		$expectedExperiment = new UnenrolledExperiment(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->staticStreamConfigs

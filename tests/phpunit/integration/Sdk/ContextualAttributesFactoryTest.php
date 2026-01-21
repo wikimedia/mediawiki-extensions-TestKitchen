@@ -1,8 +1,8 @@
 <?php
 
 use MediaWiki\Context\RequestContext;
-use MediaWiki\Extension\EventLogging\Libs\UserBucketProvider\UserBucketService;
 use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
+use MediaWiki\Extension\TestKitchen\Sdk\UserEditCountService;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Registration\ExtensionRegistry;
 use MediaWiki\Title\Title;
@@ -31,7 +31,7 @@ class ContextualAttributesFactoryTest extends MediaWikiLangTestCase {
 			'contentLanguage' => $services->getContentLanguage(),
 			'userGroupManager' => $services->getUserGroupManager(),
 			'languageConverterFactory' => $services->getLanguageConverterFactory(),
-			'userBucketService' => new UserBucketService( $services->getUserEditTracker() ),
+			'userEditCountService' => new UserEditCountService(),
 		];
 
 		// Unit Under Test
@@ -194,7 +194,8 @@ class ContextualAttributesFactoryTest extends MediaWikiLangTestCase {
 
 		$expectedUserCanProbablyEditPage = $user->probablyCan( 'edit', $title );
 
-		$expectedUserEditCountBucket = $this->services['userBucketService']->getUserEditCountBucket( $user );
+		$userEditCountService = $this->services['userEditCountService'];
+		$expectedUserEditCountBucket = $userEditCountService->getUserEditCountBucket( $user->getEditCount() );
 
 		$expectedUserRegistrationTimestamp = $user->getRegistration();
 

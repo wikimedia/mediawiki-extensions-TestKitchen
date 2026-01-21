@@ -2,9 +2,11 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
+use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Context\IContextSource;
 use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
+use MediaWiki\MainConfigNames;
 use MediaWikiUnitTestCase;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use Wikimedia\Timestamp\TimestampFormat;
@@ -13,6 +15,8 @@ use Wikimedia\Timestamp\TimestampFormat;
  * @covers \MediaWiki\Extension\TestKitchen\Sdk\EventFactory
  */
 class EventFactoryTest extends MediaWikiUnitTestCase {
+	private const SERVER_NAME = 'EventFactoryTest';
+
 	private ContextualAttributesFactory $contextualAttributesFactory;
 	private IContextSource $contextSource;
 	private EventFactory $eventFactory;
@@ -21,7 +25,19 @@ class EventFactoryTest extends MediaWikiUnitTestCase {
 	public function setUp(): void {
 		$this->contextualAttributesFactory = $this->createMock( ContextualAttributesFactory::class );
 		$this->contextSource = $this->createMock( IContextSource::class );
-		$this->eventFactory = new EventFactory( $this->contextualAttributesFactory, $this->contextSource );
+
+		$options = new ServiceOptions(
+			EventFactory::CONSTRUCTOR_OPTIONS,
+			[
+				MainConfigNames::ServerName => self::SERVER_NAME,
+			]
+		);
+
+		$this->eventFactory = new EventFactory(
+			$this->contextualAttributesFactory,
+			$this->contextSource,
+			$options,
+		);
 
 		$this->now = ConvertibleTimestamp::now( TimestampFormat::ISO_8601 );
 
@@ -38,6 +54,7 @@ class EventFactoryTest extends MediaWikiUnitTestCase {
 			] );
 
 		$event = $this->eventFactory->newEvent(
+			'foo_stream',
 			'/foo/bar/1.0.0',
 			[
 				'agent_client_platform',
@@ -51,6 +68,10 @@ class EventFactoryTest extends MediaWikiUnitTestCase {
 
 		$this->assertArrayEquals(
 			[
+				'meta' => [
+					'domain' => self::SERVER_NAME,
+					'stream' => 'foo_stream',
+				],
 				'$schema' => '/foo/bar/1.0.0',
 				'dt' => $this->now,
 				'action' => 'foo',
@@ -70,6 +91,7 @@ class EventFactoryTest extends MediaWikiUnitTestCase {
 			->with( $this->contextSource );
 
 		$this->eventFactory->newEvent(
+			'foo_stream',
 			'/foo/bar/1.0.0',
 			[
 				'agent_client_platform',
@@ -77,6 +99,7 @@ class EventFactoryTest extends MediaWikiUnitTestCase {
 			'foo'
 		);
 		$this->eventFactory->newEvent(
+			'foo_stream',
 			'/foo/bar/1.0.0',
 			[
 				'agent_client_platform',
@@ -104,6 +127,7 @@ class EventFactoryTest extends MediaWikiUnitTestCase {
 			] );
 
 		$event = $this->eventFactory->newEvent(
+			'foo_stream',
 			'/foo/bar/1.0.0',
 			[],
 			'foo',

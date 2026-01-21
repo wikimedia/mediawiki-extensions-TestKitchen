@@ -2,8 +2,8 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
+use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\Instrument;
 use MediaWikiUnitTestCase;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
@@ -38,16 +38,16 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 		'funnel_event_sequence_position' => 1
 	];
 
-	private EventSubmitter $eventSubmitter;
+	private EventSender $eventSender;
 	private EventFactory $eventFactory;
 
 	public function setUp(): void {
 		parent::setUp();
-		$this->eventSubmitter = $this->createMock( EventSubmitter::class );
+		$this->eventSender = $this->createMock( EventSender::class );
 		$this->eventFactory = $this->createMock( EventFactory::class );
 
 		$this->instrument = new Instrument(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$this->instrumentConfig
 		);
@@ -62,6 +62,7 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 		$this->eventFactory->expects( $this->once() )
 			->method( 'newEvent' )
 			->with(
+				'product_metrics.web_base',
 				'/analytics/product_metrics/web/base/2.0.0',
 				[
 					'performer_name',
@@ -72,10 +73,10 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 			)
 			->willReturn( $expectedEvent );
 
-		$this->eventSubmitter
+		$this->eventSender
 			->expects( $this->once() )
-			->method( 'submit' )
-			->with( 'product_metrics.web_base', $expectedEvent );
+			->method( 'sendEvent' )
+			->with( $expectedEvent );
 
 		$this->instrument->send( $this->action, $this->interactionData );
 	}
@@ -89,6 +90,7 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 		$this->eventFactory->expects( $this->once() )
 			->method( 'newEvent' )
 			->with(
+				'product_metrics.web_base',
 				'/analytics/product_metrics/web/base/2.0.0',
 				[
 					'performer_name',
@@ -102,10 +104,9 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 			)
 			->willReturn( $expectedEvent );
 
-		$this->eventSubmitter
-			->expects( $this->once() )
-			->method( 'submit' )
-			->with( 'product_metrics.web_base', $expectedEvent );
+		$this->eventSender->expects( $this->once() )
+			->method( 'sendEvent' )
+			->with( $expectedEvent );
 
 		$this->instrument->send( $this->action );
 	}
@@ -124,7 +125,7 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 		];
 
 		$instrument = new Instrument(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$instrumentConfig
 		);
@@ -132,6 +133,7 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 		$this->eventFactory->expects( $this->once() )
 			->method( 'newEvent' )
 			->with(
+				'product_metrics.web_base',
 				'/analytics/product_metrics/web/base/2.0.0',
 				[],
 				$this->action,
@@ -139,10 +141,9 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 			)
 			->willReturn( $expectedEvent );
 
-		$this->eventSubmitter
-			->expects( $this->once() )
-			->method( 'submit' )
-			->with( 'product_metrics.web_base', $expectedEvent );
+		$this->eventSender->expects( $this->once() )
+			->method( 'sendEvent' )
+			->with( $expectedEvent );
 
 		$instrument->send( $this->action, $this->interactionData );
 	}

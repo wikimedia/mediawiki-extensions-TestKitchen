@@ -2,6 +2,7 @@
 
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Context\RequestContext;
+use MediaWiki\Extension\EventBus\EventBus;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 use MediaWiki\Extension\TestKitchen\Coordination\Coordinator;
 use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentAuthority;
@@ -10,11 +11,14 @@ use MediaWiki\Extension\TestKitchen\Coordination\LoggedInExperimentsEnrollmentAu
 use MediaWiki\Extension\TestKitchen\Coordination\OverridesEnrollmentAuthority;
 use MediaWiki\Extension\TestKitchen\Coordination\UserSplitterInstrumentation;
 use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
+use MediaWiki\Extension\TestKitchen\Sdk\DisabledEventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
+use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManagerInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
+use MediaWiki\Extension\TestKitchen\Sdk\UserEditCountService;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
 use Psr\Log\LoggerInterface;
@@ -77,22 +81,42 @@ return [
 				$services->getContentLanguage(),
 				$services->getUserGroupManager(),
 				$services->getLanguageConverterFactory(),
-				$services->get( 'EventLogging.UserBucketService' )
+				new UserEditCountService()
 			);
 		},
 	'TestKitchen.EventFactory' => static function ( MediaWikiServices $services ): EventFactory {
+		$options = new ServiceOptions(
+			EventFactory::CONSTRUCTOR_OPTIONS,
+			$services->getMainConfig()
+		);
+
 		return new EventFactory(
 			$services->getService( 'TestKitchen.ContextualAttributesFactory' ),
-			RequestContext::getMain()
+			RequestContext::getMain(),
+			$options
 		);
 	},
 	'TestKitchen.StaticStreamConfigs' => static function ( MediaWikiServices $services ): StreamConfigs {
 		return new StreamConfigs( $services->get( 'EventStreamConfig.StreamConfigs' ) );
 	},
+	'TestKitchen.EventSender' => static function ( MediaWikiServices $services ): EventSender {
+		if ( defined( 'MW_PHPUNIT_TEST' ) ) {
+			return new DisabledEventSender();
+		}
+
+		$config = $services->getMainConfig();
+
+		// Fall back to $wgEventServiceDefault to allow developers to update their development environments seamlessly
+		// and for integration tests to pass.
+		$eventServiceName =
+			$config->get( 'TestKitchenEventIntakeServiceName' ) ?: $config->get( 'EventServiceDefault' );
+
+		return new EventSender( EventBus::getInstance( $eventServiceName ) );
+	},
 	'TestKitchen.ExperimentManager' => static function ( MediaWikiServices $services ): ExperimentManager {
 		return new ExperimentManager(
 			$services->getService( 'TestKitchen.Logger' ),
-			$services->getService( 'EventLogging.EventSubmitter' ),
+			$services->getService( 'TestKitchen.EventSender' ),
 			$services->getService( 'TestKitchen.EventFactory' ),
 			$services->getStatsFactory(),
 			$services->getService( 'TestKitchen.StaticStreamConfigs' )
@@ -100,7 +124,7 @@ return [
 	},
 	'TestKitchen.InstrumentManager' => static function ( MediaWikiServices $services ): InstrumentManagerInterface {
 		return new InstrumentManager(
-			$services->getService( 'EventLogging.EventSubmitter' ),
+			$services->getService( 'TestKitchen.EventSender' ),
 			$services->getService( 'TestKitchen.EventFactory' ),
 			$services->getService( 'TestKitchen.ConfigsFetcher' )
 		);

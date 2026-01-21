@@ -2,7 +2,6 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 
 class InstrumentManager implements InstrumentManagerInterface {
@@ -12,7 +11,7 @@ class InstrumentManager implements InstrumentManagerInterface {
 	private ?array $instrumentConfigs = null;
 
 	public function __construct(
-		private readonly EventSubmitter $eventSubmitter,
+		private readonly EventSender $eventSender,
 		private readonly EventFactory $eventFactory,
 		private readonly ConfigsFetcher $configsFetcher
 	) {
@@ -39,7 +38,7 @@ class InstrumentManager implements InstrumentManagerInterface {
 		// The instrument doesn't exist
 		if ( $instrumentConfig == null ) {
 			return new UnsampledInstrument(
-				$this->eventSubmitter,
+				$this->eventSender,
 				$this->eventFactory,
 				[]
 			);
@@ -52,7 +51,7 @@ class InstrumentManager implements InstrumentManagerInterface {
 
 		// Required contextual attributes are added automatically by EventFactory, by taking them from $instrumentConfig
 		return new Instrument(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$instrumentConfig
 		);

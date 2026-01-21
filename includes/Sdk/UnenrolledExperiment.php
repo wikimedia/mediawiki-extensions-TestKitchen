@@ -2,7 +2,6 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use Wikimedia\Stats\StatsFactory;
 
 /**
@@ -12,13 +11,13 @@ class UnenrolledExperiment extends Experiment {
 	private const EMPTY_EXPERIMENT_CONFIG = [];
 
 	public function __construct(
-		EventSubmitter $eventSubmitter,
+		EventSender $eventSender,
 		EventFactory $eventFactory,
 		StatsFactory $statsFactory,
 		StreamConfigs $streamConfigs
 	) {
 		parent::__construct(
-			$eventSubmitter,
+			$eventSender,
 			$eventFactory,
 			$statsFactory,
 			$streamConfigs,

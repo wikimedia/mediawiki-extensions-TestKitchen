@@ -4,7 +4,6 @@ namespace MediaWiki\Extension\TestKitchen\Sdk;
 
 use MediaWiki\Config\Config;
 use MediaWiki\Context\IContextSource;
-use MediaWiki\Extension\EventLogging\Libs\UserBucketProvider\UserBucketService;
 use MediaWiki\Language\Language;
 use MediaWiki\Languages\LanguageConverterFactory;
 use MediaWiki\MainConfigNames;
@@ -35,7 +34,7 @@ class ContextualAttributesFactory {
 		private readonly Language $contentLanguage,
 		private readonly UserGroupManager $userGroupManager,
 		private readonly LanguageConverterFactory $languageConverterFactory,
-		private readonly UserBucketService $userBucketService
+		private readonly UserEditCountService $userEditCountService
 	) {
 	}
 
@@ -140,7 +139,8 @@ class ContextualAttributesFactory {
 		$userLanguageVariant = $languageConverter->hasVariants() ? $languageConverter->getPreferredVariant() : null;
 
 		$userEditCount = $user->getEditCount();
-		$userEditCountBucket = $user->isAnon() ? null : $this->userBucketService->bucketEditCount( $userEditCount );
+		$userEditCountBucket =
+			$user->isAnon() ? null : $this->userEditCountService->getUserEditCountBucket( $userEditCount );
 
 		$result = [
 			'performer_is_logged_in' => !$user->isAnon(),

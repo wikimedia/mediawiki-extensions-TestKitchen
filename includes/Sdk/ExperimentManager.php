@@ -2,7 +2,6 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use Psr\Log\LoggerInterface;
 use Wikimedia\Stats\StatsFactory;
 
@@ -17,7 +16,7 @@ class ExperimentManager implements ExperimentManagerInterface {
 
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly EventSubmitter $eventSubmitter,
+		private readonly EventSender $eventSender,
 		private readonly EventFactory $eventFactory,
 		private readonly StatsFactory $statsFactory,
 		StreamConfigs $staticStreamConfigs
@@ -60,7 +59,7 @@ class ExperimentManager implements ExperimentManagerInterface {
 			$this->logger->info( 'The current user is not enrolled in ' .
 				'the ' . $experimentName . ' experiment' );
 			return new UnenrolledExperiment(
-				$this->eventSubmitter,
+				$this->eventSender,
 				$this->eventFactory,
 				$this->statsFactory,
 				$this->streamConfigs
@@ -68,7 +67,7 @@ class ExperimentManager implements ExperimentManagerInterface {
 		} else {
 			if ( !in_array( $experimentName, $enrolledExperiments, true ) ) {
 				return new UnenrolledExperiment(
-					$this->eventSubmitter,
+					$this->eventSender,
 					$this->eventFactory,
 					$this->statsFactory,
 					$this->streamConfigs
@@ -81,7 +80,7 @@ class ExperimentManager implements ExperimentManagerInterface {
 		// The experiment enrolment has been overridden
 		if ( $experimentConfig['coordinator'] === 'forced' ) {
 			return new OverriddenExperiment(
-				$this->eventSubmitter,
+				$this->eventSender,
 				$this->eventFactory,
 				$this->statsFactory,
 				$this->streamConfigs,
@@ -91,7 +90,7 @@ class ExperimentManager implements ExperimentManagerInterface {
 		}
 
 		return new Experiment(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->streamConfigs,

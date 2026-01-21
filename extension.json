@@ -14,7 +14,7 @@
 		"MediaWiki": ">= 1.46",
 		"extensions": {
 			"EventStreamConfig": "*",
-			"EventLogging": "*"
+			"EventBus": "*"
 		}
 	},
 	"AutoloadNamespaces": {
@@ -39,6 +39,10 @@
 		"TestKitchenEnableExperimentConfigsFetching": {
 			"description": "Required by the GrowthExperiments extension. Supereded by $wgTestKitchenEnableConfigsFetching above.",
 			"value": false
+		},
+		"TestKitchenEventIntakeServiceName": {
+			"description": "The name of the event intake service that server-side instruments and experiments send events to. The value must be a key in $wgEventServices.",
+			"value": ""
 		},
 		"TestKitchenExperimentEventIntakeServiceUrl": {
 			"description": "The URL of the EventGate instance to send events to that originate from everyone experiments.",

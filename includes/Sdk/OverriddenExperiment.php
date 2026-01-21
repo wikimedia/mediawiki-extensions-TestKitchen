@@ -2,7 +2,6 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use Psr\Log\LoggerInterface;
 use Wikimedia\Stats\StatsFactory;
 
@@ -12,7 +11,7 @@ use Wikimedia\Stats\StatsFactory;
 class OverriddenExperiment extends Experiment {
 
 	public function __construct(
-		EventSubmitter $eventSubmitter,
+		EventSender $eventSender,
 		EventFactory $eventFactory,
 		StatsFactory $statsFactory,
 		StreamConfigs $streamConfigs,
@@ -20,7 +19,7 @@ class OverriddenExperiment extends Experiment {
 		array $experimentConfig,
 	) {
 		parent::__construct(
-			$eventSubmitter,
+			$eventSender,
 			$eventFactory,
 			$statsFactory,
 			$streamConfigs,

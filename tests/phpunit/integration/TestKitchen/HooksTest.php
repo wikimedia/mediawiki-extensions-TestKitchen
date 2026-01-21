@@ -7,6 +7,7 @@ use DateTimeZone;
 use MediaWiki\Actions\ActionEntryPoint;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Extension\TestKitchen\Hooks;
+use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\MediaWikiEntryPoint;
 use MediaWiki\Output\OutputPage;
 use MediaWiki\Skin\Skin;
@@ -90,6 +91,11 @@ class HooksTest
 		// CentralIdLookup service
 		$this->centralIdLookup = $this->createMock( CentralIdLookup::class );
 		$this->setService( 'CentralIdLookup', $this->centralIdLookup );
+
+		$this->setService(
+			'TestKitchen.EventSender',
+			$this->createMock( EventSender::class )
+		);
 
 		$this->resetServices();
 

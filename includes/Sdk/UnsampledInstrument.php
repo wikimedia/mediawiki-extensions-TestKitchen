@@ -2,20 +2,18 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
-
 /**
  * Represents a non-existing Instrument or an existing one that is not in sample
  */
 class UnsampledInstrument extends Instrument {
 
 	public function __construct(
-		private readonly EventSubmitter $eventSubmitter,
+		private readonly EventSender $eventSender,
 		private readonly EventFactory $eventFactory,
 		private array $instrumentConfig
 	) {
 		parent::__construct(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$instrumentConfig
 		);

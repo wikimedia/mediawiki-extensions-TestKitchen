@@ -2,9 +2,9 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use MediaWiki\Extension\EventStreamConfig\StreamConfigs as BaseStreamConfigs;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
+use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
 use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
 use MediaWikiUnitTestCase;
@@ -52,7 +52,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		'action_context' => 'test_action_context',
 	];
 
-	private EventSubmitter $eventSubmitter;
+	private EventSender $eventSender;
 	private EventFactory $eventFactory;
 	private StatsFactory $statsFactory;
 	private StreamConfigs $streamConfigs;
@@ -60,7 +60,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 
 	public function setUp(): void {
 		parent::setUp();
-		$this->eventSubmitter = $this->createMock( EventSubmitter::class );
+		$this->eventSender = $this->createMock( EventSender::class );
 		$this->eventFactory = $this->createMock( EventFactory::class );
 
 		$this->statsHelper = StatsFactory::newUnitTestingHelper();
@@ -94,7 +94,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		$this->streamConfigs = new StreamConfigs( $baseStreamConfigs );
 
 		$this->experiment = new Experiment(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->streamConfigs,
@@ -109,7 +109,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 
 	public function testGetAssignedGroupWithNoExperimentConfig() {
 		$experiment = new Experiment(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->streamConfigs,
@@ -139,6 +139,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		$this->eventFactory->expects( $this->once() )
 			->method( 'newEvent' )
 			->with(
+				'product_metrics.web_base',
 				'/analytics/product_metrics/web/base/2.0.0',
 				[
 					'agent_client_platform',
@@ -152,10 +153,10 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			)
 			->willReturn( $expectedEvent );
 
-		$this->eventSubmitter
+		$this->eventSender
 			->expects( $this->once() )
-			->method( 'submit' )
-			->with( 'product_metrics.web_base', $expectedEvent );
+			->method( 'sendEvent' )
+			->with( $expectedEvent );
 
 		$this->experiment->send( $this->action, $this->interactionData );
 
@@ -177,6 +178,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		$this->eventFactory->expects( $this->once() )
 			->method( 'newEvent' )
 			->with(
+				'product_metrics.web_base',
 				'/analytics/product_metrics/web/base/2.0.0',
 				[
 					'agent_client_platform',
@@ -187,10 +189,10 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			)
 			->willReturn( $expectedEvent );
 
-		$this->eventSubmitter
+		$this->eventSender
 			->expects( $this->once() )
-			->method( 'submit' )
-			->with( 'product_metrics.web_base', $expectedEvent );
+			->method( 'sendEvent' )
+			->with( $expectedEvent );
 
 		$this->experiment->send( $this->action );
 
@@ -202,7 +204,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 
 	public function testSendArgumentsWithEmptyExperimentConfig() {
 		$experiment = new Experiment(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->streamConfigs,
@@ -213,9 +215,9 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->expects( $this->never() )
 			->method( 'newEvent' );
 
-		$this->eventSubmitter
+		$this->eventSender
 			->expects( $this->never() )
-			->method( 'submit' );
+			->method( 'sendEvent' );
 
 		$experiment->send( $this->action, $this->interactionData );
 
@@ -266,6 +268,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		$this->eventFactory->expects( $this->once() )
 			->method( 'newEvent' )
 			->with(
+				$newStream,
 				$this->experimentConfig['schema_id'],
 				$this->differentContextualAtributes,
 				$this->action,
@@ -273,9 +276,9 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			)
 			->willReturn( $expectedEvent );
 
-		$this->eventSubmitter->expects( $this->once() )
-			->method( 'submit' )
-			->with( $newStream, $expectedEvent );
+		$this->eventSender->expects( $this->once() )
+			->method( 'sendEvent' )
+			->with( $expectedEvent );
 
 		$return = $this->experiment->setStream( $newStream );
 		$this->assertSame( $this->experiment, $return );
@@ -314,6 +317,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		$this->eventFactory->expects( $this->once() )
 			->method( 'newEvent' )
 			->with(
+				$this->experimentConfig['stream_name'],
 				$newSchema,
 				$this->experimentConfig['contextual_attributes'],
 				$this->action,
@@ -321,9 +325,9 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			)
 			->willReturn( $expectedEvent );
 
-		$this->eventSubmitter->expects( $this->once() )
-			->method( 'submit' )
-			->with( $this->experimentConfig['stream_name'], $expectedEvent );
+		$this->eventSender->expects( $this->once() )
+			->method( 'sendEvent' )
+			->with( $expectedEvent );
 
 		$return = $this->experiment->setSchema( $newSchema );
 		$this->assertSame( $this->experiment, $return );

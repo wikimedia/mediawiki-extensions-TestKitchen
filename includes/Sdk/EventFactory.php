@@ -2,7 +2,9 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
+use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Context\IContextSource;
+use MediaWiki\MainConfigNames;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
 use Wikimedia\Timestamp\TimestampFormat;
 
@@ -20,18 +22,26 @@ use Wikimedia\Timestamp\TimestampFormat;
  * @internal
  */
 class EventFactory {
+	public const CONSTRUCTOR_OPTIONS = [
+		MainConfigNames::ServerName,
+	];
 
 	private const REQUIRED_CONTEXTUAL_ATTRIBUTES = [
 		'agent_client_platform',
 		'agent_client_platform_family',
 	];
 
+	private string $domain;
 	private ?array $contextualAttributes = null;
 
 	public function __construct(
 		private readonly ContextualAttributesFactory $contextualAttributesFactory,
-		private readonly IContextSource $contextSource
+		private readonly IContextSource $contextSource,
+		ServiceOptions $options
 	) {
+		$options->assertRequiredOptions( self::CONSTRUCTOR_OPTIONS );
+
+		$this->domain = $options->get( MainConfigNames::ServerName );
 	}
 
 	/**
@@ -46,12 +56,14 @@ class EventFactory {
 	 * If `$interactionData` is set, then it will be added to the event. If recognized contextual attributes are
 	 * requested, they will be added to the event.
 	 *
+	 * @param string $streamName
 	 * @param string $schemaID
 	 * @param array $contextualAttributes
 	 * @param string $action
 	 * @param array|null $interactionData
 	 */
 	public function newEvent(
+		string $streamName,
 		string $schemaID,
 		array $contextualAttributes,
 		string $action,
@@ -61,6 +73,10 @@ class EventFactory {
 			'action' => $action,
 			...$interactionData,
 			'$schema' => $schemaID,
+			'meta' => [
+				'domain' => $this->domain,
+				'stream' => $streamName,
+			],
 			'dt' => $this->getTimestamp(),
 		];
 

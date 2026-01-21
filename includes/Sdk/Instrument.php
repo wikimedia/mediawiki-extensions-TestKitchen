@@ -2,8 +2,6 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
-
 /**
  * Represents an Instrument that is in sample
  */
@@ -12,7 +10,7 @@ class Instrument implements InstrumentInterface {
 	private int $eventSequencePosition;
 
 	public function __construct(
-		private readonly EventSubmitter $eventSubmitter,
+		private readonly EventSender $eventSender,
 		private readonly EventFactory $eventFactory,
 		private array $instrumentConfig
 	) {
@@ -37,13 +35,14 @@ class Instrument implements InstrumentInterface {
 		);
 
 		$event = $this->eventFactory->newEvent(
+			$streamName,
 			$schemaID,
 			$contextualAttributes,
 			$action,
 			$interactionData
 		);
 
-		$this->eventSubmitter->submit( $streamName, $event );
+		$this->eventSender->sendEvent( $event );
 	}
 
 	/**

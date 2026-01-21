@@ -2,10 +2,10 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use MediaWiki\Extension\EventStreamConfig\StreamConfigs as BaseStreamConfigs;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
+use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\Instrument;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
@@ -16,7 +16,7 @@ use MediaWikiUnitTestCase;
  * @covers \MediaWiki\Extension\TestKitchen\Sdk\InstrumentManager
  */
 class InstrumentManagerTest extends MediaWikiUnitTestCase {
-	private EventSubmitter $eventSubmitter;
+	private EventSender $eventSender;
 	private EventFactory $eventFactory;
 	private InstrumentManager $instrumentManager;
 	private StreamConfigs $staticStreamConfigs;
@@ -25,7 +25,7 @@ class InstrumentManagerTest extends MediaWikiUnitTestCase {
 	public function setUp(): void {
 		parent::setUp();
 
-		$this->eventSubmitter = $this->createMock( EventSubmitter::class );
+		$this->eventSender = $this->createMock( EventSender::class );
 		$this->eventFactory = $this->createMock( EventFactory::class );
 		$this->configsFetcher = $this->createMock( ConfigsFetcher::class );
 
@@ -47,7 +47,7 @@ class InstrumentManagerTest extends MediaWikiUnitTestCase {
 		$this->staticStreamConfigs = new StreamConfigs( $baseStreamConfigs );
 
 		$this->instrumentManager = new InstrumentManager(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			$this->configsFetcher
 		);
@@ -88,7 +88,7 @@ class InstrumentManagerTest extends MediaWikiUnitTestCase {
 			->willReturn( $instrumentConfigs );
 
 		$expectedInstrument = new Instrument(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			[
 				'name' => 'my-instrument',
@@ -113,7 +113,7 @@ class InstrumentManagerTest extends MediaWikiUnitTestCase {
 
 	public function testGetNonExistingInstrument(): void {
 		$expectedInstrument = new UnsampledInstrument(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			[]
 		);
@@ -124,7 +124,7 @@ class InstrumentManagerTest extends MediaWikiUnitTestCase {
 
 	public function testGetUnsampledInstrument(): void {
 		$expectedInstrument = new UnsampledInstrument(
-			$this->eventSubmitter,
+			$this->eventSender,
 			$this->eventFactory,
 			[]
 		);

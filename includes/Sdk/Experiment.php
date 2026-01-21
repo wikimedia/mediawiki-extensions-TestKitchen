@@ -2,7 +2,6 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
 use Wikimedia\Stats\StatsFactory;
 
 /**
@@ -13,7 +12,7 @@ class Experiment implements ExperimentInterface {
 	protected array $experimentConfig;
 
 	public function __construct(
-		private readonly EventSubmitter $eventSubmitter,
+		private readonly EventSender $eventSender,
 		private readonly EventFactory $eventFactory,
 		private readonly StatsFactory $statsFactory,
 		private readonly StreamConfigs $staticStreamConfigs,
@@ -60,13 +59,14 @@ class Experiment implements ExperimentInterface {
 			);
 
 			$event = $this->eventFactory->newEvent(
+				$streamName,
 				$schemaID,
 				$contextualAttributes,
 				$action,
 				$interactionData
 			);
 
-			$this->eventSubmitter->submit( $streamName, $event );
+			$this->eventSender->sendEvent( $event );
 
 			// Increment the total number of events sent for each experiment (T401706).
 			$this->incrementExperimentEventsSentTotal( $this->experimentConfig['enrolled'] );
