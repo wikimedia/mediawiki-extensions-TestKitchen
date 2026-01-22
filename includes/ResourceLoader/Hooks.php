@@ -20,12 +20,9 @@ class Hooks {
 		return [
 			'EveryoneExperimentEventIntakeServiceUrl' =>
 				$config->get( 'TestKitchenExperimentEventIntakeServiceUrl' ),
-
-			// NOTE: TestKitchen has a hard dependency on EventLogging. If this code is executing, then
-			// EventLogging is loaded and this config variable is defined.
-			'LoggedInExperimentEventIntakeServiceUrl' => $config->get( 'EventLoggingServiceUri' ),
-
-			'InstrumentEventIntakeServiceUrl' => $config->get( 'EventLoggingServiceUri' ),
+			'LoggedInExperimentEventIntakeServiceUrl' =>
+				$config->get( 'TestKitchenLoggedInExperimentEventIntakeServiceUrl' ),
+			'InstrumentEventIntakeServiceUrl' => $config->get( 'TestKitchenInstrumentEventIntakeServiceUrl' ),
 
 			'streamConfigs' => self::getStreamConfigs( $config ),
 			'instrumentConfigs' => self::getStreamConfigsForInstruments(),

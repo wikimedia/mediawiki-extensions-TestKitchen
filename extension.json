@@ -37,7 +37,15 @@
 			"value": false
 		},
 		"TestKitchenExperimentEventIntakeServiceUrl": {
-			"description": "The URL of the EventGate experiment-related event intake service.",
+			"description": "The URL of the EventGate instance to send events to that originate from everyone experiments.",
+			"value": "http://localhost:8192/v1/events?hasty=true"
+		},
+		"TestKitchenLoggedInExperimentEventIntakeServiceUrl": {
+			"description": "The URL of the EventGate instance to send events to that originate from logged-in experiments.",
+			"value": "http://localhost:8192/v1/events?hasty=true"
+		},
+		"TestKitchenInstrumentEventIntakeServiceUrl": {
+			"description": "The URL of the EventGate instance to send events to that originate from instruments.",
 			"value": "http://localhost:8192/v1/events?hasty=true"
 		},
 		"TestKitchenExperimentStreamNames": {
