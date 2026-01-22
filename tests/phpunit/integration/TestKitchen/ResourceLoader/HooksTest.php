@@ -26,7 +26,8 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 		$this->context = RL\Context::newDummyContext();
 		$this->config = new HashConfig( [
 			'TestKitchenExperimentEventIntakeServiceUrl' => 'http://foo.bar',
-			'EventLoggingServiceUri' => 'http://baz.qux',
+			'TestKitchenLoggedInExperimentEventIntakeServiceUrl' => 'http://baz.qux',
+			'TestKitchenInstrumentEventIntakeServiceUrl' => 'http://quux.corge',
 			'TestKitchenExperimentStreamNames' => [
 				'product_metrics.web_base',
 			]
@@ -40,7 +41,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			[
 				'EveryoneExperimentEventIntakeServiceUrl' => 'http://foo.bar',
 				'LoggedInExperimentEventIntakeServiceUrl' => 'http://baz.qux',
-				'InstrumentEventIntakeServiceUrl' => 'http://baz.qux',
+				'InstrumentEventIntakeServiceUrl' => 'http://quux.corge',
 			],
 			$configForTestKitchenModule
 		);
