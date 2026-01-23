@@ -6,5 +6,5 @@
 	},
 	"testkitchen-desc": "Isto es le extension Test Kitchen",
 	"testkitchen-non-successful-response": "Le API de Test Kitchen ha restituite un responsa que indica un non-successo.",
-	"testkitchen-api-empty-response-body": "Le API Test Kitchen ha retornate un responsa con un corpore vacue."
+	"testkitchen-api-empty-response-body": "Le API de Test Kitchen ha restituite un responsa con un corpore vacue."
 }
