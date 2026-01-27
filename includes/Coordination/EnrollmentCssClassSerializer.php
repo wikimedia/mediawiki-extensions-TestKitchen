@@ -30,10 +30,11 @@ class EnrollmentCssClassSerializer {
 	/**
 	 * Serializes the name so that it can be used as part of a CSS class.
 	 *
-	 * This implementation follows the one at [data-engineering/mpic/src/composables/utility.js#L5][0], which is also
-	 * owned and maintained by the Experiment Platform team.
+	 * This implementation follows the one at [data-engineering/test-kitchen/src/composables/utility.js#L5][0], which is
+	 * also owned and maintained by the Experiment Platform team.
 	 *
-	 * [0]: https://gitlab.wikimedia.org/repos/data-engineering/mpic/-/blob/24466ffd9590c35e129ee8c431f9ad4145498fee/frontend/src/composables/utility.js#L5
+	 * [0]:
+	 * https://gitlab.wikimedia.org/repos/data-engineering/test-kitchen/-/blob/24466ffd9590c35e129ee8c431f9ad4145498fee/frontend/src/composables/utility.js#L5
 	 *
 	 * @param string $name
 	 * @return string
