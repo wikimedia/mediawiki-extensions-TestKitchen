@@ -10,12 +10,15 @@ use Wikimedia\Stats\StatsFactory;
  */
 class Experiment implements ExperimentInterface {
 
+	protected array $experimentConfig;
+
 	public function __construct(
 		private readonly EventSubmitter $eventSubmitter,
 		private readonly EventFactory $eventFactory,
 		private readonly StatsFactory $statsFactory,
-		protected readonly array $experimentConfig
+		array $experimentConfig
 	) {
+		$this->experimentConfig = $experimentConfig;
 	}
 
 	/**
@@ -76,6 +79,28 @@ class Experiment implements ExperimentInterface {
 	 */
 	public function getExperimentConfig(): ?array {
 		return $this->experimentConfig;
+	}
+
+	/**
+	 * Sets the stream to send analytics events.
+	 *
+	 * @param string $streamName
+	 * @return $this
+	 */
+	public function setStream( string $streamName ): self {
+		$this->experimentConfig['stream_name'] = $streamName;
+		return $this;
+	}
+
+	/**
+	 * Sets the ID of the schema used to validate analytics events sent.
+	 *
+	 * @param string $schemaId
+	 * @return $this
+	 */
+	public function setSchema( string $schemaId ): self {
+		$this->experimentConfig['schema_id'] = $schemaId;
+		return $this;
 	}
 
 	/**

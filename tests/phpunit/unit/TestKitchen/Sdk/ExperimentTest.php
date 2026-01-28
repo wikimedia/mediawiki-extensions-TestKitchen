@@ -9,6 +9,7 @@ use MediaWikiUnitTestCase;
 use Wikimedia\Stats\StatsFactory;
 use Wikimedia\Stats\UnitTestingHelper;
 use Wikimedia\Timestamp\ConvertibleTimestamp;
+use Wikimedia\Timestamp\TimestampFormat;
 
 /**
  * @covers \MediaWiki\Extension\TestKitchen\Sdk\Experiment
@@ -94,7 +95,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 
 		$expectedEvent = [
 			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
-			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 ),
+			'dt' => ConvertibleTimestamp::now( TimestampFormat::ISO_8601 ),
 		];
 
 		$this->eventFactory->expects( $this->once() )
@@ -184,6 +185,114 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 
 		$this->assertSame(
 			[],
+			$this->statsHelper->consumeAllFormatted()
+		);
+	}
+
+	public function testSetStream(): void {
+		$newStream = 'product_metrics.custom_stream';
+
+		$return = $this->experiment->setStream( $newStream );
+
+		$this->assertSame( $this->experiment, $return );
+		$this->assertSame(
+			$newStream,
+			$this->experiment->getExperimentConfig()['stream_name']
+		);
+	}
+
+	public function testSetSchema(): void {
+		$newSchema = '/analytics/product_metrics/web/custom/1.0.0';
+
+		$return = $this->experiment->setSchema( $newSchema );
+
+		$this->assertSame( $this->experiment, $return );
+		$this->assertSame(
+			$newSchema,
+			$this->experiment->getExperimentConfig()['schema_id']
+		);
+	}
+
+	public function testSetStreamAndSend(): void {
+		$newStream = 'product_metrics.custom_stream';
+
+		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
+		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+
+		$expectedEvent = [
+			'$schema' => $this->experimentConfig['schema_id'],
+			'dt' => ConvertibleTimestamp::now( TimestampFormat::ISO_8601 ),
+		];
+
+		$this->eventFactory->expects( $this->once() )
+			->method( 'newEvent' )
+			->with(
+				$this->experimentConfig['schema_id'],
+				$this->experimentConfig['contextual_attributes'],
+				$this->action,
+				array_merge( $this->interactionData, [ 'experiment' => $expectedExperimentConfig ] )
+			)
+			->willReturn( $expectedEvent );
+
+		$this->eventSubmitter->expects( $this->once() )
+			->method( 'submit' )
+			->with( $newStream, $expectedEvent );
+
+		$return = $this->experiment->setStream( $newStream );
+		$this->assertSame( $this->experiment, $return );
+
+		$this->assertSame(
+			$newStream,
+			$this->experiment->getExperimentConfig()['stream_name'] ?? null,
+			'setStream() should update experimentConfig stream_name'
+		);
+
+		$this->experiment->send( $this->action, $this->interactionData );
+
+		$this->assertSame(
+			[ 'mediawiki.TestKitchen.experiment_events_sent_total:1|c|#experiment:test_experiment' ],
+			$this->statsHelper->consumeAllFormatted()
+		);
+	}
+
+	public function testSetSchemaAndSend(): void {
+		$newSchema = '/analytics/product_metrics/web/custom/1.0.0';
+
+		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
+		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+
+		$expectedEvent = [
+			'$schema' => $newSchema,
+			'dt' => ConvertibleTimestamp::now( TimestampFormat::ISO_8601 ),
+		];
+
+		$this->eventFactory->expects( $this->once() )
+			->method( 'newEvent' )
+			->with(
+				$newSchema,
+				$this->experimentConfig['contextual_attributes'],
+				$this->action,
+				array_merge( $this->interactionData, [ 'experiment' => $expectedExperimentConfig ] )
+			)
+			->willReturn( $expectedEvent );
+
+		$this->eventSubmitter->expects( $this->once() )
+			->method( 'submit' )
+			->with( $this->experimentConfig['stream_name'], $expectedEvent );
+
+		$return = $this->experiment->setSchema( $newSchema );
+		$this->assertSame( $this->experiment, $return );
+
+		$this->assertSame(
+			$newSchema,
+			$this->experiment->getExperimentConfig()['schema_id'] ?? null,
+			'setSchema() should update experimentConfig schema_id'
+		);
+
+		$this->experiment->send( $this->action, $this->interactionData );
+
+		$this->assertSame(
+			[ 'mediawiki.TestKitchen.experiment_events_sent_total:1|c|#experiment:test_experiment' ],
 			$this->statsHelper->consumeAllFormatted()
 		);
 	}
