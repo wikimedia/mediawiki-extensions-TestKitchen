@@ -52,7 +52,7 @@ class HooksTest
 
 		$this->overrideConfigValues( [
 			'TestKitchenEnableExperiments' => true,
-			'TestKitchenEnableExperimentConfigsFetching' => true,
+			'TestKitchenEnableConfigsFetching' => true,
 		] );
 
 		$now = new DateTimeImmutable( 'now', new DateTimeZone( 'UTC' ) );

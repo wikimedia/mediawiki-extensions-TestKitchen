@@ -231,12 +231,38 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		);
 	}
 
+	public function testGetConfigsUsesInProcessCache(): void {
+		$key = $this->stash->makeGlobalKey(
+			'TestKitchen',
+			'instrument',
+			1
+		);
+		$value = array_slice( $this->instrumentConfigs['responseArray'], 0, 2 );
+
+		$this->cache->set( $key, $value );
+
+		$expectedValue = $this->fetcher->getInstrumentConfigs();
+
+		$this->cache->delete( $key );
+
+		$this->assertSame(
+			$expectedValue,
+			$this->fetcher->getInstrumentConfigs(),
+			'The value from the in-process cache is used'
+		);
+	}
+
 	private function mockOptions() {
 		return new ServiceOptions(
-			[ 'TestKitchenInstrumentConfiguratorBaseUrl', 'DBname' ],
+			[
+				'TestKitchenInstrumentConfiguratorBaseUrl',
+				'DBname',
+				'TestKitchenEnableConfigsFetching'
+			],
 			[
 				'TestKitchenInstrumentConfiguratorBaseUrl' => 'baseUrl',
 				'DBname' => 'enwiki',
+				'TestKitchenEnableConfigsFetching' => false,
 			] );
 	}
 

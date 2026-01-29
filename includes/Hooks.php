@@ -30,7 +30,6 @@ class Hooks implements
 {
 	public const CONSTRUCTOR_OPTIONS = [
 		'TestKitchenEnableExperiments',
-		'TestKitchenEnableExperimentConfigsFetching',
 	];
 
 	private ?EnrollmentResultBuilder $latestEnrollmentResult = null;
@@ -46,11 +45,6 @@ class Hooks implements
 			$config->has( 'TestKitchenEnableExperiments' ),
 			'$config',
 			'Required config "TestKitchenEnableExperiments" missing.'
-		);
-		Assert::parameter(
-			$config->has( 'TestKitchenEnableExperimentConfigsFetching' ),
-			'$config',
-			'Required config "TestKitchenEnableExperimentConfigsFetching" missing.'
 		);
 		Assert::parameter(
 			$config->has( 'TestKitchenAuthPreserveQueryParamsExperiments' ),
@@ -154,10 +148,6 @@ class Hooks implements
 
 		// Optimization: Only get experiment configs from the ConfigsFetcher's backing store if the user is registered.
 		if ( $user->isRegistered() ) {
-			if ( $this->config->get( 'TestKitchenEnableExperimentConfigsFetching' ) ) {
-				$this->configsFetcher->updateExperimentConfigs();
-			}
-
 			$activeLoggedInExperiments = $this->config->has( 'TestKitchenExperiments' ) ?
 				$this->config->get( 'TestKitchenExperiments' ) :
 				$this->configsFetcher->getExperimentConfigs();

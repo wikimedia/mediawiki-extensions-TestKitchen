@@ -26,14 +26,15 @@ class ConfigsFetcher {
 	public const TESTKITCHEN_API_EXPERIMENTS_ENDPOINT = "/api/v1/experiments?format=config&authority=mediawiki";
 
 	/**
-	 * Name of the main config key(s) for instrument configuration.
-	 *
 	 * @var array
 	 */
 	public const CONSTRUCTOR_OPTIONS = [
 		'TestKitchenInstrumentConfiguratorBaseUrl',
 		MainConfigNames::DBname,
+		'TestKitchenEnableConfigsFetching',
 	];
+
+	private array $processCache = [];
 
 	public function __construct(
 		private readonly ServiceOptions $options,
@@ -64,6 +65,20 @@ class ConfigsFetcher {
 	}
 
 	private function getConfigs( int $type ): array {
+		if ( isset( $this->processCache[$type] ) ) {
+			return $this->processCache[$type];
+		}
+
+		if ( $this->options->get( 'TestKitchenEnableConfigsFetching' ) ) {
+			$this->updateConfigs( $type );
+		}
+
+		$this->processCache[$type] = $this->getConfigsInternal( $type );
+
+		return $this->processCache[$type];
+	}
+
+	private function getConfigsInternal( int $type ): array {
 		$key = $this->makeCacheKey( $type );
 		$configs = $this->cache->get( $key );
 

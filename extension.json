@@ -32,8 +32,12 @@
 			"description": "If this is falsy, then all experiment-related behavior is disabled.",
 			"value": false
 		},
+		"TestKitchenEnableConfigsFetching": {
+			"description": "Enable fetching instrument and experiment configs from Test Kitchen UI during the request. WARNING: This will degrade performance for logged-in users and should not be enabled in production.",
+			"value": false
+		},
 		"TestKitchenEnableExperimentConfigsFetching": {
-			"description": "Enable fetching experiment configs from Test Kitchen during the request if no experiments are defined in $wgTestKitchenExperiments. WARNING: This will degrade performance for logged-in users.",
+			"description": "Required by the GrowthExperiments extension. Supereded by $wgTestKitchenEnableConfigsFetching above.",
 			"value": false
 		},
 		"TestKitchenExperimentEventIntakeServiceUrl": {
