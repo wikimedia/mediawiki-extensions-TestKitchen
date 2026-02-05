@@ -12,6 +12,8 @@ use MediaWiki\Extension\TestKitchen\Coordination\UserSplitterInstrumentation;
 use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
+use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManager;
+use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManagerInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
@@ -94,6 +96,13 @@ return [
 			$services->getService( 'TestKitchen.EventFactory' ),
 			$services->getStatsFactory(),
 			$services->getService( 'TestKitchen.StaticStreamConfigs' )
+		);
+	},
+	'TestKitchen.InstrumentManager' => static function ( MediaWikiServices $services ): InstrumentManagerInterface {
+		return new InstrumentManager(
+			$services->getService( 'EventLogging.EventSubmitter' ),
+			$services->getService( 'TestKitchen.EventFactory' ),
+			$services->getService( 'TestKitchen.ConfigsFetcher' )
 		);
 	},
 	'TestKitchen.Coordinator' => static function ( MediaWikiServices $services ): Coordinator {
