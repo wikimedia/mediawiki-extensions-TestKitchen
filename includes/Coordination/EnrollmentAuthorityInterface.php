@@ -5,6 +5,8 @@ namespace MediaWiki\Extension\TestKitchen\Coordination;
 /**
  * Represents a process that performs experiment enrollment sampling, the act of enrolling a user
  * into one or more active experiments.
+ *
+ * @deprecated
  */
 interface EnrollmentAuthorityInterface {
 

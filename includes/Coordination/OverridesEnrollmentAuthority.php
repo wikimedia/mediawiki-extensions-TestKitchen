@@ -18,6 +18,8 @@ use Psr\Log\LoggerInterface;
  *
  * See https://doc.wikimedia.org/TestKitchen/master/js/mw.testKitchen.html#.overrideExperimentGroup
  * for more detail about the client-side part to overriding experiment enrollments.
+ *
+ * @deprecated
  */
 class OverridesEnrollmentAuthority implements EnrollmentAuthorityInterface {
 	private const SUBJECT_ID = 'overridden';

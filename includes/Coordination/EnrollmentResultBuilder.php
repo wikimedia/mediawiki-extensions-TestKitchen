@@ -14,7 +14,6 @@ class EnrollmentResultBuilder {
 	private array $subjectIDs = [];
 	private array $samplingUnits = [];
 	private array $coordinator = [];
-	private ?array $enrollments = null;
 
 	public function addExperiment( string $experimentName, string $subjectID, string $samplingUnit ): void {
 		$this->activeExperiments[ $experimentName ] = true;
@@ -42,18 +41,15 @@ class EnrollmentResultBuilder {
 	 * @return array
 	 */
 	public function build(): array {
-		if ( $this->enrollments === null ) {
-			$this->enrollments = [
-				'active_experiments' => array_keys( $this->activeExperiments ),
-				'overrides' => array_keys( $this->overrides ),
-				'enrolled' => array_keys( $this->enrolled ),
-				'assigned' => $this->assigned,
-				'subject_ids' => $this->subjectIDs,
-				'sampling_units' => $this->samplingUnits,
-				'coordinator' => $this->coordinator,
-			];
-		}
-		return $this->enrollments;
+		return [
+			'active_experiments' => array_keys( $this->activeExperiments ),
+			'overrides' => array_keys( $this->overrides ),
+			'enrolled' => array_keys( $this->enrolled ),
+			'assigned' => $this->assigned,
+			'subject_ids' => $this->subjectIDs,
+			'sampling_units' => $this->samplingUnits,
+			'coordinator' => $this->coordinator,
+		];
 	}
 
 	/**

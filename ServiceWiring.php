@@ -6,15 +6,19 @@ use MediaWiki\Extension\EventBus\EventBus;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 use MediaWiki\Extension\TestKitchen\Coordination\Coordinator;
 use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentAuthority;
+use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentsProcessor;
 use MediaWiki\Extension\TestKitchen\Coordination\EveryoneExperimentsEnrollmentAuthority;
 use MediaWiki\Extension\TestKitchen\Coordination\LoggedInExperimentsEnrollmentAuthority;
 use MediaWiki\Extension\TestKitchen\Coordination\OverridesEnrollmentAuthority;
+use MediaWiki\Extension\TestKitchen\Coordination\RequestEnrollmentsProcessor;
 use MediaWiki\Extension\TestKitchen\Coordination\UserSplitterInstrumentation;
 use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\DisabledEventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
+use MediaWiki\Extension\TestKitchen\Sdk\ExperimentCoordinatorInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
+use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManagerInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManagerInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
@@ -25,9 +29,11 @@ use Psr\Log\LoggerInterface;
 
 return [
 	'TestKitchen.ConfigsFetcher' => static function ( MediaWikiServices $services ): ConfigsFetcher  {
+		$config = $services->getMainConfig();
+
 		$options = new ServiceOptions(
 			ConfigsFetcher::CONSTRUCTOR_OPTIONS,
-			$services->getMainConfig()
+			$config
 		);
 
 		$cache = $services->getObjectCacheFactory()->getLocalClusterInstance();
@@ -35,6 +41,7 @@ return [
 
 		return new ConfigsFetcher(
 			$options,
+			$config,
 			$cache,
 			$stash,
 			$services->getHttpRequestFactory(),
@@ -46,22 +53,30 @@ return [
 	'TestKitchen.Logger' => static function (): LoggerInterface {
 		return LoggerFactory::getInstance( 'TestKitchen' );
 	},
+
+	// @deprecated
 	'TestKitchen.EveryoneExperimentsEnrollmentAuthority' =>
 		static function ( MediaWikiServices $services ): EveryoneExperimentsEnrollmentAuthority {
 			return new EveryoneExperimentsEnrollmentAuthority(
 				$services->getService( 'TestKitchen.Logger' )
 			);
 		},
+
+	// @deprecated
 	'TestKitchen.LoggedInExperimentsEnrollmentAuthority' =>
 		static function ( MediaWikiServices $services ): LoggedInExperimentsEnrollmentAuthority {
 			return new LoggedInExperimentsEnrollmentAuthority( $services->getCentralIdLookup() );
 		},
+
+	// @deprecated
 	'TestKitchen.OverridesEnrollmentAuthority' =>
 		static function ( MediaWikiServices $services ): OverridesEnrollmentAuthority {
 			return new OverridesEnrollmentAuthority(
 				$services->getService( 'TestKitchen.Logger' )
 			);
 		},
+
+	// @deprecated
 	'TestKitchen.EnrollmentAuthority' =>
 		static function ( MediaWikiServices $services ): EnrollmentAuthority {
 			return new EnrollmentAuthority(
@@ -70,6 +85,7 @@ return [
 				$services->getService( 'TestKitchen.OverridesEnrollmentAuthority' )
 			);
 		},
+
 	'TestKitchen.ContextualAttributesFactory' =>
 		static function ( MediaWikiServices $services ): ContextualAttributesFactory {
 			return new ContextualAttributesFactory(
@@ -113,12 +129,27 @@ return [
 
 		return new EventSender( EventBus::getInstance( $eventServiceName ) );
 	},
-	'TestKitchen.ExperimentManager' => static function ( MediaWikiServices $services ): ExperimentManager {
+	'TestKitchen.RequestEnrollmentsProcessor' =>
+		static function ( MediaWikiServices $services ): RequestEnrollmentsProcessor {
+			return new RequestEnrollmentsProcessor(
+				$services->getService( 'TestKitchen.Logger' ),
+			);
+		},
+	'TestKitchen.EnrollmentsProcessor' => static function ( MediaWikiServices $services ): EnrollmentsProcessor {
+		return new EnrollmentsProcessor(
+			new UserSplitterInstrumentation()
+		);
+	},
+	'TestKitchen.ExperimentManager' => static function ( MediaWikiServices $services ): ExperimentManagerInterface {
 		return new ExperimentManager(
 			$services->getService( 'TestKitchen.Logger' ),
 			$services->getService( 'TestKitchen.EventSender' ),
 			$services->getService( 'TestKitchen.EventFactory' ),
 			$services->getStatsFactory(),
+			$services->getService( 'TestKitchen.RequestEnrollmentsProcessor' ),
+			$services->getService( 'TestKitchen.EnrollmentsProcessor' ),
+			$services->getCentralIdLookup(),
+			$services->getService( 'TestKitchen.ConfigsFetcher' ),
 			$services->getService( 'TestKitchen.StaticStreamConfigs' )
 		);
 	},
@@ -129,6 +160,12 @@ return [
 			$services->getService( 'TestKitchen.ConfigsFetcher' )
 		);
 	},
+	'TestKitchen.ExperimentCoordinator' =>
+		static function ( MediaWikiServices $services ): ExperimentCoordinatorInterface {
+			return $services->getService( 'TestKitchen.ExperimentManager' );
+		},
+
+	// @deprecated
 	'TestKitchen.Coordinator' => static function ( MediaWikiServices $services ): Coordinator {
 		return new Coordinator(
 			$services->getMainConfig(),

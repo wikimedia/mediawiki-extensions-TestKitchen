@@ -5,6 +5,7 @@ namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen;
 use DateTimeImmutable;
 use DateTimeZone;
 use Generator;
+use MediaWiki\Config\HashConfig;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 use MediaWiki\Http\HttpRequestFactory;
@@ -43,6 +44,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$this->statusFormatter = $this->createMock( StatusFormatter::class );
 		$this->fetcher = new ConfigsFetcher(
 			$this->mockOptions(),
+			$this->mockConfig(),
 			$this->cache,
 			$this->stash,
 			$this->httpRequestFactory,
@@ -252,6 +254,14 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		);
 	}
 
+	private function mockConfig() {
+		return new HashConfig( [
+			'TestKitchenInstrumentConfiguratorBaseUrl' => 'baseUrl',
+			'DBname' => 'enwiki',
+			'TestKitchenEnableConfigsFetching' => false,
+		] );
+	}
+
 	private function mockOptions() {
 		return new ServiceOptions(
 			[
@@ -259,11 +269,8 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 				'DBname',
 				'TestKitchenEnableConfigsFetching'
 			],
-			[
-				'TestKitchenInstrumentConfiguratorBaseUrl' => 'baseUrl',
-				'DBname' => 'enwiki',
-				'TestKitchenEnableConfigsFetching' => false,
-			] );
+			$this->mockConfig()
+		);
 	}
 
 	private static function getMockResponse(): array {

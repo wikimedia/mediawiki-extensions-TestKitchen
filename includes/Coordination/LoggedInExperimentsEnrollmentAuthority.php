@@ -4,6 +4,9 @@ namespace MediaWiki\Extension\TestKitchen\Coordination;
 
 use MediaWiki\User\CentralId\CentralIdLookup;
 
+/**
+ * @deprecated
+ */
 class LoggedInExperimentsEnrollmentAuthority implements EnrollmentAuthorityInterface {
 	private const SAMPLING_UNIT = 'mw-user';
 

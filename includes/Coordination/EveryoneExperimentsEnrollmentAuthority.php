@@ -15,6 +15,8 @@ use Psr\Log\LoggerInterface;
  *
  * Varnish *does not* send subject IDs in the `X-Experiment-Enrollments` so `"awaiting"` is used as
  * a placeholder instead.
+ *
+ * @deprecated
  */
 class EveryoneExperimentsEnrollmentAuthority implements EnrollmentAuthorityInterface {
 	private const SAMPLING_UNIT = 'edge-unique';

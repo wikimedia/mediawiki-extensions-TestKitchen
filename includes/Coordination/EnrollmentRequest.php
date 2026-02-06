@@ -10,6 +10,8 @@ use MediaWiki\User\UserIdentity;
 
 /**
  * Adapts the application state for the `EnrollmentAuthorityInterface` implementations to use.
+ *
+ * @deprecated
  */
 class EnrollmentRequest {
 

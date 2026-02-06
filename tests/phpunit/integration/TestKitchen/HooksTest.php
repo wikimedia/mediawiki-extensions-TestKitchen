@@ -20,12 +20,9 @@ use User;
 /**
  * @covers \MediaWiki\Extension\TestKitchen\Hooks
  * @covers \MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager
- * @covers \MediaWiki\Extension\TestKitchen\Coordination\EnrollmentRequest
  * @covers \MediaWiki\Extension\TestKitchen\Coordination\EnrollmentResultBuilder
- * @covers \MediaWiki\Extension\TestKitchen\Coordination\EnrollmentAuthority
- * @covers \MediaWiki\Extension\TestKitchen\Coordination\EveryoneExperimentsEnrollmentAuthority
- * @covers \MediaWiki\Extension\TestKitchen\Coordination\LoggedInExperimentsEnrollmentAuthority
- * @covers \MediaWiki\Extension\TestKitchen\Coordination\OverridesEnrollmentAuthority
+ * @covers \MediaWiki\Extension\TestKitchen\Coordination\RequestEnrollmentsProcessor
+ * @covers \MediaWiki\Extension\TestKitchen\Coordination\EnrollmentsProcessor
  */
 class HooksTest
 	extends MediaWikiIntegrationTestCase
@@ -103,7 +100,6 @@ class HooksTest
 		$this->output = new OutputPage( $this->context );
 		$this->entryPoint = $this->createMock( ActionEntryPoint::class );
 		$this->skin = $this->createMock( Skin::class );
-		$this->logger = $this->createMock( LoggerInterface::class );
 	}
 
 	private function onBeforeInitialize(): array {
@@ -111,10 +107,7 @@ class HooksTest
 
 		$hooks = new Hooks(
 			$services->getMainConfig(),
-			$services->getService( 'TestKitchen.ConfigsFetcher' ),
-			$services->getService( 'TestKitchen.EnrollmentAuthority' ),
-			$services->getService( 'TestKitchen.ExperimentManager' ),
-			$this->logger
+			$services->getService( 'TestKitchen.ExperimentManager' )
 		);
 
 		$hooks->onBeforeInitialize(
@@ -238,51 +231,7 @@ class HooksTest
 			]
 		];
 
-		$this->assertEquals(
-			$expected,
-			$actual,
-			'X-Experiment-Enrollments header has been parsed correctly'
-		);
-	}
-
-	/**
-	 * Tests whether the `X-Experiment-Enrollments` header is malformed
-	 */
-	public function testHeaderIsMalformed(): void {
-		$this->context->getRequest()->setHeader( 'X-Experiment-Enrollments', 'something-is-wrong-here' );
-
-		$this->assertEquals(
-			self::NO_ENROLLMENTS,
-			$this->onBeforeInitialize(),
-			'X-Experiment-Enrollments header is malformed and has been considered as empty'
-		);
-	}
-
-	/**
-	 * Tests whether the `X-Experiment-Enrollments` header is partially malformed
-	 */
-	public function testHeaderIsPartiallyMalformed(): void {
-		$this->context->getRequest()->setHeader(
-			'X-Experiment-Enrollments',
-			'experiment_1=group1;header-is-partially-malformed'
-		);
-
-		$this->assertEquals(
-			self::NO_ENROLLMENTS,
-			$this->onBeforeInitialize(),
-			'X-Experiment-Enrollments header is partially malformed and has been considered as empty'
-		);
-	}
-
-	/**
-	 * Tests whether the `X-Experiment-Enrollments` header is not present
-	 */
-	public function testHeaderIsNotPresent(): void {
-		$this->assertEquals(
-			self::NO_ENROLLMENTS,
-			$this->onBeforeInitialize(),
-			'X-Experiment-Enrollments header is not present so there are no enrollments for everyone experiments'
-		);
+		$this->assertEnrollmentsEqual( $expected, $actual );
 	}
 
 	/**
@@ -343,7 +292,63 @@ class HooksTest
 			]
 		];
 
-		$this->assertEquals( $expected, $actual );
+		$this->assertEnrollmentsEqual( $expected, $actual );
+	}
+
+	private function assertEnrollmentsEqual( array $expected, array $actual ): void {
+		// ::assertEquals and ::assertEqualsCanonicalizing are sensitive to order in sub-arrays. Test the equality of
+		// the sub-arrays separately to make this test more flexible.
+
+		$this->assertArrayHasKey( 'active_experiments', $actual );
+		$this->assertArrayEquals( $expected['active_experiments'], $actual['active_experiments'] );
+
+		$this->assertArrayHasKey( 'enrolled', $actual );
+		$this->assertArrayEquals( $expected['enrolled'], $actual['enrolled'] );
+
+		foreach ( [ 'assigned', 'subject_ids', 'sampling_units', 'overrides', 'coordinator' ] as $key ) {
+			$this->assertArrayHasKey( $key, $actual );
+			$this->assertEquals( $expected[$key], $actual[$key] );
+		}
+	}
+
+	/**
+	 * Tests whether the `X-Experiment-Enrollments` header is malformed
+	 */
+	public function testHeaderIsMalformed(): void {
+		$this->context->getRequest()->setHeader( 'X-Experiment-Enrollments', 'something-is-wrong-here' );
+
+		$this->assertEquals(
+			self::NO_ENROLLMENTS,
+			$this->onBeforeInitialize(),
+			'X-Experiment-Enrollments header is malformed and has been considered as empty'
+		);
+	}
+
+	/**
+	 * Tests whether the `X-Experiment-Enrollments` header is partially malformed
+	 */
+	public function testHeaderIsPartiallyMalformed(): void {
+		$this->context->getRequest()->setHeader(
+			'X-Experiment-Enrollments',
+			'experiment_1=group1;header-is-partially-malformed'
+		);
+
+		$this->assertEquals(
+			self::NO_ENROLLMENTS,
+			$this->onBeforeInitialize(),
+			'X-Experiment-Enrollments header is partially malformed and has been considered as empty'
+		);
+	}
+
+	/**
+	 * Tests whether the `X-Experiment-Enrollments` header is not present
+	 */
+	public function testHeaderIsNotPresent(): void {
+		$this->assertEquals(
+			self::NO_ENROLLMENTS,
+			$this->onBeforeInitialize(),
+			'X-Experiment-Enrollments header is not present so there are no enrollments for everyone experiments'
+		);
 	}
 
 	/**
@@ -357,34 +362,6 @@ class HooksTest
 			'ext.testKitchen',
 			$this->output->getModules(),
 			'The ext.testKitchen module is added to the output when the user is not enrolled in any active experiments'
-		);
-	}
-
-	/**
-	 * Tests that an error is logged when output decoration is performed before experiment enrollment, i.e. the
-	 * BeforePageDisplay hook is run before the BeforeInitialize hook.
-	 */
-	public function testLogsErrorWhenExperimentEnrollmentNotPerformed(): void {
-		$services = $this->getServiceContainer();
-
-		$hooks = new Hooks(
-			$services->getMainConfig(),
-			$services->getService( 'TestKitchen.ConfigsFetcher' ),
-			$services->getService( 'TestKitchen.EnrollmentAuthority' ),
-			$services->getService( 'TestKitchen.ExperimentManager' ),
-			$this->logger
-		);
-
-		$this->logger->expects( $this->once() )
-			->method( 'error' )
-			->with( 'Cannot decorate the output before experiment enrollment has been performed' );
-
-		$hooks->onBeforePageDisplay( $this->output, $this->skin );
-
-		$this->assertNotContains(
-			'ext.testKitchen',
-			$this->output->getModules(),
-			'The ext.testKitchen module is not added to the output if experiment enrollment hasn\'t been performed'
 		);
 	}
 }

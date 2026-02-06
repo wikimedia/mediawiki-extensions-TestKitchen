@@ -12,6 +12,8 @@ namespace MediaWiki\Extension\TestKitchen\Coordination;
  * 1. {@link EveryoneExperimentsEnrollmentAuthority::enrollUser()}
  * 2. {@link LoggedInExperimentsEnrollmentAuthority::enrollUser()}
  * 3. {@link OverridesEnrollmentAuthority::enrollUser()}
+ *
+ * @deprecated
  */
 class EnrollmentAuthority implements EnrollmentAuthorityInterface {
 	public function __construct(

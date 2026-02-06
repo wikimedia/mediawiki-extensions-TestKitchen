@@ -5,6 +5,7 @@ namespace MediaWiki\Extension\TestKitchen;
 use DateMalformedStringException;
 use DateTimeImmutable;
 use DomainException;
+use MediaWiki\Config\Config;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Http\HttpRequestFactory;
 use MediaWiki\Json\FormatJson;
@@ -38,6 +39,7 @@ class ConfigsFetcher {
 
 	public function __construct(
 		private readonly ServiceOptions $options,
+		private readonly Config $config,
 		private readonly BagOStuff $cache,
 		private readonly BagOStuff $stash,
 		private readonly HttpRequestFactory $httpRequestFactory,
@@ -49,18 +51,36 @@ class ConfigsFetcher {
 	}
 
 	/**
-	 * Gets instrument configs from the backing store. If there are no instrument configs in the backing store, then
-	 * they are not fetched from Test Kitchen.
+	 * Gets instrument configs for the current wiki.
+	 *
+	 * By default, this method only fetches instrument configs from the backing store and doesn't fetch instrument
+	 * configs from Test Kitchen UI as it would increase response time for every request. If you enable
+	 * `$wgTestKitchenEnableConfigsFetching` then configs are fetched from Test Kitchen UI and stored in the backing
+	 * store.
+	 *
+	 * This method is memoized and returns the same value for the lifetime of the object.
 	 */
 	public function getInstrumentConfigs(): array {
 		return $this->getConfigs( self::INSTRUMENT );
 	}
 
 	/**
-	 * Gets experiment configs from the backing store. If there are no experiment configs in the backing store, then
-	 * they are not fetched from Test Kitchen.
+	 * Gets experiment configs for the current wiki.
+	 *
+	 * If `$wgTestKitchenExperiments` is set, then it is returned immediately.
+	 *
+	 * By default, this method only fetches experiment configs from the backing store and doesn't fetch experiment
+	 * configs from Test Kitchen UI as it would increase response time for every request. If you enable
+	 * `$wgTestKitchenEnableConfigsFetching` then configs are fetched from Test Kitchen UI and stored in the backing
+	 * store.
+	 *
+	 * This method is memoized and returns the same value for the lifetime of the object.
 	 */
 	public function getExperimentConfigs(): array {
+		if ( $this->config->has( 'TestKitchenExperiments' ) ) {
+			return $this->config->get( 'TestKitchenExperiments' );
+		}
+
 		return $this->getConfigs( self::EXPERIMENT );
 	}
 
