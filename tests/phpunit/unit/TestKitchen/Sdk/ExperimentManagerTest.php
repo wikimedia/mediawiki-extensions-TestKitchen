@@ -88,6 +88,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSubmitter,
 			$this->eventFactory,
 			$this->statsFactory,
+			$this->staticStreamConfigs,
 			[
 				'enrolled' => 'dessert',
 				'assigned' => 'control',
@@ -112,6 +113,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSubmitter,
 			$this->eventFactory,
 			$this->statsFactory,
+			$this->staticStreamConfigs,
 			$this->logger,
 			[
 				'enrolled' => 'main-course',
@@ -145,7 +147,8 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		$expectedExperiment = new UnenrolledExperiment(
 			$this->eventSubmitter,
 			$this->eventFactory,
-			$this->statsFactory
+			$this->statsFactory,
+			$this->staticStreamConfigs
 		);
 		$actualExperiment = $this->experimentManager->getExperiment( 'active-but-not-enrolled' );
 

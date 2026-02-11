@@ -16,6 +16,7 @@ class Experiment implements ExperimentInterface {
 		private readonly EventSubmitter $eventSubmitter,
 		private readonly EventFactory $eventFactory,
 		private readonly StatsFactory $statsFactory,
+		private readonly StreamConfigs $staticStreamConfigs,
 		array $experimentConfig
 	) {
 		$this->experimentConfig = $experimentConfig;
@@ -82,13 +83,15 @@ class Experiment implements ExperimentInterface {
 	}
 
 	/**
-	 * Sets the stream to send analytics events.
+	 * Sets the stream and its corresponding contextual attributes to send analytics events.
 	 *
 	 * @param string $streamName
 	 * @return $this
 	 */
 	public function setStream( string $streamName ): self {
 		$this->experimentConfig['stream_name'] = $streamName;
+		$this->experimentConfig['contextual_attributes'] =
+			$this->staticStreamConfigs->getContextualAttributesForStream( $streamName );
 		return $this;
 	}
 

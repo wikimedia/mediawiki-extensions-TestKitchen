@@ -3,8 +3,10 @@
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
 use MediaWiki\Extension\EventLogging\EventSubmitter\EventSubmitter;
+use MediaWiki\Extension\EventStreamConfig\StreamConfigs as BaseStreamConfigs;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
+use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
 use MediaWikiUnitTestCase;
 use Wikimedia\Stats\StatsFactory;
 use Wikimedia\Stats\UnitTestingHelper;
@@ -32,6 +34,12 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		],
 	];
 
+	/** @var array */
+	private $differentContextualAtributes = [
+		'performer_id',
+		'performer_edit_count',
+	];
+
 	/** @var Experiment */
 	private $experiment;
 
@@ -47,6 +55,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	private EventSubmitter $eventSubmitter;
 	private EventFactory $eventFactory;
 	private StatsFactory $statsFactory;
+	private StreamConfigs $streamConfigs;
 	private UnitTestingHelper $statsHelper;
 
 	public function setUp(): void {
@@ -57,10 +66,38 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		$this->statsHelper = StatsFactory::newUnitTestingHelper();
 		$this->statsFactory = $this->statsHelper->getStatsFactory();
 
+		$baseStreamConfigs = new BaseStreamConfigs(
+			[
+				'product_metrics.web_base' => [
+					'producers' => [
+						'metrics_platform_client' => [
+							'provide_values' => [
+								'agent_client_platform',
+								'agent_client_platform_family',
+							]
+						],
+					],
+				],
+				'product_metrics.custom_stream' => [
+					'producers' => [
+						'metrics_platform_client' => [
+							'provide_values' => [
+								'performer_id',
+								'performer_edit_count',
+							]
+						],
+					],
+				],
+			],
+			[]
+		);
+		$this->streamConfigs = new StreamConfigs( $baseStreamConfigs );
+
 		$this->experiment = new Experiment(
 			$this->eventSubmitter,
 			$this->eventFactory,
 			$this->statsFactory,
+			$this->streamConfigs,
 			$this->experimentConfig
 		);
 	}
@@ -75,6 +112,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			$this->eventSubmitter,
 			$this->eventFactory,
 			$this->statsFactory,
+			$this->streamConfigs,
 			[]
 		);
 		$group = $experiment->getAssignedGroup();
@@ -167,6 +205,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			$this->eventSubmitter,
 			$this->eventFactory,
 			$this->statsFactory,
+			$this->streamConfigs,
 			[]
 		);
 
@@ -213,7 +252,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		);
 	}
 
-	public function testSetStreamAndSend(): void {
+	public function testSetStreamContextualAttributesAndSend(): void {
 		$newStream = 'product_metrics.custom_stream';
 
 		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
@@ -228,7 +267,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->method( 'newEvent' )
 			->with(
 				$this->experimentConfig['schema_id'],
-				$this->experimentConfig['contextual_attributes'],
+				$this->differentContextualAtributes,
 				$this->action,
 				array_merge( $this->interactionData, [ 'experiment' => $expectedExperimentConfig ] )
 			)
@@ -245,6 +284,12 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			$newStream,
 			$this->experiment->getExperimentConfig()['stream_name'] ?? null,
 			'setStream() should update experimentConfig stream_name'
+		);
+
+		$this->assertSame(
+			$this->differentContextualAtributes,
+			$this->experiment->getExperimentConfig()['contextual_attributes'] ?? null,
+			'setStream() should update experimentConfig contextual_attributes'
 		);
 
 		$this->experiment->send( $this->action, $this->interactionData );

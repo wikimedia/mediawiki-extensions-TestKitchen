@@ -13,6 +13,7 @@ class ExperimentManager implements ExperimentManagerInterface {
 
 	private array $enrollmentResult;
 	private array $baseStreamContextualAttributes;
+	private StreamConfigs $streamConfigs;
 
 	public function __construct(
 		private readonly LoggerInterface $logger,
@@ -22,6 +23,7 @@ class ExperimentManager implements ExperimentManagerInterface {
 		StreamConfigs $staticStreamConfigs
 	) {
 		$this->enrollmentResult = [];
+		$this->streamConfigs = $staticStreamConfigs;
 		$this->baseStreamContextualAttributes =
 			$staticStreamConfigs->getContextualAttributesForStream( self::BASE_STREAM );
 	}
@@ -60,14 +62,16 @@ class ExperimentManager implements ExperimentManagerInterface {
 			return new UnenrolledExperiment(
 				$this->eventSubmitter,
 				$this->eventFactory,
-				$this->statsFactory
+				$this->statsFactory,
+				$this->streamConfigs
 			);
 		} else {
 			if ( !in_array( $experimentName, $enrolledExperiments, true ) ) {
 				return new UnenrolledExperiment(
 					$this->eventSubmitter,
 					$this->eventFactory,
-					$this->statsFactory
+					$this->statsFactory,
+					$this->streamConfigs
 				);
 			}
 		}
@@ -80,6 +84,7 @@ class ExperimentManager implements ExperimentManagerInterface {
 				$this->eventSubmitter,
 				$this->eventFactory,
 				$this->statsFactory,
+				$this->streamConfigs,
 				$this->logger,
 				$experimentConfig
 			);
@@ -89,6 +94,7 @@ class ExperimentManager implements ExperimentManagerInterface {
 			$this->eventSubmitter,
 			$this->eventFactory,
 			$this->statsFactory,
+			$this->streamConfigs,
 			$experimentConfig
 		);
 	}
