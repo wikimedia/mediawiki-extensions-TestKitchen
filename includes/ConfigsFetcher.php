@@ -65,15 +65,13 @@ class ConfigsFetcher {
 	}
 
 	private function getConfigs( int $type ): array {
-		if ( isset( $this->processCache[$type] ) ) {
-			return $this->processCache[$type];
-		}
+		if ( !isset( $this->processCache[$type] ) ) {
+			if ( $this->options->get( 'TestKitchenEnableConfigsFetching' ) ) {
+				$this->updateConfigs( $type );
+			}
 
-		if ( $this->options->get( 'TestKitchenEnableConfigsFetching' ) ) {
-			$this->updateConfigs( $type );
+			$this->processCache[$type] = $this->getConfigsInternal( $type );
 		}
-
-		$this->processCache[$type] = $this->getConfigsInternal( $type );
 
 		return $this->processCache[$type];
 	}
@@ -375,20 +373,12 @@ class ConfigsFetcher {
 	 * @return string
 	 */
 	private function getServerErrorLabel( int $statusCode ): string {
-		switch ( $statusCode ) {
-			case 400:
-				$label = 'bad-request';
-				break;
-			case 408:
-				$label = 'server-timeout';
-				break;
-			case 500:
-				$label = 'internal-server-error';
-				break;
-			default:
-				$label = 'failure';
-		}
-		return $label;
+		return match ( $statusCode ) {
+			400 => 'bad-request',
+			408 => 'server-timeout',
+			500 => 'internal-server-error',
+			default => 'failure'
+		};
 	}
 
 	/**

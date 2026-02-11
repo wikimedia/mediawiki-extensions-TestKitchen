@@ -25,14 +25,9 @@ readonly class StreamConfigs {
 	 */
 	public function getContextualAttributesForStream( string $streamName ): array {
 		$rawStreamConfigs = $this->baseStreamConfigs->get( [ $streamName ] );
+		$rawStreamConfig = $rawStreamConfigs[ $streamName ] ?? null;
 
-		if ( !isset( $rawStreamConfigs[ $streamName ] ) ) {
-			return [];
-		}
-
-		$rawStreamConfig = $rawStreamConfigs[ $streamName ];
-
-		if ( !$rawStreamConfig || !isset( $rawStreamConfig['producers']['metrics_platform_client'] ) ) {
+		if ( !$rawStreamConfig ) {
 			return [];
 		}
 

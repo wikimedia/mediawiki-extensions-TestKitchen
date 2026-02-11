@@ -57,16 +57,12 @@ class EventFactory {
 		string $action,
 		?array $interactionData = []
 	): array {
-		$event = array_merge(
-			[
-				'action' => $action,
-			],
-			$interactionData,
-			[
-				'$schema' => $schemaID,
-				'dt' => $this->getTimestamp()
-			]
-		);
+		$event = [
+			'action' => $action,
+			...$interactionData,
+			'$schema' => $schemaID,
+			'dt' => $this->getTimestamp(),
+		];
 
 		return $this->addContextualAttributes( $event, $contextualAttributes );
 	}
@@ -92,10 +88,6 @@ class EventFactory {
 			}
 
 			[ $primaryKey, $secondaryKey ] = explode( '_', $requestedContextualAttribute, 2 );
-
-			if ( !isset( $event[$primaryKey] ) ) {
-				$event[$primaryKey] = [];
-			}
 
 			$event[$primaryKey][$secondaryKey] = $value;
 		}
