@@ -30,7 +30,9 @@ class OverriddenExperiment extends Experiment {
 	/**
 	 * @inheritDoc
 	 */
-	public function send( string $action, ?array $interactionData = null ): void {
+	public function send( string $action,
+						  ?array $interactionData = [],
+						  ?array $contextualAttributes = [] ): void {
 		$experimentName = $this->experimentConfig['enrolled'];
 
 		$this->logger->info(

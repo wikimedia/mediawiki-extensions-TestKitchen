@@ -25,11 +25,27 @@ interface ExperimentInterface {
 	 * Sends an interaction event associated with this experiment if the EESA
 	 * enrolled the current user in this experiment (for logged-in users only).
 	 *
-	 * InteractionData can be null in which case the experiment object will
+	 * In the case no interactionData is passed, the experiment object will
 	 * send an event with simply the experiment configuration and action.
 	 *
+	 * Per-event contextual attributes can be passed as contextualAttributes.
+	 * In this case, they will be added to the events along with the ones that
+	 * are defined in the experiment config
+	 *
 	 * @param string $action
-	 * @param array|null $interactionData
+	 * @param array $interactionData
+	 * @param array $contextualAttributes per event contextual attributes
 	 */
-	public function send( string $action, ?array $interactionData ): void;
+	public function send( string $action,
+						  array $interactionData = [],
+						  array $contextualAttributes = [] ): void;
+
+	/**
+	 * Sends an exposure event
+	 *
+	 * `performer_is_logged_in`, `performer_is_temp`, `performer_is_bot` and `mediawiki_database` contextual attributes
+	 * are needed in exposure events, so they will be added if not included already in the stream configuration of the
+	 * current experiment
+	 */
+	public function sendExposure(): void;
 }

@@ -9,6 +9,13 @@ use Wikimedia\Stats\StatsFactory;
  */
 class Experiment implements ExperimentInterface {
 
+	private const EXPOSURE_CONTEXTUAL_ATTRIBUTES = [
+		'performer_is_logged_in',
+		'performer_is_temp',
+		'performer_is_bot',
+		'mediawiki_database'
+	];
+
 	protected array $experimentConfig;
 
 	public function __construct(
@@ -38,21 +45,32 @@ class Experiment implements ExperimentInterface {
 	/**
 	 * @inheritDoc
 	 */
-	public function send( string $action, ?array $interactionData = null ): void {
+	public function send( string $action,
+						  array $interactionData = [],
+						  array $contextualAttributes = [] ): void {
 		// Only submit the event if experiment details exist and are valid.
 		if ( $this->isEnrolled() ) {
 			$experimentConfig = $this->experimentConfig;
 
 			$streamName = $experimentConfig['stream_name'];
 			$schemaID = $experimentConfig['schema_id'];
-			$contextualAttributes = $experimentConfig['contextual_attributes'];
+			$eventContextualAttributes = $experimentConfig['contextual_attributes'];
+			// When per-event contextual attributes are present, those not already included will be added to the event
+			if ( $contextualAttributes !== [] ) {
+				$eventContextualAttributes = array_unique(
+					array_merge(
+						$eventContextualAttributes,
+						$contextualAttributes
+					)
+				);
+			}
 
 			// Extract SDK-specific experiment config
 			$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
 			$experiment = array_intersect_key( $experimentConfig, array_fill_keys( $keys, true ) );
 
 			$interactionData = array_merge(
-				$interactionData ?? [],
+				$interactionData,
 				[
 					'experiment' => $experiment,
 				]
@@ -61,7 +79,7 @@ class Experiment implements ExperimentInterface {
 			$event = $this->eventFactory->newEvent(
 				$streamName,
 				$schemaID,
-				$contextualAttributes,
+				$eventContextualAttributes,
 				$action,
 				$interactionData
 			);
@@ -125,5 +143,16 @@ class Experiment implements ExperimentInterface {
 			->getCounter( 'experiment_events_sent_total' )
 			->setLabel( 'experiment', $experimentName )
 			->increment();
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function sendExposure(): void {
+		if ( !$this->isEnrolled() ) {
+			return;
+		}
+
+		$this->send( 'experiment_exposure', contextualAttributes: self::EXPOSURE_CONTEXTUAL_ATTRIBUTES );
 	}
 }

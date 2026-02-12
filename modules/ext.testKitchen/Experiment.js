@@ -177,6 +177,15 @@ class Experiment {
 
 		return this;
 	}
+
+	/**
+	 * Logs an exposure event
+	 */
+	sendExposure() {
+		if ( this.getAssignedGroup() !== null ) {
+			this.send( 'experiment_exposure' );
+		}
+	}
 }
 
 /**
@@ -196,6 +205,9 @@ class UnenrolledExperiment extends Experiment {
 
 	// eslint-disable-next-line no-unused-vars
 	setStream( streamName ) {}
+
+	// eslint-disable-next-line no-unused-vars
+	sendExposure() {}
 }
 
 /**

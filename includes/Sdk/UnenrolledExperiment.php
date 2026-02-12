@@ -28,6 +28,14 @@ class UnenrolledExperiment extends Experiment {
 	/**
 	 * @inheritDoc
 	 */
-	public function send( string $action, ?array $interactionData = null ): void {
+	public function send( string $action,
+						  ?array $interactionData = [],
+						  ?array $contextualAttributes = [] ): void {
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function sendExposure(): void {
 	}
 }

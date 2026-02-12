@@ -202,6 +202,85 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		);
 	}
 
+	public function testSendArgumentsInteractionDataWithPerEventContextualAttributes() {
+		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
+		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+
+		$expectedEvent = [
+			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
+			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 ),
+		];
+
+		$this->eventFactory->expects( $this->once() )
+			->method( 'newEvent' )
+			->with(
+				'product_metrics.web_base',
+				'/analytics/product_metrics/web/base/2.0.0',
+				[
+					'agent_client_platform',
+					'agent_client_platform_family',
+					'performer_is_bot',
+					'performer_id'
+				],
+				$this->action,
+				array_merge(
+					$this->interactionData,
+					[ 'experiment' => $expectedExperimentConfig ]
+				)
+			)
+			->willReturn( $expectedEvent );
+
+		$this->eventSender
+			->expects( $this->once() )
+			->method( 'sendEvent' )
+			->with( $expectedEvent );
+
+		$this->experiment->send( $this->action, $this->interactionData, [ 'performer_is_bot', 'performer_id' ] );
+
+		$this->assertSame(
+			[ 'mediawiki.TestKitchen.experiment_events_sent_total:1|c|#experiment:test_experiment' ],
+			$this->statsHelper->consumeAllFormatted()
+		);
+	}
+
+	public function testSendArgumentsNoInteractionDataWithPerEventContextualAttributes() {
+		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
+		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+
+		$expectedEvent = [
+			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
+			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 ),
+		];
+
+		$this->eventFactory->expects( $this->once() )
+			->method( 'newEvent' )
+			->with(
+				'product_metrics.web_base',
+				'/analytics/product_metrics/web/base/2.0.0',
+				[
+					'agent_client_platform',
+					'agent_client_platform_family',
+					'performer_is_bot',
+					'performer_id'
+				],
+				$this->action,
+				[ 'experiment' => $expectedExperimentConfig ]
+			)
+			->willReturn( $expectedEvent );
+
+		$this->eventSender
+			->expects( $this->once() )
+			->method( 'sendEvent' )
+			->with( $expectedEvent );
+
+		$this->experiment->send( $this->action, contextualAttributes: [ 'performer_is_bot', 'performer_id' ] );
+
+		$this->assertSame(
+			[ 'mediawiki.TestKitchen.experiment_events_sent_total:1|c|#experiment:test_experiment' ],
+			$this->statsHelper->consumeAllFormatted()
+		);
+	}
+
 	public function testSendArgumentsWithEmptyExperimentConfig() {
 		$experiment = new Experiment(
 			$this->eventSender,
@@ -344,5 +423,61 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			[ 'mediawiki.TestKitchen.experiment_events_sent_total:1|c|#experiment:test_experiment' ],
 			$this->statsHelper->consumeAllFormatted()
 		);
+	}
+
+	public function testSendExposure(): void {
+		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
+		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+
+		$expectedEvent = [
+			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
+			'dt' => ConvertibleTimestamp::now( TimestampFormat::ISO_8601 ),
+			'action' => 'experiment_exposure',
+			'experiment' => $expectedExperimentConfig
+		];
+
+		$this->eventFactory->expects( $this->once() )
+			->method( 'newEvent' )
+			->with(
+				'product_metrics.web_base',
+				'/analytics/product_metrics/web/base/2.0.0',
+				array_unique(
+					array_merge(
+						$this->experimentConfig[ 'contextual_attributes' ],
+						[ 'performer_is_logged_in', 'performer_is_temp', 'performer_is_bot', 'mediawiki_database' ]
+					)
+				),
+				'experiment_exposure',
+				[ 'experiment' => $expectedExperimentConfig ]
+			)
+			->willReturn( $expectedEvent );
+
+		$expectedEvent['action'] = 'experiment_exposure';
+
+		$this->eventSender->expects( $this->once() )
+			->method( 'sendEvent' )
+			->with( $expectedEvent );
+
+		$this->experiment->sendExposure();
+
+		$this->assertSame(
+			[ 'mediawiki.TestKitchen.experiment_events_sent_total:1|c|#experiment:test_experiment' ],
+			$this->statsHelper->consumeAllFormatted()
+		);
+	}
+
+	public function testSendExposureWithInvalidExperimentConfig(): void {
+		$experiment = new Experiment(
+			$this->eventSender,
+			$this->eventFactory,
+			$this->statsFactory,
+			$this->streamConfigs,
+			[]
+		);
+
+		$this->eventFactory->expects( $this->never() )
+			->method( 'newEvent' );
+
+		$experiment->sendExposure();
 	}
 }

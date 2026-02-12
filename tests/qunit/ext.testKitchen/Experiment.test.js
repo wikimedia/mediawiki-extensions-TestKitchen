@@ -142,6 +142,45 @@ QUnit.test( 'setStream() - warns when stream isn\'t registered', function ( asse
 	assert.strictEqual( console.warn.called, true );
 } );
 
+QUnit.test.each(
+	'sendExposure() - sends experiment exposure events via metricsClient',
+	[
+		[
+			'everyoneExperiment',
+			{
+				enrolled: 'hello_world',
+				assigned: 'A',
+				subject_id: 'awaiting',
+				sampling_unit: 'edge-unique',
+				coordinator: 'default'
+			}
+		],
+		[
+			'loggedInExperiment',
+			{
+				enrolled: 'my-awesome-experiment',
+				assigned: 'B',
+				subject_id: '0x0ff1ce',
+				sampling_unit: 'mw-user',
+				coordinator: 'default'
+			}
+		]
+	],
+	function ( assert, [ propertyName, expectedExperiment ] ) {
+		this[ propertyName ].sendExposure();
+
+		assert.strictEqual( this.metricsClient.submitInteraction.called, true );
+		assert.deepEqual( this.metricsClient.submitInteraction.firstCall.args, [
+			'product_metrics.web_base',
+			'/analytics/product_metrics/web/base/2.0.0',
+			'experiment_exposure',
+			{
+				experiment: expectedExperiment
+			}
+		] );
+	}
+);
+
 // ---
 
 QUnit.module( 'ext.testKitchen/UnenrolledExperiment' );
@@ -256,4 +295,29 @@ QUnit.test( 'setStream() - doesn\'t trigger an error', ( assert ) => {
 	const e = new OverriddenExperiment( 'foo_bar' );
 
 	e.setStream( 'my_awesome_stream' );
+} );
+
+QUnit.test( 'sendExposure()', function ( assert ) {
+	this.sandbox.mock( console )
+		.expects( 'log' )
+		.once()
+		.withExactArgs(
+			'hello_world: The enrolment for this experiment has been overridden. The following event will not be sent:\n',
+			'experiment_exposure',
+			undefined
+		);
+
+	const e = new OverriddenExperiment(
+		'hello_world',
+		'foo',
+		'overridden',
+		'mw-user'
+	);
+
+	e.sendExposure( 'experiment_exposure' );
+
+	assert.strictEqual(
+		true, true,
+		'send() shouldn\'t throw an error'
+	);
 } );
