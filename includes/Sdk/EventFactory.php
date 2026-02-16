@@ -53,8 +53,8 @@ class EventFactory {
 	 * - `dt`, which will be set to the current time in ISO 8601 format (including milliseconds)
 	 * - `action`
 	 *
-	 * If `$interactionData` is set, then it will be added to the event. If recognized contextual attributes are
-	 * requested, they will be added to the event.
+	 * If `$interactionData` is set, then it will be added to the event. If contextual attributes are requested and
+	 * they are available, then they will be added to the event.
 	 *
 	 * @param string $streamName
 	 * @param string $schemaID

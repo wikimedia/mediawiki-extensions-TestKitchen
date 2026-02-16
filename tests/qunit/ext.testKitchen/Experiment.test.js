@@ -1,31 +1,81 @@
-const { Experiment, UnenrolledExperiment, OverriddenExperiment } = mw.testKitchen;
-
 QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 	beforeEach: function () {
-		this.metricsClient = {
-			submitInteraction: this.sandbox.spy(),
-			getStreamConfig: this.sandbox.stub()
+		const { Experiment } = mw.testKitchen;
+
+		const experimentConfigs = {
+			my_awesome_stream: {
+				contextual_attributes: [
+					'performer_id',
+					'performer_name'
+				]
+			}
 		};
 
-		// Note well that Experiment#constructor() is package-private. Calling it outside Test Kitchen is
-		// not supported.
+		// Stubs
+		// =====
+
+		this.expectedEvent = {
+			$schema: '/analytics/product_metrics/web/base/2.0.0',
+			dt: new Date().toISOString()
+		};
+
+		const eventFactory = {
+			newEvent() {}
+		};
+
+		this.newEventStub = this.sandbox.stub( eventFactory, 'newEvent' )
+			.returns( this.expectedEvent );
+
+		const eventSender = {
+			sendEvent() {}
+		};
+
+		this.sendEventStub = this.sandbox.stub( eventSender, 'sendEvent' );
+
+		// Code Under Test
+		// ===============
+
+		// Note well that Experiment#constructor() is package-private. Calling it outside Test
+		// Kitchen is not supported.
 
 		this.everyoneExperiment = new Experiment(
-			this.metricsClient,
-			'hello_world',
-			'A',
-			'awaiting',
-			'edge-unique',
-			'default'
+			eventFactory,
+			eventSender,
+			'http://foo.bar/baz?qux=quux',
+			experimentConfigs,
+			{
+				enrolled: 'hello_world',
+				assigned: 'A',
+				subject_id: 'awaiting',
+				sampling_unit: 'edge-unique',
+				coordinator: 'default',
+				stream_name: 'product_metrics.web_base',
+				schema_id: '/analytics/product_metrics/web/base/2.0.0',
+				contextual_attributes: [
+					'performer_pageview_id',
+					'mediawiki_database'
+				]
+			}
 		);
 
 		this.loggedInExperiment = new Experiment(
-			this.metricsClient,
-			'my-awesome-experiment',
-			'B',
-			'0x0ff1ce',
-			'mw-user',
-			'default'
+			eventFactory,
+			eventSender,
+			'http://foo.bar/baz?qux=quux',
+			experimentConfigs,
+			{
+				enrolled: 'my-awesome-experiment',
+				assigned: 'B',
+				subject_id: '0x0ff1ce',
+				sampling_unit: 'mw-user',
+				coordinator: 'default',
+				stream_name: 'product_metrics.web_base',
+				schema_id: '/analytics/product_metrics/web/base/2.0.0',
+				contextual_attributes: [
+					'performer_pageview_id',
+					'mediawiki_database'
+				]
+			}
 		);
 	}
 } ) );
@@ -44,7 +94,7 @@ QUnit.test.each(
 );
 
 QUnit.test.each(
-	'send() - sends events via metricsClient',
+	'send()',
 	[
 		[
 			'everyoneExperiment',
@@ -70,19 +120,25 @@ QUnit.test.each(
 	function ( assert, [ propertyName, expectedExperiment ] ) {
 		this[ propertyName ].send( 'Hello, World!' );
 
-		assert.strictEqual( this.metricsClient.submitInteraction.called, true );
-		assert.deepEqual( this.metricsClient.submitInteraction.firstCall.args, [
+		assert.strictEqual( this.newEventStub.callCount, 1 );
+		assert.deepEqual( this.newEventStub.firstCall.args, [
 			'product_metrics.web_base',
 			'/analytics/product_metrics/web/base/2.0.0',
+			[
+				'performer_pageview_id',
+				'mediawiki_database'
+			],
 			'Hello, World!',
 			{
 				experiment: expectedExperiment
 			}
 		] );
+
+		assert.strictEqual( this.sendEventStub.callCount, 1 );
 	}
 );
 
-QUnit.test( 'send() - overrides experiment field', function ( assert ) {
+QUnit.test( 'send() - can\'t override experiment', function ( assert ) {
 	this.everyoneExperiment.send( 'Hello, World!', {
 		experiment: {
 			foo: 'bar',
@@ -90,10 +146,14 @@ QUnit.test( 'send() - overrides experiment field', function ( assert ) {
 		}
 	} );
 
-	assert.strictEqual( this.metricsClient.submitInteraction.called, true );
-	assert.deepEqual( this.metricsClient.submitInteraction.firstCall.args, [
+	assert.strictEqual( this.newEventStub.callCount, 1 );
+	assert.deepEqual( this.newEventStub.firstCall.args, [
 		'product_metrics.web_base',
 		'/analytics/product_metrics/web/base/2.0.0',
+		[
+			'performer_pageview_id',
+			'mediawiki_database'
+		],
 		'Hello, World!',
 		{
 			experiment: {
@@ -105,19 +165,23 @@ QUnit.test( 'send() - overrides experiment field', function ( assert ) {
 			}
 		}
 	] );
+
+	assert.strictEqual( this.sendEventStub.callCount, 1 );
 } );
 
 QUnit.test( 'send() - overriding stream and schema', function ( assert ) {
-	this.metricsClient.getStreamConfig.returns( {} );
-
 	this.everyoneExperiment.setStream( 'my_awesome_stream' )
 		.setSchema( '/my/awesome/schema/0.0.1' )
 		.send( 'Hello, World!' );
 
-	assert.strictEqual( this.metricsClient.submitInteraction.called, true );
-	assert.deepEqual( this.metricsClient.submitInteraction.firstCall.args, [
+	assert.strictEqual( this.newEventStub.callCount, 1 );
+	assert.deepEqual( this.newEventStub.firstCall.args, [
 		'my_awesome_stream',
 		'/my/awesome/schema/0.0.1',
+		[
+			'performer_id',
+			'performer_name'
+		],
 		'Hello, World!',
 		{
 			experiment: {
@@ -134,16 +198,16 @@ QUnit.test( 'send() - overriding stream and schema', function ( assert ) {
 QUnit.test( 'setStream() - warns when stream isn\'t registered', function ( assert ) {
 	this.sandbox.stub( console, 'warn' );
 
-	this.everyoneExperiment.setStream( 'my_awesome_stream' );
-
-	assert.strictEqual( this.metricsClient.getStreamConfig.called, true );
+	this.everyoneExperiment.setStream( 'my_other_awesome_stream' );
 
 	// eslint-disable-next-line no-console
-	assert.strictEqual( console.warn.called, true );
+	assert.strictEqual( console.warn.callCount, 1 );
+
+	assert.deepEqual( this.everyoneExperiment.contextualAttributes, [] );
 } );
 
 QUnit.test.each(
-	'sendExposure() - sends experiment exposure events via metricsClient',
+	'sendExposure()',
 	[
 		[
 			'everyoneExperiment',
@@ -169,10 +233,14 @@ QUnit.test.each(
 	function ( assert, [ propertyName, expectedExperiment ] ) {
 		this[ propertyName ].sendExposure();
 
-		assert.strictEqual( this.metricsClient.submitInteraction.called, true );
-		assert.deepEqual( this.metricsClient.submitInteraction.firstCall.args, [
+		assert.strictEqual( this.newEventStub.callCount, 1 );
+		assert.deepEqual( this.newEventStub.firstCall.args, [
 			'product_metrics.web_base',
 			'/analytics/product_metrics/web/base/2.0.0',
+			[
+				'performer_pageview_id',
+				'mediawiki_database'
+			],
 			'experiment_exposure',
 			{
 				experiment: expectedExperiment
@@ -185,76 +253,25 @@ QUnit.test.each(
 
 QUnit.module( 'ext.testKitchen/UnenrolledExperiment' );
 
-QUnit.test( 'constructor()', ( assert ) => {
-	// Note well that UnenrolledExperiment#constructor() is package-private. Calling it outside Test Kitchen
-	// is not supported.
-
-	const e = new UnenrolledExperiment( 'hello_world' );
-
-	assert.propContains(
-		e,
-		{
-			metricsClient: null,
-			name: 'hello_world',
-			assignedGroup: null,
-			subjectId: null,
-			samplingUnit: null,
-			coordinator: 'default'
-		}
-	);
-} );
-
-QUnit.test( 'send()', ( assert ) => {
-	const e = new UnenrolledExperiment( 'hello_world' );
-
-	e.send( 'Hello, World!', {
-		experiment: {
-			foo: 'bar',
-			baz: 'qux'
-		}
-	} );
-
-	assert.strictEqual(
-		true, true,
-		'send() shouldn\'t throw an error'
-	);
-} );
-
 QUnit.test( 'setStream() - doesn\'t trigger an error', ( assert ) => {
-	assert.expect( 0 );
+	const e = new mw.testKitchen.UnenrolledExperiment( 'hello_world' );
 
-	const e = new UnenrolledExperiment( 'hello_world' );
+	assert.strictEqual( e.setStream( 'my_awesome_stream' ), e );
+} );
 
-	e.setStream( 'my_awesome_stream' );
+QUnit.test( 'setSchema() - doesn\'t trigger an error', ( assert ) => {
+	const e = new mw.testKitchen.UnenrolledExperiment( 'hello_world' );
+
+	assert.strictEqual( e.setSchema( 'my_awesome_stream' ), e );
 } );
 
 // ---
 
-QUnit.module( 'ext.testKitchen/OverriddenExperiment' );
-
-QUnit.test( 'constructor()', ( assert ) => {
-	// Note well that OverriddenExperiment#constructor() is package-private. Calling it outside Test Kitchen
-	// is not supported.
-
-	const e = new OverriddenExperiment(
-		'hello_world',
-		'foo',
-		'overridden',
-		'mw-user'
-	);
-
-	assert.propContains(
-		e,
-		{
-			metricsClient: null,
-			name: 'hello_world',
-			assignedGroup: 'foo',
-			subjectId: 'overridden',
-			samplingUnit: 'mw-user',
-			coordinator: 'forced'
-		}
-	);
-} );
+QUnit.module( 'ext.testKitchen/OverriddenExperiment', QUnit.newMwEnvironment( {
+	beforeEach: function () {
+		this.experiment = new mw.testKitchen.OverriddenExperiment( 'hello_world', 'foo ' );
+	}
+} ) );
 
 QUnit.test( 'send()', function ( assert ) {
 	const action = 'Hello, World!';
@@ -265,59 +282,42 @@ QUnit.test( 'send()', function ( assert ) {
 		}
 	};
 
-	this.sandbox.mock( console )
-		.expects( 'log' )
-		.once()
-		.withExactArgs(
-			'hello_world: The enrolment for this experiment has been overridden. The following event will not be sent:\n',
-			action,
-			JSON.stringify( interactionData, null, 2 )
-		);
+	const logStub = this.sandbox.stub( console, 'log' );
 
-	const e = new OverriddenExperiment(
-		'hello_world',
-		'foo',
-		'overridden',
-		'mw-user'
-	);
+	this.experiment.send( action, interactionData );
 
-	e.send( action, interactionData );
-
-	assert.strictEqual(
-		true, true,
-		'send() shouldn\'t throw an error'
-	);
+	assert.strictEqual( logStub.callCount, 1 );
+	assert.deepEqual( logStub.firstCall.args, [
+		'hello_world: The enrollment for this experiment has been overridden. The following event will not be sent:\n',
+		action,
+		JSON.stringify( interactionData, null, 2 )
+	] );
 } );
 
-QUnit.test( 'setStream() - doesn\'t trigger an error', ( assert ) => {
-	assert.expect( 0 );
+QUnit.test( 'setStream() - doesn\'t trigger an error', function ( assert ) {
+	assert.strictEqual( this.experiment.setStream( 'my_awesome_stream' ), this.experiment );
+} );
 
-	const e = new OverriddenExperiment( 'foo_bar' );
-
-	e.setStream( 'my_awesome_stream' );
+QUnit.test( 'setSchema() - doesn\'t trigger an error', function ( assert ) {
+	assert.strictEqual( this.experiment.setSchema( 'my_awesome_stream' ), this.experiment );
 } );
 
 QUnit.test( 'sendExposure()', function ( assert ) {
+	assert.expect( 0 );
+
 	this.sandbox.mock( console )
 		.expects( 'log' )
 		.once()
 		.withExactArgs(
-			'hello_world: The enrolment for this experiment has been overridden. The following event will not be sent:\n',
+			'hello_world: The enrollment for this experiment has been overridden. The following event will not be sent:\n',
 			'experiment_exposure',
 			undefined
 		);
 
-	const e = new OverriddenExperiment(
+	const e = new mw.testKitchen.OverriddenExperiment(
 		'hello_world',
-		'foo',
-		'overridden',
-		'mw-user'
+		'foo'
 	);
 
 	e.sendExposure( 'experiment_exposure' );
-
-	assert.strictEqual(
-		true, true,
-		'send() shouldn\'t throw an error'
-	);
 } );

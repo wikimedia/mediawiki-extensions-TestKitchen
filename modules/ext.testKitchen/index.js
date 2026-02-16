@@ -1,45 +1,47 @@
 'use strict';
 
 const { Experiment, UnenrolledExperiment, OverriddenExperiment } = require( './Experiment.js' );
+const ContextualAttributesFactory = require( './ContextualAttributesFactory.js' );
+const EventFactory = require( './EventFactory.js' );
+const eventSender = require( './eventSender.js' );
+const { Instrument, UnsampledInstrument } = require( './Instrument.js' );
+
+const COORDINATOR_DEFAULT = 'default';
+const STREAM_NAME = 'product_metrics.web_base';
+const SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
 
 const COOKIE_NAME = 'mpo';
+
+const UINT32_MAX = 4294967295; // (2^32) - 1
+
 /**
- * @type {Object}
+ * @typedef {Object} Config
  * @property {string} EveryoneExperimentEventIntakeServiceUrl
  * @property {string} LoggedInExperimentEventIntakeServiceUrl
  * @property {string} InstrumentEventIntakeServiceUrl
- * @property {Object|false} streamConfigs
- * @property {Object} instrumentConfigs
+ * @property {Object.<string,mw.testKitchen.PartialExperimentConfig>} experimentConfigs
+ * @property {Object.<string,mw.testKitchen.InstrumentConfig>} instrumentConfigs
+ *
  * @ignore
  */
-const config = require( './config.json' );
-
-const { newMetricsClient, DefaultEventSubmitter } = require( 'ext.eventLogging.metricsPlatform' );
 
 /**
- * @param {Object} streamConfigs
- * @param {string} intakeServiceUrl
- * @return {Object}
+ * @type {Config}
+ *
  * @ignore
  */
-function newMetricsClientInternal( streamConfigs, intakeServiceUrl ) {
-	return newMetricsClient( streamConfigs, new DefaultEventSubmitter( intakeServiceUrl ) );
-}
+let config = require( './config.json' );
 
-const everyoneExperimentMetricsClient = newMetricsClientInternal(
-	config.streamConfigs,
-	config.EveryoneExperimentEventIntakeServiceUrl
-);
-
-const loggedInExperimentMetricsClient = newMetricsClientInternal(
-	config.streamConfigs,
-	config.LoggedInExperimentEventIntakeServiceUrl
-);
+const contextualAttributesFactory = new ContextualAttributesFactory();
+const eventFactory = new EventFactory( contextualAttributesFactory );
 
 /**
- * Gets an {@link mw.testKitchen.Experiment} instance that encapsulates the result of enrolling the current
- * user into the experiment. You can use that instance to get which group the user was assigned
- * when they were enrolled into the experiment and send experiment-related analytics events.
+ * Gets the details of an experiment.
+ *
+ * This method always returns an instance of {@link mw.testKitchen.ExperimentInterface} that can:
+ *
+ * 1. Get information about the user's (more precisely, the subject's) enrollment in the experiment
+ * 2. Send analytics events relating to the experiment
  *
  * @example
  * const e = mw.testKitchen.getExperiment( 'my-awesome-experiment' );
@@ -58,59 +60,55 @@ const loggedInExperimentMetricsClient = newMetricsClientInternal(
  *   myAwesomeDialog.primaryAction.label = 'Awesome!';
  * }
  *
- * @param {string} experimentName The experiment name
- * @return {Experiment}
  * @memberof mw.testKitchen
+ *
+ * @param {string} experimentName The experiment name
+ * @return {mw.testKitchen.ExperimentInterface}
  */
 function getExperiment( experimentName ) {
 	const userExperiments = mw.config.get( 'wgTestKitchenUserExperiments' );
 
-	if (
-		userExperiments &&
-		userExperiments.active_experiments.includes( experimentName ) &&
-		userExperiments.sampling_units[ experimentName ] === 'mw-user' &&
-		!userExperiments.assigned[ experimentName ]
-	) {
-		return new UnenrolledExperiment( experimentName );
-	} else {
-		// For now, regarding logged-out experiments, there is no way to distinguish between
-		// an experiment that is not active, doesn't exist or the current user is not enrolled in
-		if ( !userExperiments || !userExperiments.assigned[ experimentName ] ) {
-			return new UnenrolledExperiment( experimentName );
-		}
+	if ( !userExperiments || !userExperiments.assigned[ experimentName ] ) {
+		return new UnenrolledExperiment();
 	}
 
-	const assignedGroup = userExperiments.assigned[ experimentName ];
+	const assigned = userExperiments.assigned[ experimentName ];
+
+	if ( userExperiments.overrides.includes( experimentName ) ) {
+		return new OverriddenExperiment( experimentName, assigned );
+	}
+
 	const samplingUnit = userExperiments.sampling_units[ experimentName ];
 	const isLoggedInExperiment = samplingUnit === 'mw-user';
-	const subjectId = isLoggedInExperiment ?
+
+	const eventIntakeServiceUrl = isLoggedInExperiment ?
+		config.LoggedInExperimentEventIntakeServiceUrl :
+		config.EveryoneExperimentEventIntakeServiceUrl;
+
+	const subjectID = isLoggedInExperiment ?
 		userExperiments.subject_ids[ experimentName ] :
 		'awaiting';
 
-	if ( userExperiments.overrides.includes( experimentName ) ) {
-		return new OverriddenExperiment(
-			experimentName,
-			assignedGroup,
-			samplingUnit,
-			subjectId
-		);
-	}
-
-	// Provide an alternate MetricsClient for logged-in experiments to override the
-	// eventIntakeServiceUrl set by config (wgTestKitchenExperimentEventIntakeServiceUrl
-	// = '/evt-103e/v2/events?hasty=true' on production) which drops events if everyone experiment
-	// enrollments are not included. DefaultEventSubmitter sets DEFAULT_EVENT_INTAKE_URL to the
-	// eventgate-analytics-external cluster. See https://phabricator.wikimedia.org/T395779.
-	const metricsClient = isLoggedInExperiment ?
-		loggedInExperimentMetricsClient :
-		everyoneExperimentMetricsClient;
+	// Use the base set of contextual attributes from the product_metrics.web_base stream. This
+	// can be removed as part of T408186.
+	const contextualAttributes =
+		config.experimentConfigs[ STREAM_NAME ].contextual_attributes;
 
 	return new Experiment(
-		metricsClient,
-		experimentName,
-		assignedGroup,
-		subjectId,
-		samplingUnit
+		eventFactory,
+		eventSender,
+		eventIntakeServiceUrl,
+		config.experimentConfigs,
+		{
+			enrolled: experimentName,
+			assigned,
+			subject_id: subjectID,
+			sampling_unit: samplingUnit,
+			coordinator: COORDINATOR_DEFAULT,
+			stream_name: STREAM_NAME,
+			schema_id: SCHEMA_ID,
+			contextual_attributes: contextualAttributes
+		}
 	);
 }
 
@@ -209,20 +207,63 @@ function clearExperimentOverrides() {
 
 // ---
 
-const instrumentMetricsClient = newMetricsClientInternal(
-	config.instrumentConfigs,
-	config.InstrumentEventIntakeServiceUrl
-);
+/**
+ * This method is the same as https://gitlab.wikimedia.org/repos/data-engineering/metrics-platform/-/blob/759ce7203ad50776d1e29b1c0979ef3bb50c6a33/js/src/SamplingController.js#L22.
+ * That method was written and maintained by the authors of this extension.
+ *
+ * @ignore
+ *
+ * @param {mw.testKitchen.InstrumentSamplingConfig} instrumentSamplingConfig
+ */
+function isInstrumentInSample( instrumentSamplingConfig ) {
+	let id;
+	const { performer } = contextualAttributesFactory.newContextualAttributes();
+
+	switch ( instrumentSamplingConfig.unit ) {
+		case 'pageview':
+			id = performer.pageview_id;
+			break;
+		case 'session':
+			id = performer.session_id;
+			break;
+		default:
+			return false;
+	}
+
+	return parseInt( id.slice( 0, 8 ), 16 ) / UINT32_MAX < instrumentSamplingConfig.rate;
+}
 
 /**
- * Creates a new {@link Instrument} instance using config fetched from Test Kitchen.
+ * Gets details of an instrument.
+ *
+ * This method always returns an instance of {@link mw.testKitchen.InstrumentInterface} that can:
+ *
+ * 1. Determine whether the instrument is in-sample
+ * 2. Send analytics events
+ *
+ * @memberof mw.testKitchen
  *
  * @param {string} instrumentName
- * @return {Instrument}
- * @memberof mw.testKitchen
+ * @return {mw.testKitchen.InstrumentInterface}
  */
 function getInstrument( instrumentName ) {
-	return instrumentMetricsClient.newInstrument( instrumentName );
+	const instrumentConfig = config.instrumentConfigs[ instrumentName ];
+
+	if (
+		!instrumentConfig ||
+		( instrumentConfig.sample && !isInstrumentInSample( instrumentConfig.sample ) )
+	) {
+		return new UnsampledInstrument();
+	}
+
+	instrumentConfig.schema_id = SCHEMA_ID;
+
+	return new Instrument(
+		eventFactory,
+		eventSender,
+		config.InstrumentEventIntakeServiceUrl,
+		instrumentConfig
+	);
 }
 
 // ---
@@ -253,9 +294,31 @@ mw.tk = mw.testKitchen;
 
 // JS overriding experimentation feature
 if ( window.QUnit ) {
+	const originalConfig = config;
+
 	mw.testKitchen = Object.assign( mw.testKitchen, {
+		EventFactory,
+		eventSender,
 		Experiment,
 		UnenrolledExperiment,
-		OverriddenExperiment
+		OverriddenExperiment,
+		Instrument,
+		UnsampledInstrument,
+
+		/**
+		 * @param {Config} newConfig
+		 *
+		 * @ignore
+		 */
+		setConfig( newConfig ) {
+			config = newConfig;
+		},
+
+		/**
+		 * @ignore
+		 */
+		resetConfig() {
+			config = originalConfig;
+		}
 	} );
 }

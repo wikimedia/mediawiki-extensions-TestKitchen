@@ -2,7 +2,6 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Integration\TestKitchen\ResourceLoader;
 
-use Generator;
 use MediaWiki\Config\Config;
 use MediaWiki\Config\HashConfig;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
@@ -30,6 +29,8 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			'TestKitchenInstrumentEventIntakeServiceUrl' => 'http://quux.corge',
 			'TestKitchenExperimentStreamNames' => [
 				'product_metrics.web_base',
+				'foo.bar',
+				'baz.qux',
 			]
 		] );
 	}
@@ -47,152 +48,101 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 		);
 	}
 
-	public static function provideInstrumentConfigs(): Generator {
-		yield [
-			[],
+	public function testGetInstrumentConfigs(): void {
+		$instrumentConfigs = [
 			[
-				[
-					'name' => 'foo',
-					'sample' => [
-						'unit' => 'session',
-						'rate' => 1,
-					],
-					'stream_name' => 'product_metrics.web_base.foo',
-					'contextual_attributes' => [
-						'page_namespace_id',
-						'mediawiki_skin',
-					],
+				'name' => 'foo',
+				'sample' => [
+					'unit' => 'session',
+					'rate' => 1,
 				],
-				[
-					'name' => 'bar',
-					'sample' => [
-						'unit' => 'session',
-						'rate' => 0.5,
-					],
-					'stream_name' => 'product_metrics.web_base.bar',
-					'contextual_attributes' => [
-						'mediawiki_database',
-						'performer_is_bot',
-					],
+				'stream_name' => 'product_metrics.web_base.foo',
+				'contextual_attributes' => [
+					'page_namespace_id',
+					'mediawiki_skin',
 				],
 			],
 			[
-				'foo' => [
-					'producers' => [
-						'metrics_platform_client' => [
-							'provide_values' => [
-								'page_namespace_id',
-								'mediawiki_skin',
-							],
-							'stream_name' => 'product_metrics.web_base.foo',
-						],
-					],
-					'sample' => [
-						'unit' => 'session',
-						'rate' => 1,
-					],
+				'name' => 'bar',
+				'sample' => [
+					'unit' => 'session',
+					'rate' => 0.5,
 				],
-				'bar' => [
-					'producers' => [
-						'metrics_platform_client' => [
-							'provide_values' => [
-								'mediawiki_database',
-								'performer_is_bot',
-							],
-							'stream_name' => 'product_metrics.web_base.bar',
-						],
-					],
-					'sample' => [
-						'unit' => 'session',
-						'rate' => 0.5,
-					],
+				'stream_name' => 'product_metrics.web_base.bar',
+				'contextual_attributes' => [
+					'mediawiki_database',
+					'performer_is_bot',
 				],
 			],
 		];
 
-		// Configs for streams referenced in instrumentConfig.producers.metrics_platform_client.stream_name are copied.
-		yield [
-			[
-				'product_metrics.web_base' => [
-					'producers' => [
-						'metrics_platform_client' => [
-							'provide_values' => [
-								'page_namespace_id',
-								'mediawiki_skin',
-							],
-						],
-					],
-					'sample' => [
-						'unit' => 'session',
-						'rate' => 1,
-					],
+		$expected = [
+			'foo' => [
+				'sample' => [
+					'unit' => 'session',
+					'rate' => 1,
+				],
+				'stream_name' => 'product_metrics.web_base.foo',
+				'contextual_attributes' => [
+					'page_namespace_id',
+					'mediawiki_skin',
 				],
 			],
-			[
-				[
-					'name' => 'foo',
-					'sample' => [
-						'unit' => 'session',
-						'rate' => 1,
-					],
-					'stream_name' => 'product_metrics.web_base',
-					'contextual_attributes' => [
-						'page_namespace_id',
-						'mediawiki_skin',
-					],
+			'bar' => [
+				'sample' => [
+					'unit' => 'session',
+					'rate' => 0.5,
+				],
+				'stream_name' => 'product_metrics.web_base.bar',
+				'contextual_attributes' => [
+					'mediawiki_database',
+					'performer_is_bot',
 				],
 			],
-			[
-				'foo' => [
-					'producers' => [
-						'metrics_platform_client' => [
-							'provide_values' => [
-								'page_namespace_id',
-								'mediawiki_skin',
-							],
-							'stream_name' => 'product_metrics.web_base',
-						],
-					],
-					'sample' => [
-						'unit' => 'session',
-						'rate' => 1,
-					],
-				],
-				'product_metrics.web_base' => [
-					'producers' => [
-						'metrics_platform_client' => [
-							'provide_values' => [
-								'page_namespace_id',
-								'mediawiki_skin',
-							],
-						],
-					],
-					'sample' => [
-						'unit' => 'session',
-						'rate' => 1,
-					],
-				],
-			]
 		];
-	}
-
-	/**
-	 * @dataProvider provideInstrumentConfigs
-	 */
-	public function testGetStreamConfigsForInstruments(
-		$streamConfigs,
-		array $instrumentConfigs,
-		array $expectedStreamConfigs
-	): void {
-		$this->overrideConfigValue( 'EventStreams', $streamConfigs );
 
 		$this->configsFetcher->expects( $this->once() )
 			->method( 'getInstrumentConfigs' )
 			->willReturn( $instrumentConfigs );
 
 		$configForTestKitchenModule = Hooks::getConfigForTestKitchenModule( $this->context, $this->config );
-		$actualStreamConfigs = $configForTestKitchenModule[ 'instrumentConfigs' ];
+		$actual = $configForTestKitchenModule[ 'instrumentConfigs' ];
 
-		$this->assertEquals( $expectedStreamConfigs, $actualStreamConfigs );
+		$this->assertEquals( $expected, $actual );
+	}
+
+	/**
+	 * Tests that {@link Hooks::getExperimentConfigs()} filters out unknown streams
+	 */
+	public function testGetExperimentConfigs(): void {
+		$this->overrideConfigValues( [
+			'EventStreams' => [
+				'product_metrics.web_base' => [
+					'producers' => [
+						'metrics_platform_client' => [
+							'provide_values' => [
+								'namespace_id',
+								'namespace_name',
+							],
+						],
+					],
+				],
+				'foo.bar' => [],
+			],
+		] );
+
+		$expected = [
+			'product_metrics.web_base' => [
+				'contextual_attributes' => [
+					'namespace_id',
+					'namespace_name',
+				],
+			],
+		];
+
+		$configForTestKitchenModule = Hooks::getConfigForTestKitchenModule( $this->context, $this->config );
+		$actual = $configForTestKitchenModule[ 'experimentConfigs' ];
+
+		$this->assertEquals( $expected, $actual );
 	}
 }

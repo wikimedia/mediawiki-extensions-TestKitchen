@@ -94,14 +94,15 @@
 			"remoteExtPath": "TestKitchen/modules/ext.testKitchen",
 			"packageFiles": [
 				"index.js",
+				"ContextualAttributesFactory.js",
+				"EventFactory.js",
+				"eventSender.js",
 				"Experiment.js",
+				"Instrument.js",
 				{
 					"name": "config.json",
 					"callback": "MediaWiki\\Extension\\TestKitchen\\ResourceLoader\\Hooks::getConfigForTestKitchenModule"
 				}
-			],
-			"dependencies": [
-				"ext.eventLogging"
 			]
 		}
 	},
@@ -110,7 +111,12 @@
 		"remoteExtPath": "TestKitchen/tests/qunit",
 		"scripts": [
 			"ext.testKitchen/index.test.js",
-			"ext.testKitchen/Experiment.test.js"
+			"ext.testKitchen/getExperiment.test.js",
+			"ext.testKitchen/getInstrument.test.js",
+			"ext.testKitchen/EventFactory.test.js",
+			"ext.testKitchen/eventSender.test.js",
+			"ext.testKitchen/Experiment.test.js",
+			"ext.testKitchen/Instrument.test.js"
 		],
 		"dependencies": [
 			"ext.testKitchen"

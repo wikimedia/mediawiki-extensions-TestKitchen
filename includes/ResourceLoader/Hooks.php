@@ -24,33 +24,46 @@ class Hooks {
 				$config->get( 'TestKitchenLoggedInExperimentEventIntakeServiceUrl' ),
 			'InstrumentEventIntakeServiceUrl' => $config->get( 'TestKitchenInstrumentEventIntakeServiceUrl' ),
 
-			'streamConfigs' => self::getStreamConfigs( $config ),
-			'instrumentConfigs' => self::getStreamConfigsForInstruments(),
+			'experimentConfigs' => self::getExperimentConfigs( $config ),
+			'instrumentConfigs' => self::getInstrumentConfigs(),
 		];
 	}
 
 	/**
-	 * Gets the stream configs for experiments configured in Test Kitchen.
-	 * Currently, the names of streams are statically configured using
-	 * the `$wgTestKitchenExperimentStreamNames` config variable.
+	 * Gets the configs for experiments configured in Test Kitchen UI.
 	 *
-	 * Note well that the stream configs are limited copies of the originals. The copies only contain the
-	 * `producers.metrics_platform_client` property because:
+	 * Currently, experiment streams and contextual attributes aren't configured in Test Kitchen so this method
+	 * processes the stream configs for the streams in the `$wgTestKitchenExperimentStreamNames` config variable into
+	 * a map of experiment to contextual attributes.
 	 *
-	 * 1. The Test Kitchen client treats streams as in-sample by default. Therefore, removing the analytics sampling
-	 *    config from the copied stream config makes the stream always in-sample
-	 *
-	 * 2. It helps keep the `ext.testKitchen` ResourceLoader module small.
+	 * In future, this method will process the experiment configs from Test Kitchen UI like
+	 * {@link Hooks::getInstrumentConfigs()}.
 	 *
 	 * @param Config $config
 	 * @return array
 	 */
-	private static function getStreamConfigs( Config $config ): array {
-		return self::getMinimumUsableStreamConfigs( $config->get( 'TestKitchenExperimentStreamNames' ) );
+	private static function getExperimentConfigs( Config $config ): array {
+		$streamNames = $config->get( 'TestKitchenExperimentStreamNames' );
+
+		// NOTE: TestKitchen has a hard dependency on EventStreamConfig. If this code is executing, then
+		// EventStreamConfig is loaded and this service is defined.
+		$streamConfigs = MediaWikiServices::getInstance()->getService( 'EventStreamConfig.StreamConfigs' )
+			->get( $streamNames );
+
+		$result = [];
+
+		foreach ( $streamConfigs as $streamName => $streamConfig ) {
+			if ( isset( $streamConfig['producers']['metrics_platform_client']['provide_values'] ) ) {
+				$result[ $streamName ]['contextual_attributes'] =
+					$streamConfig['producers']['metrics_platform_client']['provide_values'];
+			}
+		}
+
+		return $result;
 	}
 
 	/**
-	 * Gets the stream configs for instruments configured in Test Kitchen.
+	 * Gets the configs for instruments configured in Test Kitchen UI.
 	 *
 	 * Note well that the stream configs are limited copies of the originals. The copies only contain the
 	 * `producers.metrics_platform_client` and `sample` properties.
@@ -58,72 +71,19 @@ class Hooks {
 	 *
 	 * @return array
 	 */
-	private static function getStreamConfigsForInstruments(): array {
+	private static function getInstrumentConfigs(): array {
 		$instrumentConfigs = Services::getConfigsFetcher()->getInstrumentConfigs();
-		$instrumentStreamConfigs = [];
-		$targetedStreams = [];
+		$result = [];
 
 		foreach ( $instrumentConfigs as $instrumentConfig ) {
 			$instrumentName = $instrumentConfig['name'];
-			$targetStreamName = $instrumentConfig['stream_name'];
-			$targetedStreams[] = $targetStreamName;
 
-			$instrumentStreamConfigs[ $instrumentName ] = [
-				'producers' => [
-					'metrics_platform_client' => [
-						'provide_values' => $instrumentConfig['contextual_attributes'],
-						'stream_name' => $targetStreamName,
-					],
-				],
+			$result[ $instrumentName ] = [
 				'sample' => $instrumentConfig['sample'],
+				'stream_name' => $instrumentConfig['stream_name'],
+				'contextual_attributes' => $instrumentConfig['contextual_attributes'],
 
 				// TODO: 'schema_id' => ???
-			];
-		}
-
-		// Get the stream configs for the streams targeted by the instruments
-		$targetedStreamConfigs = self::getMinimumUsableStreamConfigs( $targetedStreams );
-
-		return array_merge( $instrumentStreamConfigs, $targetedStreamConfigs );
-	}
-
-	/**
-	 * @param string[] $streamNames
-	 * @return array
-	 */
-	private static function getMinimumUsableStreamConfigs( array $streamNames ): array {
-		return array_map(
-			self::getMinimumUsableStreamConfig( ... ),
-
-			// NOTE: TestKitchen has a hard dependency on EventStreamConfig. If this code is executing, then
-			// EventStreamConfig is loaded and this service is defined.
-			MediaWikiServices::getInstance()->getService( 'EventStreamConfig.StreamConfigs' )
-				->get( $streamNames )
-		);
-	}
-
-	/**
-	 * Gets the minimum viable stream config usable by the Test Kitchen JS Client by removing all but the following
-	 * properties:
-	 *
-	 * * `producers.metrics_platform_client`
-	 * * `sample`
-	 *
-	 * @param array $streamConfig
-	 * @return array
-	 */
-	private static function getMinimumUsableStreamConfig( array $streamConfig ): array {
-		$result = array_intersect_key(
-			$streamConfig,
-			[
-				'producers' => true,
-				'sample' => true,
-			]
-		);
-
-		if ( isset( $streamConfig['producers']['metrics_platform_client'] ) ) {
-			$result['producers'] = [
-				'metrics_platform_client' => $streamConfig['producers']['metrics_platform_client'],
 			];
 		}
 
