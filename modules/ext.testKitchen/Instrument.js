@@ -55,19 +55,7 @@ class Instrument {
 		return this;
 	}
 
-	setSchemaID( schemaID ) {
-		return this.setSchema( schemaID );
-	}
-
 	isInSample() {
-		return true;
-	}
-
-	isStreamInSample() {
-		return true;
-	}
-
-	isEnabled() {
 		return true;
 	}
 }
@@ -92,20 +80,7 @@ class UnsampledInstrument {
 		return this;
 	}
 
-	// eslint-disable-next-line no-unused-vars
-	setSchemaID( schemaID ) {
-		return this;
-	}
-
 	isInSample() {
-		return false;
-	}
-
-	isEnabled() {
-		return false;
-	}
-
-	isStreamInSample() {
 		return false;
 	}
 }

@@ -285,61 +285,9 @@
  */
 
 /**
- * Sets the ID of the schema used to validate analytics events sent with
- * {@link mw.testKitchen.InstrumentInterface#send}.
- *
- * This method is provided for backwards compatibility with [existing instrumentation][0].
- *
- * This method is chainable.
- *
- * [0]: https://codesearch.wmcloud.org/things/?q=%5C.setSchemaID%5C%28&files=&excludeFiles=modules%5C%2Flib%5C%2F&repos=
- *
- * @deprecated
- *
- * @method setSchemaID
- * @instance
- * @memberof mw.testKitchen.InstrumentInterface
- *
- * @param {string} schemaID
- * @return {mw.testKitchen.InstrumentInterface}
- */
-
-/**
  * Gets whether the instrument is in-sample.
  *
  * @method isInSample
- * @instance
- * @memberof mw.testKitchen.InstrumentInterface
- *
- * @return {boolean}
- */
-
-/**
- * Gets whether the instrument is in-sample.
- *
- * This method is provided for backwards compatibility with [existing instrumentation][0].
- *
- * [0]: https://codesearch.wmcloud.org/things/?q=%5C.isStreamInSample%5C%28&files=js%24&excludeFiles=modules%5C%2Flib%5C%2F&repos=
- *
- * @deprecated
- *
- * @method isStreamInSample
- * @instance
- * @memberof mw.testKitchen.InstrumentInterface
- *
- * @return {boolean}
- */
-
-/**
- * Gets whether the instrument is enabled, i.e. whether the instrument is in-sample.
- *
- * This method is provided for backwards compatibility with [existing instrumentation][0].
- *
- * [0]: https://codesearch.wmcloud.org/things/?q=getInstrument%5C%28&files=js%24&excludeFiles=modules%5C%2Flib%5C%2F&repos=
- *
- * @deprecated
- *
- * @method isEnabled
  * @instance
  * @memberof mw.testKitchen.InstrumentInterface
  *
