@@ -57,11 +57,9 @@ class Experiment implements ExperimentInterface {
 			$eventContextualAttributes = $experimentConfig['contextual_attributes'];
 			// When per-event contextual attributes are present, those not already included will be added to the event
 			if ( $contextualAttributes !== [] ) {
-				$eventContextualAttributes = array_unique(
-					array_merge(
-						$eventContextualAttributes,
-						$contextualAttributes
-					)
+				$eventContextualAttributes = array_merge(
+					$eventContextualAttributes,
+					$contextualAttributes
 				);
 			}
 

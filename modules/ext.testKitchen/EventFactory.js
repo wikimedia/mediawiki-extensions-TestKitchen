@@ -87,6 +87,8 @@ class EventFactory {
 		requestedContextualAttributes =
 			REQUIRED_CONTEXTUAL_ATTRIBUTES.concat( requestedContextualAttributes );
 
+		requestedContextualAttributes = Array.from( new Set( requestedContextualAttributes ) );
+
 		const contextualAttributes = this.contextualAttributesFactory.newContextualAttributes();
 
 		for ( let i = 0; i < requestedContextualAttributes.length; i++ ) {

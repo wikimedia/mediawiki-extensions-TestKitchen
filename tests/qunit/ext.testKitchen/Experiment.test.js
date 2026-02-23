@@ -94,7 +94,7 @@ QUnit.test.each(
 );
 
 QUnit.test.each(
-	'send()',
+	'send(action)',
 	[
 		[
 			'everyoneExperiment',
@@ -131,6 +131,152 @@ QUnit.test.each(
 			'Hello, World!',
 			{
 				experiment: expectedExperiment
+			}
+		] );
+
+		assert.strictEqual( this.sendEventStub.callCount, 1 );
+	}
+);
+
+QUnit.test.each(
+	'send(action, interactionData)',
+	[
+		[
+			'everyoneExperiment',
+			{
+				enrolled: 'hello_world',
+				assigned: 'A',
+				subject_id: 'awaiting',
+				sampling_unit: 'edge-unique',
+				coordinator: 'default'
+			}
+		],
+		[
+			'loggedInExperiment',
+			{
+				enrolled: 'my-awesome-experiment',
+				assigned: 'B',
+				subject_id: '0x0ff1ce',
+				sampling_unit: 'mw-user',
+				coordinator: 'default'
+			}
+		]
+	],
+	function ( assert, [ propertyName, expectedExperiment ] ) {
+		this[ propertyName ].send( 'Hello, World!', { action_source: 'the-source' } );
+
+		assert.strictEqual( this.newEventStub.callCount, 1 );
+		assert.deepEqual( this.newEventStub.firstCall.args, [
+			'product_metrics.web_base',
+			'/analytics/product_metrics/web/base/2.0.0',
+			[
+				'performer_pageview_id',
+				'mediawiki_database'
+			],
+			'Hello, World!',
+			{
+				experiment: expectedExperiment,
+				action_source: 'the-source'
+			}
+		] );
+
+		assert.strictEqual( this.sendEventStub.callCount, 1 );
+	}
+);
+
+QUnit.test.each(
+	'send(action, {}, contextualAttributes)',
+	[
+		[
+			'everyoneExperiment',
+			{
+				enrolled: 'hello_world',
+				assigned: 'A',
+				subject_id: 'awaiting',
+				sampling_unit: 'edge-unique',
+				coordinator: 'default'
+			}
+		],
+		[
+			'loggedInExperiment',
+			{
+				enrolled: 'my-awesome-experiment',
+				assigned: 'B',
+				subject_id: '0x0ff1ce',
+				sampling_unit: 'mw-user',
+				coordinator: 'default'
+			}
+		]
+	],
+	function ( assert, [ propertyName, expectedExperiment ] ) {
+		this[ propertyName ].send( 'Hello, World!', {}, [ 'performer_is_bot' ] );
+
+		assert.strictEqual( this.newEventStub.callCount, 1 );
+		assert.deepEqual( this.newEventStub.firstCall.args, [
+			'product_metrics.web_base',
+			'/analytics/product_metrics/web/base/2.0.0',
+			[
+				'performer_is_bot',
+				'performer_pageview_id',
+				'mediawiki_database'
+			],
+			'Hello, World!',
+			{
+				experiment: expectedExperiment
+			}
+		] );
+
+		assert.strictEqual( this.sendEventStub.callCount, 1 );
+	}
+);
+
+QUnit.test.each(
+	'send(action, interactionData, contextualAttributes)',
+	[
+		[
+			'everyoneExperiment',
+			{
+				enrolled: 'hello_world',
+				assigned: 'A',
+				subject_id: 'awaiting',
+				sampling_unit: 'edge-unique',
+				coordinator: 'default'
+			}
+		],
+		[
+			'loggedInExperiment',
+			{
+				enrolled: 'my-awesome-experiment',
+				assigned: 'B',
+				subject_id: '0x0ff1ce',
+				sampling_unit: 'mw-user',
+				coordinator: 'default'
+			}
+		]
+	],
+	function ( assert, [ propertyName, expectedExperiment ] ) {
+		this[ propertyName ].send( 'Hello, World!',
+			{
+				action_source: 'the_source',
+				action_context: 'the_context'
+			},
+			[ 'performer_is_bot', 'performer_is_logged_in' ] );
+
+		assert.strictEqual( this.newEventStub.callCount, 1 );
+		assert.deepEqual( this.newEventStub.firstCall.args, [
+			'product_metrics.web_base',
+			'/analytics/product_metrics/web/base/2.0.0',
+			[
+				'performer_is_bot',
+				'performer_is_logged_in',
+				'performer_pageview_id',
+				'mediawiki_database'
+			],
+			'Hello, World!',
+			{
+				experiment: expectedExperiment,
+				action_source: 'the_source',
+				action_context: 'the_context'
 			}
 		] );
 
@@ -238,6 +384,10 @@ QUnit.test.each(
 			'product_metrics.web_base',
 			'/analytics/product_metrics/web/base/2.0.0',
 			[
+				'performer_is_logged_in',
+				'performer_is_temp',
+				'performer_is_bot',
+				'mediawiki_database',
 				'performer_pageview_id',
 				'mediawiki_database'
 			],

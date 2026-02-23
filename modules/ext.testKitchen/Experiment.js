@@ -1,3 +1,10 @@
+const EXPOSURE_CONTEXTUAL_ATTRIBUTES = [
+	'performer_is_logged_in',
+	'performer_is_temp',
+	'performer_is_bot',
+	'mediawiki_database'
+];
+
 /**
  * @class
  * @implements {mw.testKitchen.ExperimentInterface}
@@ -40,7 +47,7 @@ class Experiment {
 		return groups.includes( this.config.assigned );
 	}
 
-	send( action, interactionData ) {
+	send( action, interactionData, contextualAttributes ) {
 		// Extract SDK-specific experiment config
 		const keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
 		const experiment = {};
@@ -55,10 +62,16 @@ class Experiment {
 			{ experiment }
 		);
 
+		// if present, per-event contextual attributes will be added
+		let eventContextualAttributes = this.contextualAttributes;
+		if ( contextualAttributes && contextualAttributes.length > 0 ) {
+			eventContextualAttributes = contextualAttributes.concat( this.contextualAttributes );
+		}
+
 		const event = this.eventFactory.newEvent(
 			this.streamName,
 			this.schemaID,
-			this.contextualAttributes,
+			eventContextualAttributes,
 			action,
 			interactionData
 		);
@@ -71,7 +84,7 @@ class Experiment {
 	}
 
 	sendExposure() {
-		this.send( 'experiment_exposure' );
+		this.send( 'experiment_exposure', {}, EXPOSURE_CONTEXTUAL_ATTRIBUTES );
 	}
 
 	setStream( streamName ) {
@@ -119,7 +132,7 @@ class UnenrolledExperiment {
 	isAssignedGroup( ...groups ) {}
 
 	// eslint-disable-next-line no-unused-vars
-	send( action, interactionData ) {}
+	send( action, interactionData, contextualAttributes ) {}
 
 	// eslint-disable-next-line no-unused-vars
 	submitInteraction( action, interactionData ) {}
@@ -162,7 +175,8 @@ class OverriddenExperiment {
 		return groups.includes( this.assigned );
 	}
 
-	send( action, interactionData ) {
+	// eslint-disable-next-line no-unused-vars
+	send( action, interactionData, contextualAttributes ) {
 		const message =
 			`${ this.name }: The enrollment for this experiment has been overridden. ` +
 			'The following event will not be sent:\n';

@@ -121,6 +121,10 @@
  * {@link mw.testKitchen.ExperimentInterface#setSchema},
  * respectively.
  *
+ * Per-event contextual attributes can be passed as contextualAttributes. In this case, they will
+ * be added to the events along with the ones that are defined in the experiment config
+ *
+ *
  * [0]: https://gitlab.wikimedia.org/repos/data-engineering/schemas-event-secondary/-/blob/master/jsonschema/fragment/analytics/product_metrics/experiment/current.yaml?ref_type=heads
  *
  * @method send
@@ -131,6 +135,7 @@
  *  "hover", "click"
  * @param {Object} [interactionData] Additional data about the action that the user enrolled in
  *  the experiment took
+ * @param {array} [contextualAttributes] Per event contextual attributes
  */
 
 /**
@@ -152,7 +157,7 @@
  * @memberof mw.testKitchen.ExperimentInterface
  *
  * @param {string} action The action related to the submitted event
- * @param {Object} interactionData Additional data
+ * @param {Object} [interactionData] Additional data
  */
 
 /**
