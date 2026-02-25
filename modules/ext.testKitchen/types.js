@@ -276,6 +276,16 @@
  */
 
 /**
+ * Submits a `click` interaction.
+ *
+ * @deprecated
+ *
+ * @method submitClick
+ * @instance
+ * @memberof mw.testKitchen.InstrumentInterface
+ */
+
+/**
  * Sets the ID of the schema used to validate analytics events sent with
  * {@link mw.testKitchen.InstrumentInterface#send}.
  *
