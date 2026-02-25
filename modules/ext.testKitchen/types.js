@@ -298,3 +298,13 @@
  *
  * @return {boolean}
  */
+
+/**
+ * Sets the instrument name.
+ *
+ * @deprecated
+ *
+ * @method setInstrumentName
+ * @instance
+ * @memberof mw.testKitchen.InstrumentInterface
+ */
