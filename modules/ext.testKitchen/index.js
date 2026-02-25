@@ -262,6 +262,7 @@ function getInstrument( instrumentName ) {
 		eventFactory,
 		eventSender,
 		config.InstrumentEventIntakeServiceUrl,
+		instrumentName,
 		instrumentConfig
 	);
 }

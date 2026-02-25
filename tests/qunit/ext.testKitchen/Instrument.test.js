@@ -24,6 +24,7 @@ QUnit.module( 'ext.testKitchen/Instrument', QUnit.newMwEnvironment( {
 			eventFactory,
 			eventSender,
 			'https://foo.bar/baz?qux=quux',
+			'foo_instrument',
 			{
 				sample: {
 					unit: 'session',
@@ -67,6 +68,7 @@ QUnit.test( 'send()', function ( assert ) {
 		'my-awesome-action',
 		{
 			foo: 'bar',
+			instrument_name: 'foo_instrument',
 			funnel_event_sequence_position: 1
 		}
 	] );
@@ -87,6 +89,14 @@ QUnit.test( 'send() - increments FESP', function ( assert ) {
 	assert.strictEqual( this.newEventStub.secondCall.args[ 4 ].funnel_event_sequence_position, 2 );
 } );
 
+QUnit.test( 'send() - can\'t override instrument_name', function ( assert ) {
+	this.instrument.send( 'my-awesome-action', {
+		instrument_name: 'my-awesome-instrument'
+	} );
+
+	assert.strictEqual( this.newEventStub.firstCall.args[ 4 ].instrument_name, 'foo_instrument' );
+} );
+
 QUnit.test( 'send() - can\'t override FESP', function ( assert ) {
 	this.instrument.send( 'my-awesome-action', {
 		funnel_event_sequence_position: 10
@@ -103,4 +113,11 @@ QUnit.test( 'setSchema()', function ( assert ) {
 	this.instrument.send( 'my-awesome-action' );
 
 	assert.strictEqual( this.newEventStub.firstCall.args[ 1 ], '/my/other/awesome/schema/1.0.0' );
+} );
+
+QUnit.test( 'setInstrumentName()', function ( assert ) {
+	this.instrument.setInstrumentName( 'my-other-awesome-instrument' );
+	this.instrument.send( 'my-awesome-action' );
+
+	assert.strictEqual( this.newEventStub.firstCall.args[ 4 ].instrument_name, 'my-other-awesome-instrument' );
 } );

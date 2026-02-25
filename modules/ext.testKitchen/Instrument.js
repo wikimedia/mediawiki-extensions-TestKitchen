@@ -11,17 +11,20 @@ class Instrument {
 	 * @param {mw.testKitchen.EventFactory} eventFactory
 	 * @param {mw.testKitchen.EventSenderInterface} eventSender
 	 * @param {string} eventIntakeServiceUrl
+	 * @param {string} name
 	 * @param {mw.testKitchen.InstrumentConfig} config
 	 */
 	constructor(
 		eventFactory,
 		eventSender,
 		eventIntakeServiceUrl,
+		name,
 		config
 	) {
 		this.eventFactory = eventFactory;
 		this.eventSender = eventSender;
 		this.eventIntakeServiceUrl = eventIntakeServiceUrl;
+		this.name = name;
 		this.config = config;
 		this.schemaID = config.schema_id;
 		this.funnelEventSequencePosition = 1;
@@ -31,7 +34,10 @@ class Instrument {
 		interactionData = Object.assign(
 			{},
 			interactionData,
-			{ funnel_event_sequence_position: this.funnelEventSequencePosition++ }
+			{
+				instrument_name: this.name,
+				funnel_event_sequence_position: this.funnelEventSequencePosition++
+			}
 		);
 
 		const event = this.eventFactory.newEvent(
@@ -58,6 +64,10 @@ class Instrument {
 	isInSample() {
 		return true;
 	}
+
+	setInstrumentName( name ) {
+		this.name = name;
+	}
 }
 
 /**
@@ -83,6 +93,9 @@ class UnsampledInstrument {
 	isInSample() {
 		return false;
 	}
+
+	// eslint-disable-next-line no-unused-vars
+	setInstrumentName( name ) {}
 }
 
 module.exports = { Instrument, UnsampledInstrument };
