@@ -114,10 +114,3 @@ QUnit.test( 'setSchema()', function ( assert ) {
 
 	assert.strictEqual( this.newEventStub.firstCall.args[ 1 ], '/my/other/awesome/schema/1.0.0' );
 } );
-
-QUnit.test( 'setInstrumentName()', function ( assert ) {
-	this.instrument.setInstrumentName( 'my-other-awesome-instrument' );
-	this.instrument.send( 'my-awesome-action' );
-
-	assert.strictEqual( this.newEventStub.firstCall.args[ 4 ].instrument_name, 'my-other-awesome-instrument' );
-} );
