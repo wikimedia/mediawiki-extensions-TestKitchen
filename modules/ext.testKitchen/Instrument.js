@@ -55,6 +55,10 @@ class Instrument {
 		this.send( action, interactionData );
 	}
 
+	submitClick( interactionData ) {
+		this.submitInteraction( 'click', interactionData );
+	}
+
 	setSchema( schemaID ) {
 		this.schemaID = schemaID;
 
@@ -84,6 +88,9 @@ class UnsampledInstrument {
 
 	// eslint-disable-next-line no-unused-vars
 	submitInteraction( action, interactionData ) {}
+
+	// eslint-disable-next-line no-unused-vars
+	submitClick( interactionData ) {}
 
 	// eslint-disable-next-line no-unused-vars
 	setSchema( schemaID ) {
