@@ -13,7 +13,7 @@ services:
       MYSQL_DB: test_kitchen
       MYSQL_ROOT_PASSWORD: maria
   test-kitchen:
-    image: docker-registry.wikimedia.org/repos/data-engineering/test-kitchen:latest
+    image: docker-registry.wikimedia.org/repos/data-engineering/test-kitchen:dev
     container_name: test-kitchen
     restart: always
     volumes:
