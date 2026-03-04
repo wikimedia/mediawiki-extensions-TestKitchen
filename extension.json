@@ -77,13 +77,20 @@
 				"TestKitchen.ExperimentManager",
 				"TestKitchen.Logger"
 			]
+		},
+		"MinervaExperimentAAA": {
+			"class": "MediaWiki\\Extension\\TestKitchen\\Experiments\\MinervaExperimentAAA",
+			"services": [
+				"TestKitchen.ExperimentManager"
+			]
 		}
 	},
 	"Hooks": {
 		"AuthPreserveQueryParams": "TestKitchenMain",
 		"BeforeInitialize": "TestKitchenMain",
 		"BeforePageDisplay": [
-			"TestKitchenMain"
+			"TestKitchenMain",
+			"MinervaExperimentAAA"
 		],
 		"ApiBeforeMain": "TestKitchenMain",
 		"APIAfterExecute": "TestKitchenMain"
@@ -103,6 +110,34 @@
 					"name": "config.json",
 					"callback": "MediaWiki\\Extension\\TestKitchen\\ResourceLoader\\Hooks::getConfigForTestKitchenModule"
 				}
+			]
+		},
+		"ext.testKitchen.minervaExperiment.init": {
+			"localBasePath": "modules/ext.testKitchen.minervaExperiment",
+			"remoteExtPath": "TestKitchen/modules/ext.testKitchen.minervaExperiment",
+			"packageFiles": [
+				"init.js"
+			]
+		},
+		"ext.testKitchen.minervaExperiment.instrumentControl": {
+			"localBasePath": "modules/ext.testKitchen.minervaExperiment",
+			"remoteExtPath": "TestKitchen/modules/ext.testKitchen.minervaExperiment",
+			"packageFiles": [
+				"instrumentControl.js"
+			]
+		},
+		"ext.testKitchen.minervaExperiment.instrument1": {
+			"localBasePath": "modules/ext.testKitchen.minervaExperiment",
+			"remoteExtPath": "TestKitchen/modules/ext.testKitchen.minervaExperiment",
+			"packageFiles": [
+				"instrument1.js"
+			]
+		},
+		"ext.testKitchen.minervaExperiment.instrument2": {
+			"localBasePath": "modules/ext.testKitchen.minervaExperiment",
+			"remoteExtPath": "TestKitchen/modules/ext.testKitchen.minervaExperiment",
+			"packageFiles": [
+				"instrument2.js"
 			]
 		}
 	},
