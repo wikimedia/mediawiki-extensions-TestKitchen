@@ -147,6 +147,7 @@
 		"scripts": [
 			"ext.testKitchen/index.test.js",
 			"ext.testKitchen/getExperiment.test.js",
+			"ext.testKitchen/getExperimentByPrefix.test.js",
 			"ext.testKitchen/getInstrument.test.js",
 			"ext.testKitchen/EventFactory.test.js",
 			"ext.testKitchen/eventSender.test.js",
