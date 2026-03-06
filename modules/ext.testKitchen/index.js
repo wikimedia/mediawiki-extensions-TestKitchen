@@ -113,6 +113,58 @@ function getExperiment( experimentName ) {
 }
 
 /**
+ * Gets the details of an experiment whose name matches the given prefix.
+ *
+ * This method should only be used when an experiment will be repeated frequently, e.g. to measure
+ * a key metric on a monthly basis. In these cases, this method can be used to minimize the number
+ * of changes required to repeat the experiment.
+ *
+ * This method always returns an instance of {@link mw.testKitchen.ExperimentInterface} that can:
+ *
+ * 1. Get information about the user's (more precisely, the subject's) enrollment in the experiment
+ * 2. Send analytics events relating to the experiment
+ *
+ * @see mw.testKitchen.getExperiment
+ *
+ * @example
+ * // The user is enrolled in the following experiments:
+ * //
+ * // - my-awesome-experiment-1
+ * // - my-awesome-experiment-2
+ * // - my-other-awesome-experiment
+ *
+ * // Gets the details of the "my-awesome-experiment-2" experiment
+ * mw.testKitchen.getExperimentByPrefix( 'my-awesome-experiment-' );
+ *
+ * // Gets the details of the "my-other-awesome-experiment" experiment
+ * mw.testKitchen.getExperimentByPrefix( 'my-other-' );
+ *
+ * @memberof mw.testKitchen
+ *
+ * @param {string} experimentNamePrefix
+ * @return {mw.testKitchen.ExperimentInterface}
+ */
+function getExperimentByPrefix( experimentNamePrefix ) {
+	const userExperiments = mw.config.get( 'wgTestKitchenUserExperiments' );
+
+	if ( !userExperiments || userExperiments.enrolled.length === 0 ) {
+		return new UnenrolledExperiment();
+	}
+
+	// Filter out the names of experiments that don't start with the given prefix. Then sort them in
+	// reverse alphabetical order. The topmost experiment name should be the best match.
+	const experimentNames = userExperiments.enrolled.filter(
+		( experimentName ) => experimentName.startsWith( experimentNamePrefix )
+	).sort( ( a, b ) => b.localeCompare( a ) );
+
+	if ( !experimentNames.length ) {
+		return new UnenrolledExperiment();
+	}
+
+	return getExperiment( experimentNames[ 0 ] );
+}
+
+/**
  * Gets a map of experiment to group for all experiments that the current user is enrolled into.
  *
  * This method is internal and should only be used by other Test Kitchen components.
@@ -274,6 +326,7 @@ function getInstrument( instrumentName ) {
  */
 mw.testKitchen = {
 	getExperiment,
+	getExperimentByPrefix,
 	getAssignments,
 	getInstrument,
 	overrideExperimentGroup,
@@ -285,6 +338,7 @@ mw.testKitchen = {
 /**
  * @namespace mw.tk
  * @borrows mw.testKitchen.getExperiment as getExperiment
+ * @borrows mw.testKitchen.getExperimentByPrefix as getExperimentByPrefix
  * @borrows mw.testKitchen.getAssignments as getAssignments
  * @borrows mw.testKitchen.getInstrument as getInstrument
  * @borrows mw.testKitchen.overrideExperimentGroup as overrideExperimentGroup

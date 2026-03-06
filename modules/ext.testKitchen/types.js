@@ -135,7 +135,7 @@
  *  "hover", "click"
  * @param {Object} [interactionData] Additional data about the action that the user enrolled in
  *  the experiment took
- * @param {array} [contextualAttributes] Per event contextual attributes
+ * @param {string[]} [contextualAttributes] Per event contextual attributes
  */
 
 /**
