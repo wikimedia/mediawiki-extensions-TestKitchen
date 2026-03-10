@@ -31,24 +31,19 @@ class Instrument {
 	}
 
 	send( action, interactionData ) {
-		interactionData = Object.assign(
-			{},
-			interactionData,
-			{
-				instrument_name: this.name,
-				funnel_event_sequence_position: this.funnelEventSequencePosition++
-			}
-		);
-
-		const event = this.eventFactory.newEvent(
-			this.config.stream_name,
-			this.schemaID,
-			this.config.contextual_attributes,
-			action,
-			interactionData
-		);
-
+		const event = this.buildEvent( action, interactionData );
 		this.eventSender.sendEvent( event, this.eventIntakeServiceUrl );
+	}
+
+	sendImmediately( action, interactionData ) {
+		const event = this.buildEvent( action, interactionData );
+
+		// T417143 Send events directly to the new path.
+		try {
+			navigator.sendBeacon( this.eventIntakeServiceUrl, JSON.stringify( event ) );
+		} catch ( e ) {
+			// Ignoring errors similar to doSendEvents() in eventSender.js.
+		}
 	}
 
 	submitInteraction( action, interactionData ) {
@@ -64,6 +59,32 @@ class Instrument {
 	isInSample() {
 		return true;
 	}
+
+	/**
+	 * Construct a standard event for all send paths.
+	 *
+	 * @private
+	 * @param {string} action
+	 * @param {Object} [interactionData]
+	 * @return {Object}
+	 */
+	buildEvent( action, interactionData ) {
+		interactionData = Object.assign(
+			{},
+			interactionData,
+			{
+				instrument_name: this.name,
+				funnel_event_sequence_position: this.funnelEventSequencePosition++
+			}
+		);
+		return this.eventFactory.newEvent(
+			this.config.stream_name,
+			this.schemaID,
+			this.config.contextual_attributes,
+			action,
+			interactionData
+		);
+	}
 }
 
 /**
@@ -76,6 +97,9 @@ class UnsampledInstrument {
 
 	// eslint-disable-next-line no-unused-vars
 	send( action, interactionData ) {}
+
+	// eslint-disable-next-line no-unused-vars
+	sendImmediately( action, interactionData ) {}
 
 	// eslint-disable-next-line no-unused-vars
 	submitInteraction( action, interactionData ) {}

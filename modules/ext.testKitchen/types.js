@@ -276,6 +276,23 @@
  */
 
 /**
+ * Sends an analytics event immediately.
+ *
+ * This method sends an event right away via the [Navigator: sendBeacon() method][0]
+ *
+ * [0]: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon
+ *
+ * @package
+ *
+ * @method sendImmediately
+ * @instance
+ * @memberof mw.testKitchen.InstrumentInterface
+ *
+ * @param {string} action The action related to the submitted event
+ * @param {Object} [interactionData] Additional data
+ */
+
+/**
  * Sets the ID of the schema used to validate analytics events sent with
  * {@link mw.testKitchen.InstrumentInterface#send}.
  *
