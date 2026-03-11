@@ -110,6 +110,9 @@
 					"name": "config.json",
 					"callback": "MediaWiki\\Extension\\TestKitchen\\ResourceLoader\\Hooks::getConfigForTestKitchenModule"
 				}
+			],
+			"dependencies": [
+				"mediawiki.user"
 			]
 		},
 		"ext.testKitchen.minervaExperiment.init": {
