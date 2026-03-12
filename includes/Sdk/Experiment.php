@@ -92,9 +92,9 @@ class Experiment implements ExperimentInterface {
 	/**
 	 * Get the config for the experiment.
 	 *
-	 * @return array|null
+	 * @return array
 	 */
-	public function getExperimentConfig(): ?array {
+	public function getExperimentConfig(): array {
 		return $this->experimentConfig;
 	}
 

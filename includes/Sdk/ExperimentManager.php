@@ -166,6 +166,7 @@ class ExperimentManager implements
 	 * Get the current user's experiment enrollment details.
 	 *
 	 * @param string $experimentName
+	 * @return array
 	 */
 	private function getExperimentConfig( string $experimentName ): array {
 		return [
