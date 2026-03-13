@@ -20,11 +20,16 @@ class ExperimentManager implements
 	private const BASE_STREAM = 'product_metrics.web_base';
 	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
 
+	// The experiment.sampling_unit field can be one of "mw-user", "edge-unique", or "session" but, because overridden
+	// experiments cannot send events, for clarity we can set "overridden" as the value.
+	private const OVERRIDDEN_EXPERIMENT_SAMPLING_UNIT = 'overridden';
+
 	private EnrollmentResultBuilder $enrollments;
 	private array $enrollmentResult;
 
 	private array $baseStreamContextualAttributes;
 	private StreamConfigs $streamConfigs;
+	private array $streamNameToContextualAttributesMap;
 
 	public function __construct(
 		private readonly LoggerInterface $logger,
@@ -44,6 +49,7 @@ class ExperimentManager implements
 
 		$this->enrollments = new EnrollmentResultBuilder();
 		$this->enrollmentResult = [];
+		$this->streamNameToContextualAttributesMap = [];
 	}
 
 	/**
@@ -63,8 +69,6 @@ class ExperimentManager implements
 
 	public function setRequest( WebRequest $request ): void {
 		$this->enrollments = $this->requestEnrollmentsProcessor->process( $request );
-
-		// B/C
 		$this->enrollmentResult = $this->enrollments->build();
 	}
 
@@ -99,7 +103,6 @@ class ExperimentManager implements
 			$this->enrollments
 		);
 
-		// B/C
 		$this->enrollmentResult = $this->enrollments->build();
 	}
 
@@ -110,12 +113,13 @@ class ExperimentManager implements
 	 * @return Experiment
 	 */
 	public function getExperiment( string $experimentName ): Experiment {
-		$activeExperiments = $this->enrollmentResult['active_experiments'] ?? [];
+		// Get experiment configs from Test Kitchen UI.
+		$experiments = $this->configsFetcher->getExperimentConfigs();
 		$enrolledExperiments = $this->enrollmentResult['enrolled'] ?? [];
 
 		if (
-			in_array( $experimentName, $activeExperiments, true ) &&
-			$this->enrollmentResult['sampling_units'][ $experimentName ] === 'mw-user' &&
+			isset( $experiments[ $experimentName ] ) &&
+			$experiments[$experimentName]['user_identifier_type'] === 'mw-user' &&
 			!in_array( $experimentName, $enrolledExperiments, true )
 		) {
 			// For logged-in experiments we know whether the experiment is active, but the current user
@@ -139,7 +143,9 @@ class ExperimentManager implements
 			}
 		}
 
-		$experimentConfig = $this->getExperimentConfig( $experimentName );
+		// Combine experiment enrollments from Test Kitchen Coordination into the user's
+		// experiment config from the Test Kitchen UI into a single experiment config.
+		$experimentConfig = $this->getExperimentConfig( $experimentName, $experiments );
 
 		// The experiment enrolment has been overridden
 		if ( $experimentConfig['coordinator'] === 'forced' ) {
@@ -165,19 +171,34 @@ class ExperimentManager implements
 	/**
 	 * Get the current user's experiment enrollment details.
 	 *
+	 * Stitches together the user's experiment configs and enrollment results.
+	 * 1. Get experiment configs from Test Kitchen UI.
+	 * 2. Get experiment enrollments from Test Kitchen Coordination.
+	 *
 	 * @param string $experimentName
+	 * @param array $experiments
 	 * @return array
 	 */
-	private function getExperimentConfig( string $experimentName ): array {
+	private function getExperimentConfig( string $experimentName, array $experiments ): array {
+		// Until we pass schema ids in the Test Kitchen API response, we will default to web base.
+		// In the interim, experiment owners can set schema id with Experiment::setSchema().
+		$schemaID = $experiments[ $experimentName ]['schema_id'] ?? self::BASE_SCHEMA_ID;
+
+		// If the experiment is overridden, other keys will be overridden.
+		$isOverridden = in_array( $experimentName, $this->enrollmentResult['overrides'] );
+		$samplingUnit = $isOverridden ?
+			self::OVERRIDDEN_EXPERIMENT_SAMPLING_UNIT :
+			$experiments[ $experimentName ]['user_identifier_type'];
+
 		return [
 			'enrolled' => $experimentName,
 			'assigned' => $this->enrollmentResult['assigned'][ $experimentName ],
 			'subject_id' => $this->enrollmentResult['subject_ids'][ $experimentName ],
-			'sampling_unit' => $this->enrollmentResult['sampling_units'][ $experimentName ],
-			'coordinator' => $this->enrollmentResult['coordinator'][ $experimentName ],
-			'stream_name' => self::BASE_STREAM,
-			'schema_id' => self::BASE_SCHEMA_ID,
-			'contextual_attributes' => $this->baseStreamContextualAttributes,
+			'sampling_unit' => $samplingUnit,
+			'coordinator' => $isOverridden ? 'forced' : 'default',
+			'stream_name' => $isOverridden ? self::BASE_STREAM : $experiments[ $experimentName ][ 'stream_name' ],
+			'schema_id' => $schemaID,
+			'contextual_attributes' => $isOverridden ? [] : $experiments[ $experimentName ]['contextual_attributes']
 		];
 	}
 

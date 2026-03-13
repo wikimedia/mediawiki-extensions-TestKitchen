@@ -30,13 +30,10 @@ class HooksTest
 	use MockHttpTrait;
 
 	private const NO_ENROLLMENTS = [
-		'active_experiments' => [],
 		'enrolled' => [],
 		'assigned' => [],
 		'subject_ids' => [],
-		'sampling_units' => [],
 		'overrides' => [],
-		'coordinator' => []
 	];
 	private CentralIdLookup $centralIdLookup;
 	private RequestContext $context;
@@ -57,31 +54,77 @@ class HooksTest
 		// logged-in-experiment-3 shouldn't be considered (it hasn't started yet)
 		$this->installMockHttp( $this->makeFakeHttpRequest( '[
 			{
-    			"name": "logged-in-experiment-1",
+    			"name": "experiment_1",
     			"start": "' . $now->modify( '-1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
     			"end": "' . $now->modify( '+1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"user_identifier_type": "edge-unique",
     			"sample_rate": {
     	  			"default": 1
      			},
-     			"groups": [ "control", "group-something" ]
+				"groups": [ "control", "group-something" ],
+				"stream_name": "product_metrics.web_base",
+				"contextual_attributes": [
+					"performer_is_logged_in",
+					"performer_is_temp"
+				]
+			},
+						{
+    			"name": "experiment_2",
+    			"start": "' . $now->modify( '-1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"end": "' . $now->modify( '+1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"user_identifier_type": "edge-unique",
+    			"sample_rate": {
+    	  			"default": 1
+     			},
+				"groups": [ "control", "group-something" ],
+				"stream_name": "product_metrics.web_base",
+				"contextual_attributes": [
+					"performer_is_logged_in",
+					"performer_is_temp"
+				]
+			},
+			{
+    			"name": "logged-in-experiment-1",
+    			"start": "' . $now->modify( '-1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"end": "' . $now->modify( '+1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"user_identifier_type": "mw-user",
+    			"sample_rate": {
+    	  			"default": 1
+     			},
+				"groups": [ "control", "group-something" ],
+				"stream_name": "product_metrics.web_base",
+				"contextual_attributes": [
+					"performer_is_logged_in",
+					"performer_is_temp"
+				]
 			},
 			{
     			"name": "logged-in-experiment-2",
     			"start": "' . $now->modify( '-1 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
     			"end": "' . $now->modify( '+1 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"user_identifier_type": "mw-user",
     			"sample_rate": {
     	  			"default": 1
      			},
-     			"groups": [ "control", "group-other-thing" ]
+				"groups": [ "control", "group-other-thing" ],
+				"stream_name": "product_metrics.web_base",
+				"contextual_attributes": [
+					"page_id"
+				]
 			},
 			{
     			"name": "logged-in-experiment-3",
     			"start": "' . $now->modify( '+1 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
     			"end": "' . $now->modify( '+2 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"user_identifier_type": "mw-user",
     			"sample_rate": {
     	  			"default": 1
      			},
-     			"groups": [ "control", "group-another-thing" ]
+				"groups": [ "control", "group-another-thing" ],
+				"stream_name": "product_metrics.web_base",
+				"contextual_attributes": [
+					"performer_active_browsing_session_token"
+				]
 			}
 		]' ) );
 
@@ -134,10 +177,6 @@ class HooksTest
 
 		$actual = $this->onBeforeInitialize();
 		$expected = [
-			'active_experiments' => [
-				'experiment_1',
-				'experiment_2'
-			],
 			'enrolled' => [
 				'experiment_1',
 				'experiment_2'
@@ -150,15 +189,7 @@ class HooksTest
 				'experiment_1' => 'awaiting',
 				'experiment_2' => 'awaiting',
 			],
-			'sampling_units' => [
-				'experiment_1' => 'edge-unique',
-				'experiment_2' => 'edge-unique'
-			],
-			'overrides' => [],
-			'coordinator' => [
-				'experiment_1' => 'default',
-				'experiment_2' => 'default'
-			]
+			'overrides' => []
 		];
 
 		$this->assertEquals(
@@ -192,12 +223,6 @@ class HooksTest
 
 		$actual = $this->onBeforeInitialize();
 		$expected = [
-			'active_experiments' => [
-				'experiment_1',
-				'experiment_2',
-				'logged-in-experiment-1',
-				'logged-in-experiment-2'
-			],
 			'enrolled' => [
 				'experiment_1',
 				'experiment_2',
@@ -216,19 +241,7 @@ class HooksTest
 				'logged-in-experiment-1' => '9b6a4e7d98cd96a463fbcadb9e9edfdd9e4b5d9560c79b9d16b38599cb23128e',
 				'logged-in-experiment-2' => '94d25f0b2bd16c79bad41a0b9713a604e6b709ffe30124f5bb68bcae9d57ba38'
 			],
-			'sampling_units' => [
-				'experiment_1' => 'edge-unique',
-				'experiment_2' => 'edge-unique',
-				'logged-in-experiment-1' => 'mw-user',
-				'logged-in-experiment-2' => 'mw-user'
-			],
-			'overrides' => [],
-			'coordinator' => [
-				'experiment_1' => 'default',
-				'experiment_2' => 'default',
-				'logged-in-experiment-1' => 'default',
-				'logged-in-experiment-2' => 'default'
-			]
+			'overrides' => []
 		];
 
 		$this->assertEnrollmentsEqual( $expected, $actual );
@@ -257,11 +270,6 @@ class HooksTest
 
 		$actual = $this->onBeforeInitialize();
 		$expected = [
-			'active_experiments' => [
-				'logged-in-experiment-1',
-				'logged-in-experiment-2',
-				'logged-in-experiment-3',
-			],
 			'enrolled' => [
 				'logged-in-experiment-1',
 				'logged-in-experiment-2',
@@ -277,18 +285,8 @@ class HooksTest
 				'logged-in-experiment-2' => '94d25f0b2bd16c79bad41a0b9713a604e6b709ffe30124f5bb68bcae9d57ba38',
 				'logged-in-experiment-3' => 'overridden',
 			],
-			'sampling_units' => [
-				'logged-in-experiment-1' => 'mw-user',
-				'logged-in-experiment-2' => 'mw-user',
-				'logged-in-experiment-3' => 'overridden',
-			],
 			'overrides' => [
 				'logged-in-experiment-3',
-			],
-			'coordinator' => [
-				'logged-in-experiment-1' => 'default',
-				'logged-in-experiment-2' => 'default',
-				'logged-in-experiment-3' => 'forced',
 			]
 		];
 
@@ -299,13 +297,10 @@ class HooksTest
 		// ::assertEquals and ::assertEqualsCanonicalizing are sensitive to order in sub-arrays. Test the equality of
 		// the sub-arrays separately to make this test more flexible.
 
-		$this->assertArrayHasKey( 'active_experiments', $actual );
-		$this->assertArrayEquals( $expected['active_experiments'], $actual['active_experiments'] );
-
 		$this->assertArrayHasKey( 'enrolled', $actual );
 		$this->assertArrayEquals( $expected['enrolled'], $actual['enrolled'] );
 
-		foreach ( [ 'assigned', 'subject_ids', 'sampling_units', 'overrides', 'coordinator' ] as $key ) {
+		foreach ( [ 'assigned', 'subject_ids', 'overrides' ] as $key ) {
 			$this->assertArrayHasKey( $key, $actual );
 			$this->assertEquals( $expected[$key], $actual[$key] );
 		}

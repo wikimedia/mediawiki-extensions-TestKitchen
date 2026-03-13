@@ -64,7 +64,16 @@ class Experiment implements ExperimentInterface {
 			}
 
 			// Extract SDK-specific experiment config
-			$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
+			$keys = [
+				'enrolled',
+				'assigned',
+				'subject_id',
+				'sampling_unit',
+				'coordinator',
+				'stream_name',
+				'schema_id',
+				'contextual_attributes'
+			];
 			$experiment = array_intersect_key( $experimentConfig, array_fill_keys( $keys, true ) );
 
 			$interactionData = array_merge(

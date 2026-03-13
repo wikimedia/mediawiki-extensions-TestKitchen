@@ -13,15 +13,10 @@ class RequestEnrollmentsProcessor {
 	// subject ID for the experiment. See
 	// https://gitlab.wikimedia.org/repos/data-engineering/eventgate-wikimedia/-/blob/11beab8f5f980726a00f2251593d3b8a74a29c15/lib/experiments.js#L70.
 	private const EVERYONE_EXPERIMENT_SUBJECT_ID = 'awaiting';
-	private const EVERYONE_EXPERIMENT_SAMPLING_UNIT = 'edge-unique';
 
 	private const OVERRIDES_PARAM_NAME = 'mpo';
 
 	private const OVERRIDDEN_EXPERIMENT_SUBJECT_ID = 'overridden';
-
-	// The experiment.sampling_unit field can be one of "mw-user", "edge-unique", or "session" but, because overridden
-	// experiments cannot send events, for clarity we can set "overridden" as the value.
-	private const OVERRIDDEN_EXPERIMENT_SAMPLING_UNIT = 'overridden';
 
 	public function __construct( private readonly LoggerInterface $logger ) {
 	}
@@ -43,7 +38,7 @@ class RequestEnrollmentsProcessor {
 	private function getEveryoneExperimentsEnrollments(
 		WebRequest $request,
 		EnrollmentResultBuilder $enrollmentResult
-	) {
+	): void {
 		$headerValue = $request->getHeader( self::EVERYONE_EXPERIMENTS_ENROLLMENTS_HEADER_NAME ) ?? '';
 
 		if ( !$headerValue ) {
@@ -97,8 +92,7 @@ class RequestEnrollmentsProcessor {
 		foreach ( $enrollments as $enrollment ) {
 			$enrollmentResult->addExperiment(
 				$enrollment[0],
-				self::EVERYONE_EXPERIMENT_SUBJECT_ID,
-				self::EVERYONE_EXPERIMENT_SAMPLING_UNIT
+				self::EVERYONE_EXPERIMENT_SUBJECT_ID
 			);
 			$enrollmentResult->addAssignment( $enrollment[0], $enrollment[1] );
 		}
@@ -118,8 +112,8 @@ class RequestEnrollmentsProcessor {
 		foreach ( $assignments as $experimentName => $groupName ) {
 			$enrollmentResult->addExperiment(
 				$experimentName,
-				self::OVERRIDDEN_EXPERIMENT_SUBJECT_ID,
-				self::OVERRIDDEN_EXPERIMENT_SAMPLING_UNIT );
+				self::OVERRIDDEN_EXPERIMENT_SUBJECT_ID
+			);
 			$enrollmentResult->addAssignment( $experimentName, $groupName, true );
 		}
 	}

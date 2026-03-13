@@ -37,7 +37,7 @@ class LoggedInExperimentsEnrollmentAuthority implements EnrollmentAuthorityInter
 			$experimentName = $experiment['name'];
 			$subjectID = $this->userSplitterInstrumentation->getSubjectId( $centralUserID, $experimentName );
 
-			$result->addExperiment( $experimentName, $subjectID, self::SAMPLING_UNIT );
+			$result->addExperiment( $experimentName, $subjectID );
 
 			$groups = $experiment['groups'];
 			$userHash = $this->userSplitterInstrumentation->getUserHash( $centralUserID, $experimentName );

@@ -15,10 +15,14 @@ class EnrollmentsProcessor {
 		EnrollmentResultBuilder $result
 	): void {
 		foreach ( $experiments as $experiment ) {
+			// Exclude edge-unique experiments. This process method is called with a static parameter set to mw-user.
+			if ( $experiment['user_identifier_type'] !== $identifierType ) {
+				continue;
+			}
 			$experimentName = $experiment['name'];
 			$subjectID = $this->userSplitterInstrumentation->getSubjectId( $identifier, $experimentName );
 
-			$result->addExperiment( $experimentName, $subjectID, $identifierType );
+			$result->addExperiment( $experimentName, $subjectID );
 
 			$groups = $experiment['groups'];
 			$userHash = $this->userSplitterInstrumentation->getUserHash( $identifier, $experimentName );

@@ -7,18 +7,13 @@ namespace MediaWiki\Extension\TestKitchen\Coordination;
  * enrollment sampling.
  */
 class EnrollmentResultBuilder {
-	private array $activeExperiments = [];
 	private array $overrides = [];
 	private array $enrolled = [];
 	private array $assigned = [];
 	private array $subjectIDs = [];
-	private array $samplingUnits = [];
-	private array $coordinator = [];
 
-	public function addExperiment( string $experimentName, string $subjectID, string $samplingUnit ): void {
-		$this->activeExperiments[ $experimentName ] = true;
+	public function addExperiment( string $experimentName, string $subjectID ): void {
 		$this->subjectIDs[ $experimentName ] = $subjectID;
-		$this->samplingUnits[ $experimentName ] = $samplingUnit;
 	}
 
 	public function addAssignment( string $experimentName, string $groupName, bool $isOverride = false ): void {
@@ -27,9 +22,6 @@ class EnrollmentResultBuilder {
 
 		if ( $isOverride ) {
 			$this->overrides[ $experimentName ] = true;
-			$this->coordinator[ $experimentName ] = 'forced';
-		} else {
-			$this->coordinator[ $experimentName ] = 'default';
 		}
 	}
 
@@ -42,13 +34,10 @@ class EnrollmentResultBuilder {
 	 */
 	public function build(): array {
 		return [
-			'active_experiments' => array_keys( $this->activeExperiments ),
 			'overrides' => array_keys( $this->overrides ),
 			'enrolled' => array_keys( $this->enrolled ),
 			'assigned' => $this->assigned,
-			'subject_ids' => $this->subjectIDs,
-			'sampling_units' => $this->samplingUnits,
-			'coordinator' => $this->coordinator,
+			'subject_ids' => $this->subjectIDs
 		];
 	}
 

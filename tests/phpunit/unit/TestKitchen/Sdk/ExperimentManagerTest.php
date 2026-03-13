@@ -38,7 +38,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 	private StreamConfigs $staticStreamConfigs;
 	private ExperimentManager $experimentManager;
 
-	public function setUp(): void {
+	protected function setUp(): void {
 		parent::setUp();
 
 		$this->logger = $this->createMock( LoggerInterface::class );
@@ -53,18 +53,20 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		$baseStreamConfigs = new BaseStreamConfigs(
 			[
 				'product_metrics.web_base' => [
+					'schema_title' => 'analytics/product_metrics/web/base',
 					'producers' => [
 						'metrics_platform_client' => [
 							'provide_values' => [
 								'agent_client_platform',
 								'agent_client_platform_family',
-							]
+							],
 						],
 					],
 				],
 			],
 			[]
 		);
+
 		$this->staticStreamConfigs = new StreamConfigs( $baseStreamConfigs );
 
 		$this->experimentManager = new ExperimentManager(
@@ -81,9 +83,10 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testEnrollmentsAreEmptyByDefault(): void {
-		$expected = new EnrollmentResultBuilder();
-
-		$this->assertEquals( $expected, $this->experimentManager->getEnrollments() );
+		$this->assertEquals(
+			new EnrollmentResultBuilder(),
+			$this->experimentManager->getEnrollments()
+		);
 	}
 
 	/**
@@ -108,21 +111,12 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 	 * Tests that experiment configs are fetched and that the identifier is passed to the enrollments processor.
 	 */
 	public function testEnrollmentsAreUpdatedByUpdateIdentifier(): void {
-		$identifier = 1234567890;
+		$identifier = '1234567890';
 		$experimentConfigs = [
-			[
-				'name' => 'foo',
-				'groups' => [
-					'control',
-					'treatment',
-				],
-				'sample' => [
-					'rate' => 0.5,
-				]
-			]
+			'foo' => $this->makeExperimentConfig( 'foo' ),
 		];
 
-		$expected = $this->experimentManager->getEnrollments();
+		$expectedEnrollments = $this->experimentManager->getEnrollments();
 
 		$this->configsFetcher->expects( $this->once() )
 			->method( 'getExperimentConfigs' )
@@ -134,7 +128,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 				'mw-user',
 				$identifier,
 				$experimentConfigs,
-				$expected
+				$expectedEnrollments
 			);
 
 		$this->experimentManager->updateIdentifier( 'mw-user', $identifier );
@@ -153,17 +147,19 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 		$request = new FauxRequest();
 		$enrollments = new EnrollmentResultBuilder();
+		$experimentName = 'dessert';
+
 		$experimentConfigs = [
-			[
-				'name' => 'dessert',
-				'groups' => [
-					'control',
-					'treatment',
-				],
-				'sample' => [
-					'rate' => 1,
-				],
-			],
+			$experimentName => $this->makeExperimentConfig(
+				$experimentName,
+				[
+					'contextual_attributes' => [
+						'page_is_redirect',
+						'performer_is_logged_in',
+						'performer_is_temp',
+					],
+				]
+			),
 		];
 
 		// Mocks
@@ -176,7 +172,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			->willReturn( $enrollments );
 
 		// Called by ExperimentManager::updateIdentifier()
-		$this->configsFetcher->expects( $this->once() )
+		$this->configsFetcher->expects( $this->any() )
 			->method( 'getExperimentConfigs' )
 			->willReturn( $experimentConfigs );
 
@@ -188,13 +184,12 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 				$experimentConfigs,
 				$enrollments
 			)
-			->willReturnCallback( static function () use ( $enrollments ) {
+			->willReturnCallback( static function () use ( $enrollments, $experimentName ) {
 				$enrollments->addExperiment(
-					'dessert',
-					'603c456f34744aac87bf1f086eb46e8f9f0ba7330f5f72c38e3f8031ccd95397',
-					'mw-user'
+					$experimentName,
+					'603c456f34744aac87bf1f086eb46e8f9f0ba7330f5f72c38e3f8031ccd95397'
 				);
-				$enrollments->addAssignment( 'dessert', 'control' );
+				$enrollments->addAssignment( $experimentName, 'control' );
 			} );
 
 		// Code Under Test
@@ -205,7 +200,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		$user = UserIdentityValue::newRegistered( 1234567890, self::class );
 		$this->experimentManager->updateUser( $user, false );
 
-		$actual = $this->experimentManager->getExperiment( 'dessert' );
+		$actual = $this->experimentManager->getExperiment( $experimentName );
 
 		// Assertions
 		// ----------
@@ -215,19 +210,18 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->staticStreamConfigs,
-			[
-				'enrolled' => 'dessert',
-				'assigned' => 'control',
-				'subject_id' => '603c456f34744aac87bf1f086eb46e8f9f0ba7330f5f72c38e3f8031ccd95397',
-				'sampling_unit' => 'mw-user',
-				'coordinator' => 'default',
-				'stream_name' => 'product_metrics.web_base',
-				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
-				'contextual_attributes' => [
-					'agent_client_platform',
-					'agent_client_platform_family',
-				],
-			]
+			$this->makeExpectedSdkConfig(
+				$experimentName,
+				[
+					'assigned' => 'control',
+					'subject_id' => '603c456f34744aac87bf1f086eb46e8f9f0ba7330f5f72c38e3f8031ccd95397',
+					'contextual_attributes' => [
+						'page_is_redirect',
+						'performer_is_logged_in',
+						'performer_is_temp',
+					],
+				]
+			)
 		);
 
 		$this->assertEquals( $expected, $actual );
@@ -237,16 +231,33 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		// Data
 		// ----
 
+		$experimentName = 'main-course';
 		$request = new FauxRequest();
-
 		$enrollments = new EnrollmentResultBuilder();
-		$enrollments->addExperiment( 'main-course', 'overridden', 'overridden' );
-		$enrollments->addAssignment( 'main-course', 'control', true );
+
+		// Called by ExperimentManager::setRequest()
+		$enrollments->addExperiment( $experimentName, 'overridden' );
+		$enrollments->addAssignment( $experimentName, 'control', true );
+
+		$experimentConfigs = [
+			$experimentName => $this->makeExperimentConfig(
+				$experimentName,
+				[
+					'contextual_attributes' => [
+						'page_title',
+						'performer_is_logged_in'
+					],
+				]
+			),
+		];
 
 		// Mocks
 		// -----
 
-		// Called by ExperimentManager::setRequest()
+		$this->configsFetcher->expects( $this->any() )
+			->method( 'getExperimentConfigs' )
+			->willReturn( $experimentConfigs );
+
 		$this->requestEnrollmentsProcessor->expects( $this->once() )
 			->method( 'process' )
 			->with( $request )
@@ -257,10 +268,10 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 		$this->experimentManager->setRequest( $request );
 
-		$actual = $this->experimentManager->getExperiment( 'main-course' );
-
 		// Assertions
 		// ----------
+
+		$actual = $this->experimentManager->getExperiment( $experimentName );
 
 		$expected = new OverriddenExperiment(
 			$this->eventSender,
@@ -268,19 +279,16 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->statsFactory,
 			$this->staticStreamConfigs,
 			$this->logger,
-			[
-				'enrolled' => 'main-course',
-				'assigned' => 'control',
-				'subject_id' => 'overridden',
-				'sampling_unit' => 'overridden',
-				'coordinator' => 'forced',
-				'stream_name' => 'product_metrics.web_base',
-				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
-				'contextual_attributes' => [
-					'agent_client_platform',
-					'agent_client_platform_family',
-				],
-			]
+			$this->makeExpectedSdkConfig(
+				$experimentName,
+				[
+					'assigned' => 'control',
+					'subject_id' => 'overridden',
+					'sampling_unit' => 'overridden',
+					'coordinator' => 'forced',
+					'contextual_attributes' => [],
+				]
+			)
 		);
 
 		$this->assertEquals( $expected, $actual );
@@ -294,16 +302,27 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		// ----
 
 		$request = new FauxRequest();
-
+		$experimentName = 'active-but-not-enrolled';
 		$enrollments = new EnrollmentResultBuilder();
-		$enrollments->addExperiment(
-			'active-but-not-enrolled',
-			'1234567890abcdef',
-			'mw-user'
-		);
+
+		$experimentConfigs = [
+			$experimentName => $this->makeExperimentConfig(
+				$experimentName,
+				[
+					'contextual_attributes' => [
+						'page_id',
+						'performer_is_temp',
+					],
+				]
+			),
+		];
 
 		// Mocks
 		// -----
+
+		$this->configsFetcher->expects( $this->any() )
+			->method( 'getExperimentConfigs' )
+			->willReturn( $experimentConfigs );
 
 		// Called by ExperimentManager::setRequest()
 		$this->requestEnrollmentsProcessor->expects( $this->once() )
@@ -323,7 +342,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 		$this->experimentManager->setRequest( $request );
 
-		$actual = $this->experimentManager->getExperiment( 'active-but-not-enrolled' );
+		$actual = $this->experimentManager->getExperiment( $experimentName );
 
 		$expected = new UnenrolledExperiment(
 			$this->eventSender,
@@ -338,18 +357,99 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		$this->assertFalse( $actual->isAssignedGroup( 'control' ) );
 	}
 
+	public function testGetExperimentReturnsUnenrolledExperimentForUnknownExperiment(): void {
+		$this->configsFetcher->expects( $this->once() )
+			->method( 'getExperimentConfigs' )
+			->willReturn( [] );
+
+		$actual = $this->experimentManager->getExperiment( 'does-not-exist' );
+
+		$expected = new UnenrolledExperiment(
+			$this->eventSender,
+			$this->eventFactory,
+			$this->statsFactory,
+			$this->staticStreamConfigs
+		);
+
+		$this->assertEquals( $expected, $actual );
+	}
+
+	public function testGetExperimentUsesExplicitSchemaIdWhenPresent(): void {
+		$experimentName = 'with-custom-schema';
+		$request = new FauxRequest();
+		$enrollments = new EnrollmentResultBuilder();
+		$enrollments->addExperiment( $experimentName, 'subject-123' );
+		$enrollments->addAssignment( $experimentName, 'treatment' );
+
+		$experimentConfigs = [
+			$experimentName => $this->makeExperimentConfig(
+				$experimentName,
+				[
+					'schema_id' => '/analytics/product_metrics/web/custom/1.0.0',
+				]
+			),
+		];
+
+		$this->configsFetcher->expects( $this->any() )
+			->method( 'getExperimentConfigs' )
+			->willReturn( $experimentConfigs );
+
+		$this->requestEnrollmentsProcessor->expects( $this->once() )
+			->method( 'process' )
+			->with( $request )
+			->willReturn( $enrollments );
+
+		$this->experimentManager->setRequest( $request );
+
+		$actual = $this->experimentManager->getExperiment( $experimentName );
+
+		$expected = new Experiment(
+			$this->eventSender,
+			$this->eventFactory,
+			$this->statsFactory,
+			$this->staticStreamConfigs,
+			$this->makeExpectedSdkConfig(
+				$experimentName,
+				[
+					'assigned' => 'treatment',
+					'subject_id' => 'subject-123',
+					'schema_id' => '/analytics/product_metrics/web/custom/1.0.0',
+				]
+			)
+		);
+
+		$this->assertEquals( $expected, $actual );
+	}
+
 	public function testSendLogsInformationalMessageOverriddenExperiment(): void {
 		// Data
 		// ----
 
 		$request = new FauxRequest();
+		$experimentName = 'main-course';
 
 		$enrollments = new EnrollmentResultBuilder();
-		$enrollments->addExperiment( 'main-course', 'overridden', 'overridden' );
-		$enrollments->addAssignment( 'main-course', 'control', true );
+		$enrollments->addExperiment( $experimentName, 'overridden', 'overridden' );
+		$enrollments->addAssignment( $experimentName, 'control', true );
+
+		$experimentConfigs = [
+			$experimentName => $this->makeExperimentConfig(
+				$experimentName,
+				[
+					'contextual_attributes' => [
+						'page_id',
+						'performer_is_temp',
+					],
+				]
+			),
+		];
 
 		// Mocks
 		// -----
+
+		$this->configsFetcher->expects( $this->any() )
+			->method( 'getExperimentConfigs' )
+			->willReturn( $experimentConfigs );
 
 		// Called by ExperimentManager::setRequest()
 		$this->requestEnrollmentsProcessor->expects( $this->once() )
@@ -370,7 +470,58 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 		$this->experimentManager->setRequest( $request );
 
-		$actualExperiment = $this->experimentManager->getExperiment( 'main-course' );
-		$actualExperiment->send( 'some-action' );
+		$experiment = $this->experimentManager->getExperiment( $experimentName );
+		$experiment->send( 'some-action' );
+	}
+
+	/**
+	 * @param string $name
+	 * @param array $overrides
+	 * @return array
+	 */
+	private function makeExperimentConfig( string $name, array $overrides = [] ): array {
+		return array_replace(
+			[
+				'name' => $name,
+				'user_identifier_type' => 'mw-user',
+				'groups' => [
+					'control',
+					'treatment',
+				],
+				'sample_rate' => [
+					'default' => 1,
+				],
+				'stream_name' => 'product_metrics.web_base',
+				'contextual_attributes' => [
+					'page_id',
+					'performer_is_temp',
+				],
+			],
+			$overrides
+		);
+	}
+
+	/**
+	 * @param string $experimentName
+	 * @param array $overrides
+	 * @return array
+	 */
+	private function makeExpectedSdkConfig( string $experimentName, array $overrides = [] ): array {
+		return array_replace(
+			[
+				'enrolled' => $experimentName,
+				'assigned' => 'control',
+				'subject_id' => 'default-subject-id',
+				'sampling_unit' => 'mw-user',
+				'coordinator' => 'default',
+				'stream_name' => 'product_metrics.web_base',
+				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+				'contextual_attributes' => [
+					'page_id',
+					'performer_is_temp',
+				],
+			],
+			$overrides
+		);
 	}
 }

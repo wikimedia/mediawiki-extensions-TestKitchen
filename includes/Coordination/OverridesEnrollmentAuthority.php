@@ -42,7 +42,7 @@ class OverridesEnrollmentAuthority implements EnrollmentAuthorityInterface {
 		);
 
 		foreach ( $assignments as $experimentName => $groupName ) {
-			$result->addExperiment( $experimentName, self::SUBJECT_ID, self::SAMPLING_UNIT );
+			$result->addExperiment( $experimentName, self::SUBJECT_ID );
 			$result->addAssignment( $experimentName, $groupName, true );
 		}
 	}

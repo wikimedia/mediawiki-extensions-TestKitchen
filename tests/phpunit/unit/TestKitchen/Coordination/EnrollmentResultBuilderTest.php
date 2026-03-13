@@ -33,7 +33,7 @@ class EnrollmentResultBuilderTest extends MediaWikiUnitTestCase {
 	 */
 	public function testGetEnrollmentsWithoutSubjectIdsExcludesSubjectIds() {
 		$resultBuilder = new EnrollmentResultBuilder();
-		$resultBuilder->addExperiment( 'experiment1', 'subject1', 'samplingUnit1' );
+		$resultBuilder->addExperiment( 'experiment1', 'subject1' );
 		$resultBuilder->addAssignment( 'experiment1', 'groupA' );
 
 		$enrollmentsWithoutSubjectIds = $resultBuilder->getEnrollmentsWithoutSubjectIds();
@@ -42,10 +42,7 @@ class EnrollmentResultBuilderTest extends MediaWikiUnitTestCase {
 			'subject_ids', $enrollmentsWithoutSubjectIds,
 			'The response should not include `subject_ids`.'
 		);
-		$this->assertArrayHasKey(
-			'active_experiments',
-			$enrollmentsWithoutSubjectIds, 'Expected `active_experiments` key in response.'
-		);
+
 		$this->assertArrayHasKey(
 			'enrolled', $enrollmentsWithoutSubjectIds,
 			'Expected `enrolled` key in response.'
@@ -55,7 +52,6 @@ class EnrollmentResultBuilderTest extends MediaWikiUnitTestCase {
 			$enrollmentsWithoutSubjectIds, 'Expected `assigned` key in response.'
 		);
 
-		$this->assertSame( [ 'experiment1' ], $enrollmentsWithoutSubjectIds[ 'active_experiments' ] );
 		$this->assertSame( [ 'experiment1' ], $enrollmentsWithoutSubjectIds[ 'enrolled' ] );
 		$this->assertSame( [ 'experiment1' => 'groupA' ], $enrollmentsWithoutSubjectIds[ 'assigned' ] );
 	}
@@ -65,7 +61,7 @@ class EnrollmentResultBuilderTest extends MediaWikiUnitTestCase {
 	 */
 	public function testGetEnrollmentsWithoutSubjectIdsSkipsEmptyKeys() {
 		$resultBuilder = new EnrollmentResultBuilder();
-		$resultBuilder->addExperiment( 'experiment1', 'subject1', 'samplingUnit1' );
+		$resultBuilder->addExperiment( 'experiment1', 'subject1' );
 
 		$enrollmentsWithoutSubjectIds = $resultBuilder->getEnrollmentsWithoutSubjectIds();
 
@@ -77,9 +73,10 @@ class EnrollmentResultBuilderTest extends MediaWikiUnitTestCase {
 			'subject_ids', $enrollmentsWithoutSubjectIds,
 			'The response should not include `subject_ids`.'
 		);
-		$this->assertNotEmpty(
+		$this->assertSame(
+			[],
 			$enrollmentsWithoutSubjectIds,
-			'Expected at least one valid key after filtering empty arrays.'
+			'Expected no valid keys after filtering empty arrays.'
 		);
 	}
 
@@ -88,8 +85,8 @@ class EnrollmentResultBuilderTest extends MediaWikiUnitTestCase {
 	 */
 	public function testGetEnrollmentsWithoutSubjectIdsMultipleExperiments() {
 		$resultBuilder = new EnrollmentResultBuilder();
-		$resultBuilder->addExperiment( 'experiment1', 'subject1', 'samplingUnit1' );
-		$resultBuilder->addExperiment( 'experiment2', 'subject2', 'samplingUnit2' );
+		$resultBuilder->addExperiment( 'experiment1', 'subject1' );
+		$resultBuilder->addExperiment( 'experiment2', 'subject2' );
 		$resultBuilder->addAssignment( 'experiment1', 'groupA' );
 		$resultBuilder->addAssignment( 'experiment2', 'groupB', true );
 
@@ -98,7 +95,7 @@ class EnrollmentResultBuilderTest extends MediaWikiUnitTestCase {
 		$this->assertArrayNotHasKey(
 			'subject_ids', $enrollmentsWithoutSubjectIds, 'The response should not include `subject_ids`.'
 		);
-		$this->assertSame( [ 'experiment1', 'experiment2' ], $enrollmentsWithoutSubjectIds[ 'active_experiments' ] );
+
 		$this->assertSame( [ 'experiment1', 'experiment2' ], $enrollmentsWithoutSubjectIds[ 'enrolled' ] );
 		$this->assertSame(
 			[ 'experiment1' => 'groupA', 'experiment2' => 'groupB' ],

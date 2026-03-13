@@ -24,7 +24,7 @@ class ConfigsFetcher {
 	private const EXPERIMENT = 2;
 	private const USER_AGENT = 'ConfigsFetcher/0.0.1 (#experiment-platform)';
 	public const TESTKITCHEN_API_INSTRUMENTS_ENDPOINT = "/api/v1/instruments";
-	public const TESTKITCHEN_API_EXPERIMENTS_ENDPOINT = "/api/v1/experiments?format=config&authority=mediawiki";
+	public const TESTKITCHEN_API_EXPERIMENTS_ENDPOINT = "/api/v1/experiments";
 
 	/**
 	 * @var array
@@ -78,10 +78,28 @@ class ConfigsFetcher {
 	 */
 	public function getExperimentConfigs(): array {
 		if ( $this->config->has( 'TestKitchenExperiments' ) ) {
-			return $this->config->get( 'TestKitchenExperiments' );
+			return $this->formatExperimentConfigs(
+				$this->config->get( 'TestKitchenExperiments' )
+			);
 		}
 
-		return $this->getConfigs( self::EXPERIMENT );
+		return $this->formatExperimentConfigs(
+			$this->getConfigs( self::EXPERIMENT )
+		);
+	}
+
+	/**
+	 * Re-indexes experiment config rows by experiment name.
+	 *
+	 * The Test Kitchen config source returns experiments as a numerically indexed list,
+	 * but callers of {@see getExperimentConfigs()} expect an associative array keyed by
+	 * the experiment's `name` field.
+	 *
+	 * @param array $experiments List of experiment config rows, each containing a `name` key.
+	 * @return array Associative array keyed by experiment name.
+	 */
+	private function formatExperimentConfigs( array $experiments ): array {
+		return array_column( $experiments, null, 'name' );
 	}
 
 	private function getConfigs( int $type ): array {

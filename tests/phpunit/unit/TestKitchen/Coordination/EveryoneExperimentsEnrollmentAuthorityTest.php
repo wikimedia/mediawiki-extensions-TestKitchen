@@ -52,7 +52,7 @@ class EveryoneExperimentsEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 
 		$this->result->expects( $this->once() )
 			->method( 'addExperiment' )
-			->with( 'foo_experiment', 'awaiting', 'edge-unique' );
+			->with( 'foo_experiment', 'awaiting' );
 
 		$this->result->expects( $this->once() )
 			->method( 'addAssignment' )
@@ -80,14 +80,14 @@ class EveryoneExperimentsEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 			->willReturnCallback( function ( ...$parameters ) use ( $addExperimentInvokedCount ) {
 				if ( $addExperimentInvokedCount->getInvocationCount() === 1 ) {
 					$this->assertSame(
-						[ 'foo_experiment', 'awaiting', 'edge-unique' ],
+						[ 'foo_experiment', 'awaiting' ],
 						$parameters
 					);
 				}
 
 				if ( $addExperimentInvokedCount->getInvocationCount() === 2 ) {
 					$this->assertSame(
-						[ 'qux_experiment', 'awaiting', 'edge-unique' ],
+						[ 'qux_experiment', 'awaiting' ],
 						$parameters
 					);
 				}

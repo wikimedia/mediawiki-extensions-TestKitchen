@@ -115,24 +115,26 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 	 * Tests that {@link Hooks::getExperimentConfigs()} filters out unknown streams
 	 */
 	public function testGetExperimentConfigs(): void {
-		$this->overrideConfigValues( [
-			'EventStreams' => [
-				'product_metrics.web_base' => [
-					'producers' => [
-						'metrics_platform_client' => [
-							'provide_values' => [
-								'namespace_id',
-								'namespace_name',
-							],
-						],
-					],
+		$experimentConfigs = [
+			[
+				'name' => 'fruit',
+				'user_identifier_type' => 'mw-user',
+				'sample_rate' => [ 'default' => 0 ],
+				'groups' => [ 'control', 'tropical' ],
+				'stream_name' => 'product_metrics.web_base',
+				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+				'contextual_attributes' => [
+					'namespace_id',
+					'namespace_name',
 				],
-				'foo.bar' => [],
 			],
-		] );
-
-		$expected = [
-			'product_metrics.web_base' => [
+			[
+				'name' => 'supper',
+				'user_identifier_type' => 'edge-unique',
+				'sample_rate' => [ 'default' => 0 ],
+				'groups' => [ 'control', 'fish-pie' ],
+				'stream_name' => 'product_metrics.web_base',
+				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
 				'contextual_attributes' => [
 					'namespace_id',
 					'namespace_name',
@@ -140,9 +142,33 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			],
 		];
 
+		$expected = [
+			'fruit' => [
+				'user_identifier_type' => 'mw-user',
+				'stream_name' => 'product_metrics.web_base',
+				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+				'contextual_attributes' => [
+					'namespace_id',
+					'namespace_name',
+				],
+			],
+			'supper' => [
+				'user_identifier_type' => 'edge-unique',
+				'stream_name' => 'product_metrics.web_base',
+				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+				'contextual_attributes' => [
+					'namespace_id',
+					'namespace_name',
+				],
+			],
+		];
+
+		$this->configsFetcher->expects( $this->once() )
+			->method( 'getExperimentConfigs' )
+			->willReturn( $experimentConfigs );
+
 		$configForTestKitchenModule = Hooks::getConfigForTestKitchenModule( $this->context, $this->config );
 		$actual = $configForTestKitchenModule[ 'experimentConfigs' ];
-
 		$this->assertEquals( $expected, $actual );
 	}
 }

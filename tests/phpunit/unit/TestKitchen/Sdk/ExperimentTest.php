@@ -52,6 +52,17 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		'action_context' => 'test_action_context',
 	];
 
+	private array $keys = [
+		'enrolled',
+		'assigned',
+		'subject_id',
+		'sampling_unit',
+		'coordinator',
+		'stream_name',
+		'schema_id',
+		'contextual_attributes'
+	];
+
 	private EventSender $eventSender;
 	private EventFactory $eventFactory;
 	private StatsFactory $statsFactory;
@@ -128,8 +139,10 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testSendArgumentsDefault() {
-		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
-		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+		$expectedExperimentConfig = array_intersect_key(
+			$this->experimentConfig,
+			array_fill_keys( $this->keys, true )
+		);
 
 		$expectedEvent = [
 			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
@@ -167,8 +180,10 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testSendArgumentsNoInteractionData() {
-		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
-		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+		$expectedExperimentConfig = array_intersect_key(
+			$this->experimentConfig,
+			array_fill_keys( $this->keys, true )
+		);
 
 		$expectedEvent = [
 			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
@@ -203,8 +218,10 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testSendArgumentsInteractionDataWithPerEventContextualAttributes() {
-		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
-		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+		$expectedExperimentConfig = array_intersect_key(
+			$this->experimentConfig,
+			array_fill_keys( $this->keys, true )
+		);
 
 		$expectedEvent = [
 			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
@@ -244,8 +261,10 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testSendArgumentsNoInteractionDataWithPerEventContextualAttributes() {
-		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
-		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+		$expectedExperimentConfig = array_intersect_key(
+			$this->experimentConfig,
+			array_fill_keys( $this->keys, true )
+		);
 
 		$expectedEvent = [
 			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
@@ -335,9 +354,13 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 
 	public function testSetStreamContextualAttributesAndSend(): void {
 		$newStream = 'product_metrics.custom_stream';
+		$return = $this->experiment->setStream( $newStream, $this->differentContextualAtributes );
 
-		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
-		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+		$expectedExperimentConfig = array_intersect_key(
+			$this->experiment->getExperimentConfig(),
+			array_fill_keys( $this->keys, true )
+		);
+		$expectedExperimentConfig['contextual_attributes'] = $this->differentContextualAtributes;
 
 		$expectedEvent = [
 			'$schema' => $this->experimentConfig['schema_id'],
@@ -359,7 +382,6 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->method( 'sendEvent' )
 			->with( $expectedEvent );
 
-		$return = $this->experiment->setStream( $newStream );
 		$this->assertSame( $this->experiment, $return );
 
 		$this->assertSame(
@@ -385,13 +407,24 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	public function testSetSchemaAndSend(): void {
 		$newSchema = '/analytics/product_metrics/web/custom/1.0.0';
 
-		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
-		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
-
 		$expectedEvent = [
 			'$schema' => $newSchema,
 			'dt' => ConvertibleTimestamp::now( TimestampFormat::ISO_8601 ),
 		];
+
+		$return = $this->experiment->setSchema( $newSchema );
+		$this->assertSame( $this->experiment, $return );
+
+		$this->assertSame(
+			$newSchema,
+			$this->experiment->getExperimentConfig()['schema_id'] ?? null,
+			'setSchema() should update experimentConfig schema_id'
+		);
+
+		$expectedExperimentConfig = array_intersect_key(
+			$this->experiment->getExperimentConfig(),
+			array_fill_keys( $this->keys, true )
+		);
 
 		$this->eventFactory->expects( $this->once() )
 			->method( 'newEvent' )
@@ -408,15 +441,6 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->method( 'sendEvent' )
 			->with( $expectedEvent );
 
-		$return = $this->experiment->setSchema( $newSchema );
-		$this->assertSame( $this->experiment, $return );
-
-		$this->assertSame(
-			$newSchema,
-			$this->experiment->getExperimentConfig()['schema_id'] ?? null,
-			'setSchema() should update experimentConfig schema_id'
-		);
-
 		$this->experiment->send( $this->action, $this->interactionData );
 
 		$this->assertSame(
@@ -426,8 +450,10 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testSendExposure(): void {
-		$keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
-		$expectedExperimentConfig = array_intersect_key( $this->experimentConfig, array_fill_keys( $keys, true ) );
+		$expectedExperimentConfig = array_intersect_key(
+			$this->experimentConfig,
+			array_fill_keys( $this->keys, true )
+		);
 
 		$expectedEvent = [
 			'$schema' => '/analytics/product_metrics/web/base/2.0.0',

@@ -8,6 +8,7 @@ use MediaWiki\MediaWikiServices;
 use MediaWiki\ResourceLoader as RL;
 
 class Hooks {
+	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
 
 	/**
 	 * Gets the contents of the `config.json` file for the `ext.testKitchen` ResourceLoader module.
@@ -24,25 +25,67 @@ class Hooks {
 				$config->get( 'TestKitchenLoggedInExperimentEventIntakeServiceUrl' ),
 			'InstrumentEventIntakeServiceUrl' => $config->get( 'TestKitchenInstrumentEventIntakeServiceUrl' ),
 
-			'experimentConfigs' => self::getExperimentConfigs( $config ),
+			'experimentConfigs' => self::getExperimentConfigs(),
 			'instrumentConfigs' => self::getInstrumentConfigs(),
+			'streamNameToContextualAttributesMap' => self::getStreamNameToContextualAttributesMap( $config ),
 		];
 	}
 
 	/**
-	 * Gets the configs for experiments configured in Test Kitchen UI.
+	 * Gets a map of experiment configs from the Test Kitchen UI keyed by the experiment name.
 	 *
-	 * Currently, experiment streams and contextual attributes aren't configured in Test Kitchen so this method
-	 * processes the stream configs for the streams in the `$wgTestKitchenExperimentStreamNames` config variable into
-	 * a map of experiment to contextual attributes.
+	 * Fetches experiment configurations from the ConfigsFetcher service and
+	 * extracts only the fields required by Test Kitchen SDKs.
 	 *
-	 * In future, this method will process the experiment configs from Test Kitchen UI like
-	 * {@link Hooks::getInstrumentConfigs()}.
+	 * Resulting structure:
+	 * [
+	 *   'experiment_name' => [
+	 *     'user_identifier_type' => array,
+	 *     'stream_name' => array,
+	 *     'schema_id' => string,
+	 *     'contextual_attributes' => string[],
+	 *   ],
+	 *   ...
+	 * ]
 	 *
-	 * @param Config $config
 	 * @return array
 	 */
-	private static function getExperimentConfigs( Config $config ): array {
+	private static function getExperimentConfigs(): array {
+		$experimentConfigs = Services::getConfigsFetcher()->getExperimentConfigs();
+		$result = [];
+
+		foreach ( $experimentConfigs as $experimentConfig ) {
+			$experimentName = $experimentConfig['name'];
+			$schemaId = array_key_exists( 'schema_id', $experimentConfig )
+				? $experimentConfig['schema_id']
+				: self::BASE_SCHEMA_ID;
+
+			$result[ $experimentName ] = [
+				'user_identifier_type' => $experimentConfig['user_identifier_type'],
+				'stream_name' => $experimentConfig['stream_name'],
+				'schema_id' => $schemaId,
+				'contextual_attributes' => $experimentConfig['contextual_attributes'],
+			];
+		}
+		return $result;
+	}
+
+	/**
+	 * Builds a map of stream names to their contextual attributes.
+	 *
+	 * Retrieves stream configurations from the EventStreamConfig service for the streams in
+	 * the `$wgTestKitchenExperimentStreamNames` config variable into a map of the experiment
+	 * to their corresponding contextual attributes.
+	 *
+	 * Streams without contextual attributes are omitted.
+	 *
+	 * @param Config $config Configuration containing wgTestKitchenExperimentStreamNames
+	 * @return array<string,string[]>
+	 * @deprecated This method provides data for `mw.testKitchen.Experiment#setStream()`,
+	 * which will be removed in a future release.
+	 * @see ConfigsFetcher::getExperimentConfigs()
+	 */
+	private static function getStreamNameToContextualAttributesMap( Config $config ): array {
 		$streamNames = $config->get( 'TestKitchenExperimentStreamNames' );
 
 		// NOTE: TestKitchen has a hard dependency on EventStreamConfig. If this code is executing, then
@@ -58,7 +101,6 @@ class Hooks {
 					$streamConfig['producers']['metrics_platform_client']['provide_values'];
 			}
 		}
-
 		return $result;
 	}
 

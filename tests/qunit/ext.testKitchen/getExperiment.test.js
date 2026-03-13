@@ -16,17 +16,6 @@ QUnit.module( 'ext.testKitchen/getExperiment()', QUnit.newMwEnvironment( {
 				dessert: '788a1970cc9b665222de25cc1a79da7ee1fcaf69b674caba188233ad995ba3d4',
 				supper: 'awaiting'
 			},
-			sampling_units: {
-				fruit: 'mw-user',
-				dessert: 'mw-user',
-				supper: 'edge-unique'
-			},
-			active_experiments: [
-				'fruit',
-				'dessert',
-				'lunch',
-				'supper'
-			],
 			overrides: []
 		}
 	},
@@ -36,14 +25,46 @@ QUnit.module( 'ext.testKitchen/getExperiment()', QUnit.newMwEnvironment( {
 			LoggedInExperimentEventIntakeServiceUrl: 'http://logged-in.experiments',
 			InstrumentEventIntakeServiceUrl: 'http://instrument',
 			experimentConfigs: {
-				'product_metrics.web_base': {
+				fruit: {
+					user_identifier_type: 'mw-user',
+					sample_rate: { default: 0 },
+					groups: [ 'control', 'tropical' ],
+					stream_name: 'product_metrics.web_base',
+					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					contextual_attributes: [
+						'mediawiki_database',
+						'page_namespace'
+					]
+				},
+				dessert: {
+					user_identifier_type: 'mw-user',
+					sample_rate: { default: 0 },
+					groups: [ 'control', 'ice-cream' ],
+					stream_name: 'product_metrics.web_base',
+					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					contextual_attributes: [
+						'mediawiki_database',
+						'page_namespace'
+					]
+				},
+				supper: {
+					user_identifier_type: 'edge-unique',
+					sample_rate: { default: 0 },
+					groups: [ 'control', 'fish-pie' ],
+					stream_name: 'product_metrics.web_base',
+					schema_id: '/analytics/product_metrics/web/base/2.0.0',
 					contextual_attributes: [
 						'mediawiki_database',
 						'page_namespace'
 					]
 				}
 			},
-			instrumentConfigs: {}
+			instrumentConfigs: {},
+			streamNameToContextualAttributesMap: {
+				'product_metrics.custom_stream': {
+					contextual_attributes: [ 'page_id', 'page_title' ]
+				}
+			}
 		} );
 	},
 	afterEach() {
@@ -89,12 +110,6 @@ QUnit.test( 'it handles overridden experiment', ( assert ) => {
 		subject_ids: {
 			fruit: 'overridden'
 		},
-		sampling_units: {
-			fruit: 'overridden'
-		},
-		active_experiments: [
-			'fruit'
-		],
 		overrides: [ 'fruit' ]
 	} );
 
@@ -125,18 +140,14 @@ QUnit.test( 'it sets stream, schema, and contextual attributes', ( assert ) => {
 	] );
 } );
 
-QUnit.test( 'it passes through experiment configs', ( assert ) => {
+QUnit.test( 'it passes through correct contextual attributes when stream is set', ( assert ) => {
 	const e = mw.testKitchen.getExperiment( 'fruit' );
 
+	e.setStream( 'product_metrics.custom_stream' );
+
 	assert.deepEqual(
-		e.experimentConfigs,
-		{
-			'product_metrics.web_base': {
-				contextual_attributes: [
-					'mediawiki_database',
-					'page_namespace'
-				]
-			}
-		}
+		e.contextualAttributes,
+		[ 'page_id', 'page_title' ],
+		'uses contextual attributes from the stream map when stream is set'
 	);
 } );

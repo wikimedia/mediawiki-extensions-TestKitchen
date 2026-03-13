@@ -19,20 +19,6 @@ QUnit.module( 'ext.testKitchen/getExperimentsByPrefix()', QUnit.newMwEnvironment
 				'foo-3': 'awaiting',
 				bar: 'awaiting'
 			},
-			sampling_units: {
-				'foo-1': 'edge-unique',
-				'foo-2': 'edge-unique',
-				'foo-3': 'edge-unique',
-				bar: 'edge-unique'
-
-			},
-			active_experiments: [
-				'foo-1',
-				'foo-2',
-				'foo-3',
-				'bar',
-				'baz'
-			],
 			overrides: []
 		}
 	},
@@ -42,7 +28,45 @@ QUnit.module( 'ext.testKitchen/getExperimentsByPrefix()', QUnit.newMwEnvironment
 			LoggedInExperimentEventIntakeServiceUrl: 'http://logged-in.experiments',
 			InstrumentEventIntakeServiceUrl: 'http://instrument',
 			experimentConfigs: {
-				'product_metrics.web_base': {
+				'foo-1': {
+					user_identifier_type: 'edge-unique',
+					sample_rate: { default: 0 },
+					groups: [ 'control', 'bar' ],
+					stream_name: 'product_metrics.web_base',
+					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					contextual_attributes: [
+						'mediawiki_database',
+						'page_namespace'
+					]
+				},
+				'foo-2': {
+					user_identifier_type: 'edge-unique',
+					sample_rate: { default: 0 },
+					groups: [ 'control', 'baz' ],
+					stream_name: 'product_metrics.web_base',
+					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					contextual_attributes: [
+						'mediawiki_database',
+						'page_namespace'
+					]
+				},
+				'foo-3': {
+					user_identifier_type: 'edge-unique',
+					sample_rate: { default: 0 },
+					groups: [ 'control', 'qux' ],
+					stream_name: 'product_metrics.web_base',
+					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					contextual_attributes: [
+						'mediawiki_database',
+						'page_namespace'
+					]
+				},
+				bar: {
+					user_identifier_type: 'edge-unique',
+					sample_rate: { default: 0 },
+					groups: [ 'control', 'quux' ],
+					stream_name: 'product_metrics.web_base',
+					schema_id: '/analytics/product_metrics/web/base/2.0.0',
 					contextual_attributes: [
 						'mediawiki_database',
 						'page_namespace'

@@ -73,7 +73,7 @@ class LoggedInExperimentsEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 
 		$this->result->expects( $this->once() )
 			->method( 'addExperiment' )
-			->with( 'foo', '377195904c99497c2cdb7aaecaf541ca717f34e5357dace55ebb1711d54190c2', 'mw-user' );
+			->with( 'foo', '377195904c99497c2cdb7aaecaf541ca717f34e5357dace55ebb1711d54190c2' );
 
 		$this->result->expects( $this->once() )
 			->method( 'addAssignment' )
@@ -121,8 +121,7 @@ class LoggedInExperimentsEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 					$this->assertSame(
 						[
 							'foo',
-							'377195904c99497c2cdb7aaecaf541ca717f34e5357dace55ebb1711d54190c2',
-							'mw-user',
+							'377195904c99497c2cdb7aaecaf541ca717f34e5357dace55ebb1711d54190c2'
 						],
 						$parameters
 					);
@@ -133,7 +132,6 @@ class LoggedInExperimentsEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 						[
 							'bar',
 							'92bd577d056dc2d6fe69083f638d4ce8bf4e8e4b88b351bcb8bbdf2dcef6a437',
-							'mw-user',
 						],
 						$parameters
 					);

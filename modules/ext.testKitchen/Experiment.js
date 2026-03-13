@@ -96,8 +96,8 @@ class Experiment {
 
 			// eslint-disable-next-line no-console
 			console.warn(
-				'%s: The stream %s isn\'t registered. Has you added %s to $wgTestKitchenExperimentStreamNames?',
-				this.name,
+				'%s: The stream %s isn\'t registered. Have you added %s to $wgTestKitchenExperimentStreamNames?',
+				this.config.enrolled,
 				streamName
 			);
 
@@ -116,6 +116,14 @@ class Experiment {
 		return this;
 	}
 }
+
+mw.log.deprecate(
+	Experiment.prototype,
+	'setStream',
+	Experiment.prototype.setStream,
+	'Experiment#setStream is deprecated and will be removed.',
+	'mw.testKitchen.Experiment#setStream()'
+);
 
 /**
  * @class

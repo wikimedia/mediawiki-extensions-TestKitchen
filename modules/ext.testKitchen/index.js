@@ -7,7 +7,6 @@ const eventSender = require( './eventSender.js' );
 const { Instrument, UnsampledInstrument } = require( './Instrument.js' );
 
 const COORDINATOR_DEFAULT = 'default';
-const STREAM_NAME = 'product_metrics.web_base';
 const SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
 
 const COOKIE_NAME = 'mpo';
@@ -67,47 +66,44 @@ const eventFactory = new EventFactory( contextualAttributesFactory );
  */
 function getExperiment( experimentName ) {
 	const userExperiments = mw.config.get( 'wgTestKitchenUserExperiments' );
+	const experimentConfig = config.experimentConfigs[ experimentName ];
 
-	if ( !userExperiments || !userExperiments.assigned[ experimentName ] ) {
+	// First Check if the experiment has been overridden.
+	if ( userExperiments && userExperiments.overrides.includes( experimentName ) ) {
+		return new OverriddenExperiment(
+			experimentName,
+			userExperiments.assigned[ experimentName ]
+		);
+	}
+
+	// This covers the cases where the experiment config is falsy, the user is not enrolled
+	// in the experiment, or the experiment is not configured.
+	if ( !userExperiments || !userExperiments.assigned[ experimentName ] || !experimentConfig ) {
 		return new UnenrolledExperiment();
 	}
 
 	const assigned = userExperiments.assigned[ experimentName ];
 
-	if ( userExperiments.overrides.includes( experimentName ) ) {
-		return new OverriddenExperiment( experimentName, assigned );
-	}
-
-	const samplingUnit = userExperiments.sampling_units[ experimentName ];
+	const samplingUnit = experimentConfig.user_identifier_type;
 	const isLoggedInExperiment = samplingUnit === 'mw-user';
-
 	const eventIntakeServiceUrl = isLoggedInExperiment ?
 		config.LoggedInExperimentEventIntakeServiceUrl :
 		config.EveryoneExperimentEventIntakeServiceUrl;
-
-	const subjectID = isLoggedInExperiment ?
-		userExperiments.subject_ids[ experimentName ] :
-		'awaiting';
-
-	// Use the base set of contextual attributes from the product_metrics.web_base stream. This
-	// can be removed as part of T408186.
-	const contextualAttributes =
-		config.experimentConfigs[ STREAM_NAME ].contextual_attributes;
 
 	return new Experiment(
 		eventFactory,
 		eventSender,
 		eventIntakeServiceUrl,
-		config.experimentConfigs,
+		config.streamNameToContextualAttributesMap,
 		{
 			enrolled: experimentName,
 			assigned,
-			subject_id: subjectID,
+			subject_id: userExperiments.subject_ids[ experimentName ],
 			sampling_unit: samplingUnit,
 			coordinator: COORDINATOR_DEFAULT,
-			stream_name: STREAM_NAME,
-			schema_id: SCHEMA_ID,
-			contextual_attributes: contextualAttributes
+			stream_name: experimentConfig.stream_name,
+			schema_id: experimentConfig.schema_id,
+			contextual_attributes: experimentConfig.contextual_attributes
 		}
 	);
 }

@@ -3,6 +3,7 @@
 namespace MediaWiki\Extension\TestKitchen\Tests\Integration\TestKitchen\Coordination;
 
 use Generator;
+use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentResultBuilder;
 use MediaWiki\Extension\TestKitchen\Coordination\RequestEnrollmentsProcessor;
 use MediaWiki\Request\FauxRequest;
@@ -15,12 +16,50 @@ use Psr\Log\LoggerInterface;
 class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 	private LoggerInterface $logger;
 	private RequestEnrollmentsProcessor $processor;
+	private ConfigsFetcher $configsFetcher;
+	private array $experiments = [];
 
 	public function setUp(): void {
 		parent::setUp();
 
 		$this->logger = $this->createMock( LoggerInterface::class );
 		$this->processor = new RequestEnrollmentsProcessor( $this->logger );
+		$this->configsFetcher = $this->createMock( ConfigsFetcher::class );
+		$this->experiments = [
+			'foo_experiment' => [
+				'name' => 'foo_experiment',
+				'user_identifier_type' => 'mw-user',
+				'sample_rate' => [
+					'default' => 1,
+				],
+				'groups' => [
+					'control',
+					'bar'
+				],
+				'stream_name' => 'product_metrics.web_base',
+				'contextual_attributes' => [
+					'page_id',
+					'performer_is_logged_in',
+				],
+			],
+			'qux_experiment' => [
+				'name' => 'qux_experiment',
+				'user_identifier_type' => 'mw-user',
+				'sample_rate' => [
+					'default' => 1,
+				],
+				'groups' => [
+					'control',
+					'treatment'
+				],
+				'stream_name' => 'product_metrics.custom_base',
+				'contextual_attributes' => [
+					'page_is_redirect',
+					'page_title',
+					'performer_is_bot'
+				],
+			],
+		];
 	}
 
 	public function testExperimentEnrollmentsHeaderIsEmpty(): void {
@@ -42,7 +81,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 			->method( 'error' );
 
 		$expected = new EnrollmentResultBuilder();
-		$expected->addExperiment( 'foo_experiment', 'awaiting', 'edge-unique' );
+		$expected->addExperiment( 'foo_experiment', 'awaiting' );
 		$expected->addAssignment( 'foo_experiment', 'bar' );
 
 		$this->assertEquals( $expected, $this->processor->process( $request ) );
@@ -58,6 +97,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 		$expected = new EnrollmentResultBuilder();
 		$expected->addExperiment( 'foo_experiment', 'awaiting', 'edge-unique' );
 		$expected->addAssignment( 'foo_experiment', 'bar' );
+
 		$expected->addExperiment( 'qux_experiment', 'awaiting', 'edge-unique' );
 		$expected->addAssignment( 'qux_experiment', 'quux' );
 
