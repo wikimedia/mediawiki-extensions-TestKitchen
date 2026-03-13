@@ -99,7 +99,9 @@
 				{
 					"name": "config.json",
 					"callback": "MediaWiki\\Extension\\TestKitchen\\ResourceLoader\\Hooks::getConfigForTestKitchenModule"
-				}
+				},
+				"useFakeExperiments.js",
+				"useFakeInstruments.js"
 			],
 			"dependencies": [
 				"mediawiki.user"
@@ -117,7 +119,9 @@
 			"ext.testKitchen/EventFactory.test.js",
 			"ext.testKitchen/eventSender.test.js",
 			"ext.testKitchen/Experiment.test.js",
-			"ext.testKitchen/Instrument.test.js"
+			"ext.testKitchen/Instrument.test.js",
+			"ext.testKitchen/useFakeExperiments.test.js",
+			"ext.testKitchen/useFakeInstruments.test.js"
 		],
 		"dependencies": [
 			"ext.testKitchen"

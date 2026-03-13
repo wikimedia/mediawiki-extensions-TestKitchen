@@ -135,7 +135,7 @@
  *  "hover", "click"
  * @param {Object} [interactionData] Additional data about the action that the user enrolled in
  *  the experiment took
- * @param {string[]} [contextualAttributes] Per event contextual attributes
+ * @param {string[]} [contextualAttributes] Per-event contextual attributes
  */
 
 /**
@@ -158,6 +158,7 @@
  *
  * @param {string} action The action related to the submitted event
  * @param {Object} [interactionData] Additional data
+ * @param {string[]} [contextualAttributes] Per-event contextual attributes
  */
 
 /**
@@ -249,8 +250,7 @@
  *
  * @param {string} action The action that the user enrolled in this experiment took, e.g.
  *  "hover", "click"
- * @param {Object} [interactionData] Additional data about the action that the user enrolled in
- *  the experiment took
+ * @param {Object} [interactionData] Additional data
  */
 
 /**
@@ -272,7 +272,7 @@
  * @memberof mw.testKitchen.InstrumentInterface
  *
  * @param {string} action The action related to the submitted event
- * @param {Object} interactionData Additional data
+ * @param {Object} [interactionData] Additional data
  */
 
 /**
@@ -314,4 +314,152 @@
  * @memberof mw.testKitchen.InstrumentInterface
  *
  * @return {boolean}
+ */
+
+// ---
+
+/**
+ * @typedef {Object} mw.testKitchen.TestEvent
+ * @property {string} action
+ * @property {Object} interactionData
+ * @property {string[]} [contextualAttributes]
+ */
+
+// ---
+
+/**
+ * @interface mw.testKitchen.StubbedExperimentInterface
+ * @extends mw.testKitchen.ExperimentInterface
+ */
+
+/**
+ * The events that have been sent for the experiment.
+ *
+ * @constant {mw.testKitchen.TestEvent[]} events
+ * @instance
+ * @memberof mw.testKitchen.StubbedExperimentInterface
+ */
+
+/**
+ * The number of events that have been sent for the experiment.
+ *
+ * @constant {number} eventCount
+ * @instance
+ * @memberof mw.testKitchen.StubbedExperimentInterface
+ */
+
+// ---
+
+/**
+ * @interface FakeExperimentsHelper
+ * @memberof mw.testKitchen
+ */
+
+/**
+ * Restores {@link mw.testKitchen.getExperiment} to its original state.
+ *
+ * This method should be called after every unit test that calls
+ * {@link mw.testKitchen.useFakeExperiments}.
+ *
+ * @method restore
+ * @instance
+ * @memberof mw.testKitchen.FakeExperimentsHelper
+ */
+
+/**
+ * Stubs enrollment in an experiment.
+ *
+ * @example
+ * const tk = mw.testKitchen.useFakeExperiments();
+ * const e = tk.stubExperiment( 'my-awesome-experiment', 'treatment' );
+ *
+ * // Run Code Under Test
+ *
+ * assert.strictEqual( e.eventCount, 1 );
+ * assert.strictEqual( e.events[ 0 ].action, 'my-awesome-action' );
+ *
+ * assert.strictEqual( tk.globalEventCount, 1 );
+ *
+ * @method stubExperiment
+ * @instance
+ * @memberof mw.testKitchen.FakeExperimentsHelper
+ *
+ * @param {string} experimentName
+ * @param {string} assigned
+ * @return {mw.testKitchen.StubbedExperimentInterface}
+ */
+
+/**
+ * The number of events that have been sent by all stubbed experiments.
+ *
+ * @constant {number} mw.testKitchen.FakeExperimentsHelper#globalEventCount
+ */
+
+// ---
+
+/**
+ * @interface mw.testKitchen.StubbedInstrumentInterface
+ * @extends mw.testKitchen.InstrumentInterface
+ */
+
+/**
+ * The events that have been sent for the experiment.
+ *
+ * @constant {mw.testKitchen.TestEvent[]} events
+ * @instance
+ * @memberof mw.testKitchen.StubbedInstrumentInterface
+ */
+
+/**
+ * The number of events that have been sent for the experiment.
+ *
+ * @constant {number} eventCount
+ * @instance
+ * @memberof mw.testKitchen.StubbedInstrumentInterface
+ */
+
+// ---
+
+/**
+ * @interface FakeInstrumentsHelper
+ * @memberof mw.testKitchen
+ */
+
+/**
+ * Restores {@link mw.testKitchen.getInstrument} to its original state.
+ *
+ * This method should be called after every unit test that calls
+ * {@link mw.testKitchen.useFakeInstruments}.
+ *
+ * @method restore
+ * @instance
+ * @memberof mw.testKitchen.FakeInstrumentsHelper
+ */
+
+/**
+ * Stubs an instrument.
+ *
+ * @example
+ * const tk = mw.testKitchen.useFakeExperiments();
+ * const e = tk.stubInstrument( 'my-awesome-instrument' );
+ *
+ * // Run Code Under Test
+ *
+ * assert.strictEqual( e.eventCount, 1 );
+ * assert.strictEqual( e.events[ 0 ].action, 'my-awesome-action' );
+ *
+ * assert.strictEqual( tk.globalEventCount, 1 );
+ *
+ * @method stubInstrument
+ * @instance
+ * @memberof mw.testKitchen.FakeInstrumentsHelper
+ *
+ * @param {string} instrumentName
+ * @return {mw.testKitchen.StubbedInstrumentInterface}
+ */
+
+/**
+ * The number of events that have been sent by all stubbed experiments.
+ *
+ * @constant {number} mw.testKitchen.FakeInstrumentsHelper#globalEventCount
  */

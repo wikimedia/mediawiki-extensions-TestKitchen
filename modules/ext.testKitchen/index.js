@@ -330,12 +330,16 @@ mw.testKitchen = {
  * @borrows mw.testKitchen.overrideExperimentGroup as overrideExperimentGroup
  * @borrows mw.testKitchen.clearExperimentOverride as clearExperimentOverride
  * @borrows mw.testKitchen.clearExperimentOverrides as clearExperimentOverrides
+ * @borrows mw.testKitchen.useFakeExperiments as useFakeExperiments
+ * @borrows mw.testKitchen.useFakeInstruments as useFakeInstruments
  */
 mw.tk = mw.testKitchen;
 
 // JS overriding experimentation feature
 if ( window.QUnit ) {
 	const originalConfig = config;
+	const useFakeExperiments = require( './useFakeExperiments.js' );
+	const useFakeInstruments = require( './useFakeInstruments.js' );
 
 	mw.testKitchen = Object.assign( mw.testKitchen, {
 		EventFactory,
@@ -360,6 +364,14 @@ if ( window.QUnit ) {
 		 */
 		resetConfig() {
 			config = originalConfig;
-		}
+		},
+
+		useFakeExperiments,
+		useFakeInstruments
+	} );
+
+	mw.tk = Object.assign( mw.tk, {
+		useFakeExperiments,
+		useFakeInstruments
 	} );
 }

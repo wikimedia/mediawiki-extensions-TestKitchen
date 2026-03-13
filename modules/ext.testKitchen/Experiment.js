@@ -79,8 +79,8 @@ class Experiment {
 		this.eventSender.sendEvent( event, this.eventIntakeServiceUrl );
 	}
 
-	submitInteraction( action, interactionData ) {
-		this.send( action, interactionData );
+	submitInteraction( action, interactionData, contextualAttributes ) {
+		this.send( action, interactionData, contextualAttributes );
 	}
 
 	sendExposure() {
@@ -143,7 +143,7 @@ class UnenrolledExperiment {
 	send( action, interactionData, contextualAttributes ) {}
 
 	// eslint-disable-next-line no-unused-vars
-	submitInteraction( action, interactionData ) {}
+	submitInteraction( action, interactionData, contextualAttributes ) {}
 
 	sendExposure() {}
 
@@ -197,8 +197,8 @@ class OverriddenExperiment {
 		);
 	}
 
-	submitInteraction( action, interactionData ) {
-		this.send( action, interactionData );
+	submitInteraction( action, interactionData, contextualAttributes ) {
+		this.send( action, interactionData, contextualAttributes );
 	}
 
 	sendExposure() {
