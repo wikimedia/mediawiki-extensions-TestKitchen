@@ -1,4 +1,4 @@
-QUnit.module( 'ext.testKitchen/getExperimentByPrefix()', QUnit.newMwEnvironment( {
+QUnit.module( 'ext.testKitchen/getExperimentsByPrefix()', QUnit.newMwEnvironment( {
 	config: {
 		wgTestKitchenUserExperiments: {
 			enrolled: [
@@ -58,24 +58,25 @@ QUnit.module( 'ext.testKitchen/getExperimentByPrefix()', QUnit.newMwEnvironment(
 } ) );
 
 QUnit.test( 'it handles an unknown experiment', ( assert ) => {
-	const e = mw.testKitchen.getExperimentByPrefix( 'an_experiment_name' );
+	const experiments = mw.testKitchen.getExperimentsByPrefix( 'an_experiment_name' );
 
-	assert.true( e instanceof mw.testKitchen.UnenrolledExperiment );
-	assert.strictEqual( e.getAssignedGroup(), null );
-} );
-
-QUnit.test( 'it sorts the experiment names', ( assert ) => {
-	const e = mw.testKitchen.getExperimentByPrefix( 'foo-' );
-
-	assert.true( e instanceof mw.testKitchen.Experiment );
-	assert.strictEqual( e.getAssignedGroup(), 'qux' );
+	assert.deepEqual( experiments, [] );
 } );
 
 QUnit.test( 'it handles an exact match', ( assert ) => {
-	const e = mw.testKitchen.getExperimentByPrefix( 'bar' );
+	const experiments = mw.testKitchen.getExperimentsByPrefix( 'bar' );
 
-	assert.true( e instanceof mw.testKitchen.Experiment );
-	assert.strictEqual( e.getAssignedGroup(), 'quux' );
+	assert.strictEqual( experiments.length, 1 );
+	assert.strictEqual( experiments[ 0 ].getAssignedGroup(), 'quux' );
+} );
+
+QUnit.test( 'it handles matches', ( assert ) => {
+	const experiments = mw.testKitchen.getExperimentsByPrefix( 'foo' );
+
+	assert.strictEqual( experiments.length, 3 );
+	assert.strictEqual( experiments[ 0 ].getAssignedGroup(), 'bar' );
+	assert.strictEqual( experiments[ 1 ].getAssignedGroup(), 'baz' );
+	assert.strictEqual( experiments[ 2 ].getAssignedGroup(), 'qux' );
 } );
 
 QUnit.test( 'it handles invalid config', ( assert ) => {
@@ -84,8 +85,7 @@ QUnit.test( 'it handles invalid config', ( assert ) => {
 
 	delete mw.config.values.wgTestKitchenUserExperiments;
 
-	const e = mw.testKitchen.getExperimentByPrefix( 'an_experiment_name' );
+	const experiments = mw.testKitchen.getExperimentsByPrefix( 'an_experiment_name' );
 
-	assert.true( e instanceof mw.testKitchen.UnenrolledExperiment );
-	assert.strictEqual( e.getAssignedGroup(), null );
+	assert.deepEqual( experiments, [] );
 } );
