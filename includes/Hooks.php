@@ -101,7 +101,12 @@ class Hooks implements
 		$out->addBodyClasses( EnrollmentCssClassSerializer::serialize( $enrollments ) );
 
 		// T404262: Add field for A/B test (and control) findability in Logstash
-		LoggerFactory::getContext()->add( [ 'context.ab_tests' => $enrollments ] );
+		//
+		// NOTE: MW_ENTRY_POINT is defined in all entry points. It's safe to access it without checking it's
+		// defined.
+		if ( MW_ENTRY_POINT === 'index' && $enrollments['assigned'] ) {
+			LoggerFactory::getContext()->add( [ 'context.ab_tests' => $enrollments['assigned'] ] );
+		}
 	}
 
 	/**
