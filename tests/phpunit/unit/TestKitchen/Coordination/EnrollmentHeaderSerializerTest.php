@@ -11,7 +11,7 @@ use MediaWikiUnitTestCase;
  */
 class EnrollmentHeaderSerializerTest extends MediaWikiUnitTestCase {
 
-	public function provideSerialize(): Generator {
+	public static function provideSerialize(): Generator {
 		yield [ [], '' ];
 
 		yield [
