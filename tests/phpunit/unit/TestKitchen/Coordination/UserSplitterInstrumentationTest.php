@@ -37,11 +37,11 @@ class UserSplitterInstrumentationTest extends MediaWikiUnitTestCase {
 	 * @dataProvider provideSampledAndBucket
 	 */
 	public function testSampledAndBucket(
-		float $ratio, array $buckets, float $userHash, bool $sampled, ?string $bucket
+		float $ratio, array $buckets, float $user, bool $sampled, ?string $bucket
 	) {
 		$subject = new UserSplitterInstrumentation();
-		$this->assertEquals( $sampled, $subject->isSampled( $ratio, $buckets, $userHash ) );
-		$this->assertEquals( $bucket, $subject->getBucket( $buckets, $userHash ) );
+		$this->assertEquals( $sampled, $subject->isSampled( $ratio, $buckets, $user ) );
+		$this->assertEquals( $bucket, $subject->getBucket( $buckets, $user ) );
 	}
 
 	public static function provideSampledAndBucket(): Generator {
