@@ -5,6 +5,7 @@ const ContextualAttributesFactory = require( './ContextualAttributesFactory.js' 
 const EventFactory = require( './EventFactory.js' );
 const eventSender = require( './eventSender.js' );
 const { Instrument, UnsampledInstrument } = require( './Instrument.js' );
+const ExposureLogTracker = require( './ExposureLogTracker.js' );
 
 const COORDINATOR_DEFAULT = 'default';
 const SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
@@ -33,6 +34,7 @@ let config = require( './config.json' );
 
 const contextualAttributesFactory = new ContextualAttributesFactory();
 const eventFactory = new EventFactory( contextualAttributesFactory );
+const exposureLogTracker = new ExposureLogTracker();
 
 /**
  * Gets the details of an experiment.
@@ -94,6 +96,7 @@ function getExperiment( experimentName ) {
 		eventFactory,
 		eventSender,
 		eventIntakeServiceUrl,
+		exposureLogTracker,
 		config.streamNameToContextualAttributesMap,
 		{
 			enrolled: experimentName,
@@ -103,7 +106,8 @@ function getExperiment( experimentName ) {
 			coordinator: COORDINATOR_DEFAULT,
 			stream_name: experimentConfig.stream_name,
 			schema_id: experimentConfig.schema_id,
-			contextual_attributes: experimentConfig.contextual_attributes
+			contextual_attributes: experimentConfig.contextual_attributes,
+			exposure_version: experimentConfig.exposure_version
 		}
 	);
 }
@@ -317,8 +321,8 @@ mw.testKitchen = {
 	getInstrument,
 	overrideExperimentGroup,
 	clearExperimentOverride,
-	clearExperimentOverrides
-
+	clearExperimentOverrides,
+	ExposureLogTracker
 };
 
 /**
@@ -349,6 +353,7 @@ if ( window.QUnit ) {
 		OverriddenExperiment,
 		Instrument,
 		UnsampledInstrument,
+		ExposureLogTracker,
 
 		/**
 		 * @param {Config} newConfig

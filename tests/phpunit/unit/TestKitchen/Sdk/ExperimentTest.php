@@ -6,6 +6,7 @@ use MediaWiki\Extension\EventStreamConfig\StreamConfigs as BaseStreamConfigs;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
+use MediaWiki\Extension\TestKitchen\Sdk\ExposureLogTracker;
 use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
 use MediaWikiUnitTestCase;
 use Wikimedia\Stats\StatsFactory;
@@ -68,6 +69,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	private StatsFactory $statsFactory;
 	private StreamConfigs $streamConfigs;
 	private UnitTestingHelper $statsHelper;
+	private ExposureLogTracker $exposureLogTracker;
 
 	public function setUp(): void {
 		parent::setUp();
@@ -76,6 +78,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 
 		$this->statsHelper = StatsFactory::newUnitTestingHelper();
 		$this->statsFactory = $this->statsHelper->getStatsFactory();
+		$this->exposureLogTracker = $this->createMock( ExposureLogTracker::class );
 
 		$baseStreamConfigs = new BaseStreamConfigs(
 			[
@@ -109,6 +112,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->streamConfigs,
+			$this->exposureLogTracker,
 			$this->experimentConfig
 		);
 	}
@@ -124,6 +128,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->streamConfigs,
+			$this->exposureLogTracker,
 			[]
 		);
 		$group = $experiment->getAssignedGroup();
@@ -306,6 +311,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->streamConfigs,
+			$this->exposureLogTracker,
 			[]
 		);
 
@@ -462,6 +468,23 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			'experiment' => $expectedExperimentConfig
 		];
 
+		$expectedExposureKey = 'tk.exposure.' .
+			$this->experimentConfig['enrolled'] . ':' .
+			$this->experimentConfig['assigned'];
+
+		$this->exposureLogTracker->expects( $this->once() )
+			->method( 'makeKey' )
+			->with(
+				$this->experimentConfig['enrolled'],
+				$this->experimentConfig['assigned']
+			)
+			->willReturn( $expectedExposureKey );
+
+		$this->exposureLogTracker->expects( $this->once() )
+			->method( 'checkShouldSend' )
+			->with( $expectedExposureKey )
+			->willReturn( true );
+
 		$this->eventFactory->expects( $this->once() )
 			->method( 'newEvent' )
 			->with(
@@ -484,6 +507,10 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->method( 'sendEvent' )
 			->with( $expectedEvent );
 
+		$this->exposureLogTracker->expects( $this->once() )
+			->method( 'addLog' )
+			->with( $expectedExposureKey );
+
 		$this->experiment->sendExposure();
 
 		$this->assertSame(
@@ -498,6 +525,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->streamConfigs,
+			$this->exposureLogTracker,
 			[]
 		);
 

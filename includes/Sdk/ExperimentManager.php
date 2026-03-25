@@ -30,6 +30,7 @@ class ExperimentManager implements
 	private array $baseStreamContextualAttributes;
 	private StreamConfigs $streamConfigs;
 	private array $streamNameToContextualAttributesMap;
+	private ExposureLogTracker $exposureLogTracker;
 
 	public function __construct(
 		private readonly LoggerInterface $logger,
@@ -40,7 +41,8 @@ class ExperimentManager implements
 		private readonly EnrollmentsProcessor $enrollmentsProcessor,
 		private readonly CentralIdLookup $centralIdLookup,
 		private readonly ConfigsFetcher $configsFetcher,
-		StreamConfigs $staticStreamConfigs
+		StreamConfigs $staticStreamConfigs,
+		ExposureLogTracker $exposureLogTracker
 	) {
 		$this->enrollmentResult = [];
 		$this->streamConfigs = $staticStreamConfigs;
@@ -50,6 +52,7 @@ class ExperimentManager implements
 		$this->enrollments = new EnrollmentResultBuilder();
 		$this->enrollmentResult = [];
 		$this->streamNameToContextualAttributesMap = [];
+		$this->exposureLogTracker = $exposureLogTracker;
 	}
 
 	/**
@@ -132,7 +135,8 @@ class ExperimentManager implements
 				$this->eventSender,
 				$this->eventFactory,
 				$this->statsFactory,
-				$this->streamConfigs
+				$this->streamConfigs,
+				$this->exposureLogTracker
 			);
 		} else {
 			if ( !in_array( $experimentName, $enrolledExperiments, true ) ) {
@@ -140,7 +144,8 @@ class ExperimentManager implements
 					$this->eventSender,
 					$this->eventFactory,
 					$this->statsFactory,
-					$this->streamConfigs
+					$this->streamConfigs,
+					$this->exposureLogTracker
 				);
 			}
 		}
@@ -157,6 +162,7 @@ class ExperimentManager implements
 				$this->statsFactory,
 				$this->streamConfigs,
 				$this->logger,
+				$this->exposureLogTracker,
 				$experimentConfig
 			);
 		}
@@ -166,6 +172,7 @@ class ExperimentManager implements
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->streamConfigs,
+			$this->exposureLogTracker,
 			$experimentConfig
 		);
 	}

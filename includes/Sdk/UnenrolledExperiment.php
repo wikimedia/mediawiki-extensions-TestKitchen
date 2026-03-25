@@ -14,13 +14,15 @@ class UnenrolledExperiment extends Experiment {
 		EventSender $eventSender,
 		EventFactory $eventFactory,
 		StatsFactory $statsFactory,
-		StreamConfigs $streamConfigs
+		StreamConfigs $streamConfigs,
+		ExposureLogTracker $exposureLogTracker
 	) {
 		parent::__construct(
 			$eventSender,
 			$eventFactory,
 			$statsFactory,
 			$streamConfigs,
+			$exposureLogTracker,
 			self::EMPTY_EXPERIMENT_CONFIG
 		);
 	}

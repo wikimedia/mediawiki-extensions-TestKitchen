@@ -23,6 +23,7 @@ class Experiment implements ExperimentInterface {
 		private readonly EventFactory $eventFactory,
 		private readonly StatsFactory $statsFactory,
 		private readonly StreamConfigs $staticStreamConfigs,
+		protected ExposureLogTracker $exposureLogTracker,
 		array $experimentConfig
 	) {
 		$this->experimentConfig = $experimentConfig;
@@ -160,6 +161,21 @@ class Experiment implements ExperimentInterface {
 			return;
 		}
 
-		$this->send( 'experiment_exposure', contextualAttributes: self::EXPOSURE_CONTEXTUAL_ATTRIBUTES );
+		$config = $this->getExperimentConfig();
+
+		$key = $this->exposureLogTracker->makeKey(
+			$config['enrolled'],
+			$this->getAssignedGroup()
+		);
+
+		// Check if exposure log should be sent and if so,
+		// send the exposure event and add the key to the exposure log.
+		if ( $this->exposureLogTracker->checkShouldSend( $key ) ) {
+			$this->send(
+				'experiment_exposure',
+				contextualAttributes: self::EXPOSURE_CONTEXTUAL_ATTRIBUTES
+			);
+			$this->exposureLogTracker->addLog( $key );
+		}
 	}
 }

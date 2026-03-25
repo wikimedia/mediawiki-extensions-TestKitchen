@@ -19,6 +19,7 @@ use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentCoordinatorInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManagerInterface;
+use MediaWiki\Extension\TestKitchen\Sdk\ExposureLogTracker;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManagerInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
@@ -150,7 +151,8 @@ return [
 			$services->getService( 'TestKitchen.EnrollmentsProcessor' ),
 			$services->getCentralIdLookup(),
 			$services->getService( 'TestKitchen.ConfigsFetcher' ),
-			$services->getService( 'TestKitchen.StaticStreamConfigs' )
+			$services->getService( 'TestKitchen.StaticStreamConfigs' ),
+			$services->getService( 'TestKitchen.ExposureLogTracker' )
 		);
 	},
 	'TestKitchen.InstrumentManager' => static function ( MediaWikiServices $services ): InstrumentManagerInterface {
@@ -172,5 +174,8 @@ return [
 			$services->getService( 'TestKitchen.ConfigsFetcher' ),
 			new UserSplitterInstrumentation()
 		);
-	}
+	},
+	'TestKitchen.ExposureLogTracker' => static function (): ExposureLogTracker {
+		return new ExposureLogTracker();
+	},
 ];

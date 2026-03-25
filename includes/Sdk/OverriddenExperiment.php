@@ -16,13 +16,15 @@ class OverriddenExperiment extends Experiment {
 		StatsFactory $statsFactory,
 		StreamConfigs $streamConfigs,
 		private readonly LoggerInterface $logger,
-		array $experimentConfig,
+		protected ExposureLogTracker $exposureLogTracker,
+		array $experimentConfig
 	) {
 		parent::__construct(
 			$eventSender,
 			$eventFactory,
 			$statsFactory,
 			$streamConfigs,
+			$exposureLogTracker,
 			$experimentConfig
 		);
 	}

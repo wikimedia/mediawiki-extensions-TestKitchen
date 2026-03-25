@@ -65,6 +65,10 @@
 		"TestKitchenAuthPreserveQueryParamsExperiments": {
 			"description": "List of experiment names to use in the AuthPreseveQueryParams hook. For each experiment listed here, AuthPreserveQueryParams will add its assigned group to a query param in the form ?mpo=<experiment1-name:group>;<experiment2-name:group>",
 			"value": []
+		},
+		"TestKitchenExposureResetEpoch": {
+			"description": "The epoch (in seconds) at which the exposure log will be reset. This is used to ensure that the exposure log is reset at the same time for all users.",
+			"value": 0
 		}
 	},
 	"HookHandlers": {
@@ -101,10 +105,12 @@
 					"callback": "MediaWiki\\Extension\\TestKitchen\\ResourceLoader\\Hooks::getConfigForTestKitchenModule"
 				},
 				"useFakeExperiments.js",
-				"useFakeInstruments.js"
+				"useFakeInstruments.js",
+				"ExposureLogTracker.js"
 			],
 			"dependencies": [
-				"mediawiki.user"
+				"mediawiki.user",
+				"mediawiki.storage"
 			]
 		}
 	},
@@ -121,7 +127,8 @@
 			"ext.testKitchen/Experiment.test.js",
 			"ext.testKitchen/Instrument.test.js",
 			"ext.testKitchen/useFakeExperiments.test.js",
-			"ext.testKitchen/useFakeInstruments.test.js"
+			"ext.testKitchen/useFakeInstruments.test.js",
+			"ext.testKitchen/ExposureLogTracker.test.js"
 		],
 		"dependencies": [
 			"ext.testKitchen"

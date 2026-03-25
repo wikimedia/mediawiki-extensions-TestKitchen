@@ -38,10 +38,19 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 		// Note well that Experiment#constructor() is package-private. Calling it outside Test
 		// Kitchen is not supported.
 
+		this.exposureLogTracker = {
+			exposuresThisPage: new Set(),
+			makeKey: this.sandbox.stub().returns( 'key' ),
+			trySend: this.sandbox.stub().callsFake( ( key, sendFn ) => {
+				sendFn();
+			} )
+		};
+
 		this.everyoneExperiment = new Experiment(
 			eventFactory,
 			eventSender,
 			'http://foo.bar/baz?qux=quux',
+			this.exposureLogTracker,
 			experimentConfigs,
 			{
 				enrolled: 'hello_world',
@@ -54,7 +63,8 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 				contextual_attributes: [
 					'performer_pageview_id',
 					'mediawiki_database'
-				]
+				],
+				exposure_version: 'v1'
 			}
 		);
 
@@ -62,6 +72,7 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 			eventFactory,
 			eventSender,
 			'http://foo.bar/baz?qux=quux',
+			this.exposureLogTracker,
 			experimentConfigs,
 			{
 				enrolled: 'my-awesome-experiment',
@@ -74,7 +85,8 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 				contextual_attributes: [
 					'performer_pageview_id',
 					'mediawiki_database'
-				]
+				],
+				exposure_version: 'v1'
 			}
 		);
 	}
@@ -379,25 +391,71 @@ QUnit.test.each(
 	function ( assert, [ propertyName, expectedExperiment ] ) {
 		this[ propertyName ].sendExposure();
 
+		assert.strictEqual( this.exposureLogTracker.makeKey.callCount, 1 );
+		assert.strictEqual( this.exposureLogTracker.trySend.callCount, 1 );
 		assert.strictEqual( this.newEventStub.callCount, 1 );
-		assert.deepEqual( this.newEventStub.firstCall.args, [
-			'product_metrics.web_base',
-			'/analytics/product_metrics/web/base/2.0.0',
-			[
-				'performer_is_logged_in',
-				'performer_is_temp',
-				'performer_is_bot',
-				'mediawiki_database',
-				'performer_pageview_id',
-				'mediawiki_database'
-			],
-			'experiment_exposure',
+		assert.strictEqual( this.sendEventStub.callCount, 1 );
+
+		assert.deepEqual(
+			this.exposureLogTracker.makeKey.firstCall.args[ 0 ],
 			{
-				experiment: expectedExperiment
+				enrolled: expectedExperiment.enrolled,
+				assigned: expectedExperiment.assigned,
+				version: 'v1'
 			}
-		] );
+		);
+
+		assert.strictEqual(
+			this.exposureLogTracker.trySend.firstCall.args[ 0 ],
+			'key'
+		);
+		assert.strictEqual(
+			typeof this.exposureLogTracker.trySend.firstCall.args[ 1 ],
+			'function'
+		);
+
+		assert.deepEqual(
+			this.newEventStub.firstCall.args,
+			[
+				'product_metrics.web_base',
+				'/analytics/product_metrics/web/base/2.0.0',
+				[
+					'performer_is_logged_in',
+					'performer_is_temp',
+					'performer_is_bot',
+					'mediawiki_database',
+					'performer_pageview_id'
+				],
+				'experiment_exposure',
+				{
+					experiment: expectedExperiment
+				}
+			]
+		);
 	}
 );
+
+QUnit.test( 'sendExposure() does not send when tracker suppresses exposure', function ( assert ) {
+	this.exposureLogTracker.trySend = this.sandbox.stub();
+
+	this.everyoneExperiment.sendExposure();
+
+	assert.strictEqual( this.exposureLogTracker.makeKey.callCount, 1 );
+	assert.strictEqual( this.exposureLogTracker.trySend.callCount, 1 );
+	assert.strictEqual( this.newEventStub.callCount, 0 );
+	assert.strictEqual( this.sendEventStub.callCount, 0 );
+} );
+
+QUnit.test( 'sendExposure() rethrows when sending exposure fails', function ( assert ) {
+	this.sendEventStub.throws( new Error( 'boom' ) );
+
+	assert.throws( () => {
+		this.everyoneExperiment.sendExposure();
+	}, /boom/ );
+
+	assert.strictEqual( this.exposureLogTracker.makeKey.callCount, 1 );
+	assert.strictEqual( this.exposureLogTracker.trySend.callCount, 1 );
+} );
 
 // ---
 

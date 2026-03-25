@@ -19,6 +19,7 @@ class Experiment {
 	 * @param {mw.testKitchen.EventFactory} eventFactory
 	 * @param {mw.testKitchen.EventSenderInterface} eventSender
 	 * @param {string} eventIntakeServiceUrl
+	 * @param {mw.testKitchen.ExposureLogTracker} exposureLogTracker
 	 * @param {Object.<string,mw.testKitchen.PartialExperimentConfig>} experimentConfigs
 	 * @param {mw.testKitchen.ExperimentConfig} config
 	 */
@@ -26,6 +27,7 @@ class Experiment {
 		eventFactory,
 		eventSender,
 		eventIntakeServiceUrl,
+		exposureLogTracker,
 		experimentConfigs,
 		config
 	) {
@@ -37,6 +39,8 @@ class Experiment {
 		this.streamName = config.stream_name;
 		this.schemaID = config.schema_id;
 		this.contextualAttributes = config.contextual_attributes;
+		this.tracker = exposureLogTracker;
+		this.exposureVersion = config.exposure_version;
 	}
 
 	getAssignedGroup() {
@@ -44,7 +48,7 @@ class Experiment {
 	}
 
 	isAssignedGroup( ...groups ) {
-		return groups.includes( this.config.assigned );
+		return groups.includes( this.getAssignedGroup() );
 	}
 
 	send( action, interactionData, contextualAttributes ) {
@@ -65,7 +69,9 @@ class Experiment {
 		// if present, per-event contextual attributes will be added
 		let eventContextualAttributes = this.contextualAttributes;
 		if ( contextualAttributes && contextualAttributes.length > 0 ) {
-			eventContextualAttributes = contextualAttributes.concat( this.contextualAttributes );
+			eventContextualAttributes = [ ...new Set(
+				contextualAttributes.concat( this.contextualAttributes )
+			) ];
 		}
 
 		const event = this.eventFactory.newEvent(
@@ -83,8 +89,24 @@ class Experiment {
 		this.send( action, interactionData, contextualAttributes );
 	}
 
+	/**
+	 * Logs an exposure event with 2-tier deduplication.
+	 */
 	sendExposure() {
-		this.send( 'experiment_exposure', {}, EXPOSURE_CONTEXTUAL_ATTRIBUTES );
+		const group = this.getAssignedGroup();
+
+		// Experiment Key - ensures automatic reset if config changes
+		const key = this.tracker.makeKey( {
+			enrolled: this.config.enrolled,
+			assigned: group,
+			version: this.exposureVersion
+		} );
+
+		// trySend marks that an experiment exposure event is about to be sent.
+		// If the callback throws an error, then it tidies up.
+		this.tracker.trySend( key, () => {
+			this.send( 'experiment_exposure', {}, EXPOSURE_CONTEXTUAL_ATTRIBUTES );
+		} );
 	}
 
 	setStream( streamName ) {

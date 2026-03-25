@@ -28,6 +28,7 @@ class Hooks {
 			'experimentConfigs' => self::getExperimentConfigs(),
 			'instrumentConfigs' => self::getInstrumentConfigs(),
 			'streamNameToContextualAttributesMap' => self::getStreamNameToContextualAttributesMap( $config ),
+			'exposureResetEpoch' => $config->get( 'TestKitchenExposureResetEpoch' ),
 		];
 	}
 
@@ -40,10 +41,11 @@ class Hooks {
 	 * Resulting structure:
 	 * [
 	 *   'experiment_name' => [
-	 *     'user_identifier_type' => array,
-	 *     'stream_name' => array,
+	 *     'user_identifier_type' => string,
+	 *     'stream_name' => string,
 	 *     'schema_id' => string,
 	 *     'contextual_attributes' => string[],
+	 *     'exposure_version' => string[]
 	 *   ],
 	 *   ...
 	 * ]
@@ -65,9 +67,38 @@ class Hooks {
 				'stream_name' => $experimentConfig['stream_name'],
 				'schema_id' => $schemaId,
 				'contextual_attributes' => $experimentConfig['contextual_attributes'],
+				'exposure_version' => self::getExposureVersion( $experimentConfig, $schemaId ),
 			];
 		}
 		return $result;
+	}
+
+	/**
+	 * Build a stable version string for exposure logging from the semantic
+	 * experiment config. This value is consumed by client SDKs to invalidate
+	 * previously stored exposure memory when experiment semantics change.
+	 *
+	 * @param array $experimentConfig
+	 * @param string $schemaID
+	 * @return string
+	 */
+	private static function getExposureVersion( array $experimentConfig, string $schemaID ): string {
+		$groups = $experimentConfig['groups'] ?? [];
+		sort( $groups );
+
+		$semanticConfig = [
+			'name' => $experimentConfig['name'],
+			'user_identifier_type' => $experimentConfig['user_identifier_type'],
+			'groups' => $groups,
+			'sample_rate' => $experimentConfig['sample_rate'] ?? [],
+			'stream_name' => $experimentConfig['stream_name'],
+			'schema_id' => $schemaID,
+			'contextual_attributes' => $experimentConfig['contextual_attributes'] ?? [],
+		];
+
+		$json = json_encode( $semanticConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+
+		return substr( hash( 'sha256', $json ), 0, 16 );
 	}
 
 	/**

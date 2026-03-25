@@ -11,6 +11,7 @@ use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
+use MediaWiki\Extension\TestKitchen\Sdk\ExposureLogTracker;
 use MediaWiki\Extension\TestKitchen\Sdk\OverriddenExperiment;
 use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
 use MediaWiki\Extension\TestKitchen\Sdk\UnenrolledExperiment;
@@ -37,6 +38,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 	private StatsFactory $statsFactory;
 	private StreamConfigs $staticStreamConfigs;
 	private ExperimentManager $experimentManager;
+	private ExposureLogTracker $exposureLogTracker;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -49,6 +51,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		$this->centralIdLookup = $this->createMock( CentralIdLookup::class );
 		$this->configsFetcher = $this->createMock( ConfigsFetcher::class );
 		$this->statsFactory = StatsFactory::newNull();
+		$this->exposureLogTracker = $this->createMock( ExposureLogTracker::class );
 
 		$baseStreamConfigs = new BaseStreamConfigs(
 			[
@@ -78,7 +81,8 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->enrollmentsProcessor,
 			$this->centralIdLookup,
 			$this->configsFetcher,
-			$this->staticStreamConfigs
+			$this->staticStreamConfigs,
+			$this->exposureLogTracker
 		);
 	}
 
@@ -210,6 +214,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->staticStreamConfigs,
+			$this->exposureLogTracker,
 			$this->makeExpectedSdkConfig(
 				$experimentName,
 				[
@@ -279,6 +284,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->statsFactory,
 			$this->staticStreamConfigs,
 			$this->logger,
+			$this->exposureLogTracker,
 			$this->makeExpectedSdkConfig(
 				$experimentName,
 				[
@@ -348,7 +354,8 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->staticStreamConfigs
+			$this->staticStreamConfigs,
+			$this->exposureLogTracker
 		);
 
 		$this->assertEquals( $expected, $actual );
@@ -368,7 +375,8 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->staticStreamConfigs
+			$this->staticStreamConfigs,
+			$this->exposureLogTracker
 		);
 
 		$this->assertEquals( $expected, $actual );
@@ -408,6 +416,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->staticStreamConfigs,
+			$this->exposureLogTracker,
 			$this->makeExpectedSdkConfig(
 				$experimentName,
 				[
