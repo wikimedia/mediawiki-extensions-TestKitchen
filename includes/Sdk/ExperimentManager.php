@@ -68,7 +68,9 @@ class ExperimentManager implements
 	}
 
 	public function setRequest( WebRequest $request ): void {
-		$this->enrollments = $this->requestEnrollmentsProcessor->process( $request );
+		$this->enrollments = $this->requestEnrollmentsProcessor->process( $request, $this->enrollments );
+
+		// B/C
 		$this->enrollmentResult = $this->enrollments->build();
 	}
 

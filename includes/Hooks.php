@@ -148,7 +148,7 @@ class Hooks implements
 	 * @param WebRequest $request
 	 */
 	private function doEnrollUser( User $user, WebRequest $request ): void {
-		$this->experimentManager->setRequest( $request );
 		$this->experimentManager->updateUser( $user );
+		$this->experimentManager->setRequest( $request );
 	}
 }

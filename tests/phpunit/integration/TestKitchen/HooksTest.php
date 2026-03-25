@@ -293,6 +293,61 @@ class HooksTest
 		$this->assertEnrollmentsEqual( $expected, $actual );
 	}
 
+	/**
+	 * Tests the user setting an override for an out-sample for a logged-in experiment.
+	 */
+	public function testOverriddenAlreadyEnrolledLoggedInExperiment(): void {
+		// The user is registered (they have a local ID > 0) and they have a central user ID > 0
+		// as well.
+		$user = $this->createMock( User::class );
+		$user->method( 'getName' )->willReturn( 'TestUser' );
+		$user->method( 'getId' )->willReturn( 123 );
+		$user->method( 'isRegistered' )->willReturn( true );
+		$this->context->setUser( $user );
+
+		$this->centralIdLookup->expects( $this->once() )
+			->method( 'centralIdFromName' )
+			->with( 'TestUser' )
+			->willReturn( 321 );
+
+		$this->context->getRequest()->setCookie(
+			'mpo', 'logged-in-experiment-2:control'
+		);
+
+		$actual = $this->onBeforeInitialize();
+		$expected = [
+			'active_experiments' => [
+				'logged-in-experiment-1',
+				'logged-in-experiment-2'
+			],
+			'enrolled' => [
+				'logged-in-experiment-1',
+				'logged-in-experiment-2'
+			],
+			'assigned' => [
+				'logged-in-experiment-1' => 'group-something',
+				'logged-in-experiment-2' => 'control'
+			],
+			'subject_ids' => [
+				'logged-in-experiment-1' => '9b6a4e7d98cd96a463fbcadb9e9edfdd9e4b5d9560c79b9d16b38599cb23128e',
+				'logged-in-experiment-2' => 'overridden'
+			],
+			'sampling_units' => [
+				'logged-in-experiment-1' => 'mw-user',
+				'logged-in-experiment-2' => 'overridden'
+			],
+			'overrides' => [
+				'logged-in-experiment-2'
+			],
+			'coordinator' => [
+				'logged-in-experiment-1' => 'default',
+				'logged-in-experiment-2' => 'forced'
+			]
+		];
+
+		$this->assertEnrollmentsEqual( $expected, $actual );
+	}
+
 	private function assertEnrollmentsEqual( array $expected, array $actual ): void {
 		// ::assertEquals and ::assertEqualsCanonicalizing are sensitive to order in sub-arrays. Test the equality of
 		// the sub-arrays separately to make this test more flexible.

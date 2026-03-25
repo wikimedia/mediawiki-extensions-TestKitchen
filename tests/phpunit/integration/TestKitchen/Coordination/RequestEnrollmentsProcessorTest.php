@@ -70,7 +70,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$expected = new EnrollmentResultBuilder();
 
-		$this->assertEquals( $expected, $this->processor->process( $request ) );
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 
 	public function testExperimentEnrollmentsHeaderHasOneAssignment(): void {
@@ -84,7 +84,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 		$expected->addExperiment( 'foo_experiment', 'awaiting' );
 		$expected->addAssignment( 'foo_experiment', 'bar' );
 
-		$this->assertEquals( $expected, $this->processor->process( $request ) );
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 
 	public function testExperimentEnrollmentsHeaderHasMultipleAssignments(): void {
@@ -101,7 +101,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 		$expected->addExperiment( 'qux_experiment', 'awaiting', 'edge-unique' );
 		$expected->addAssignment( 'qux_experiment', 'quux' );
 
-		$this->assertEquals( $expected, $this->processor->process( $request ) );
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 
 	public static function provideMalformedHeader(): Generator {
@@ -126,7 +126,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$expected = new EnrollmentResultBuilder();
 
-		$this->assertEquals( $expected, $this->processor->process( $request ) );
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 
 	public function testExperimentEnrollmentsHeaderExperimentNameIsInvalid(): void {
@@ -142,7 +142,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$expected = new EnrollmentResultBuilder();
 
-		$this->assertEquals( $expected, $this->processor->process( $request ) );
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 
 	public function testExperimentEnrollmentsHeaderGroupNameIsInvalid(): void {
@@ -158,7 +158,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$expected = new EnrollmentResultBuilder();
 
-		$this->assertEquals( $expected, $this->processor->process( $request ) );
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 
 	public function testOverrideCookieAndQueryAreEmpty(): void {
@@ -166,7 +166,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$expected = new EnrollmentResultBuilder();
 
-		$this->assertEquals( $expected, $this->processor->process( $request ) );
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 
 	public static function provideOverrideCookieAndQuery(): Generator {
@@ -216,7 +216,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 			$expected->addAssignment( $experimentName, $groupName, true );
 		}
 
-		$this->assertEquals( $expected, $this->processor->process( $request ) );
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 
 	public function testMalformedOverrideQuery(): void {
@@ -230,7 +230,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 
 		$this->assertEquals(
 			$expected,
-			$this->processor->process( $request ),
+			$this->processor->process( $request, new EnrollmentResultBuilder() ),
 			'If the query is malformed, then it isn\'t processed'
 		);
 	}

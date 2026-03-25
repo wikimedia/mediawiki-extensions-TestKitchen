@@ -26,9 +26,7 @@ class RequestEnrollmentsProcessor {
 	 *
 	 * @param WebRequest $request
 	 */
-	public function process( WebRequest $request ): EnrollmentResultBuilder {
-		$result = new EnrollmentResultBuilder();
-
+	public function process( WebRequest $request, EnrollmentResultBuilder $result ): EnrollmentResultBuilder {
 		$this->getEveryoneExperimentsEnrollments( $request, $result );
 		$this->getOverriddenEnrollments( $request, $result );
 
