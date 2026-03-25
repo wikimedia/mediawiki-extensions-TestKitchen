@@ -11,6 +11,8 @@ const EXPOSURE_CONTEXTUAL_ATTRIBUTES = [
 // eslint-disable-next-line compat/compat
 const COOKIES_DISABLED = navigator.cookieEnabled !== undefined ? !navigator.cookieEnabled : false;
 
+const COORDINATOR_DEFAULT = 'default';
+
 /**
  * @class
  * @implements {mw.testKitchen.ExperimentInterface}
@@ -26,7 +28,7 @@ class Experiment {
 	 * @param {mw.testKitchen.EventSenderInterface} eventSender
 	 * @param {string} eventIntakeServiceUrl
 	 * @param {mw.testKitchen.ExposureLogTracker} exposureLogTracker
-	 * @param {Object.<string,mw.testKitchen.PartialExperimentConfig>} experimentConfigs
+	 * @param {Object.<string,string[]>} streamNameToContextualAttributesMap
 	 * @param {mw.testKitchen.ExperimentConfig} config
 	 */
 	constructor(
@@ -34,13 +36,13 @@ class Experiment {
 		eventSender,
 		eventIntakeServiceUrl,
 		exposureLogTracker,
-		experimentConfigs,
+		streamNameToContextualAttributesMap,
 		config
 	) {
 		this.eventFactory = eventFactory;
 		this.eventSender = eventSender;
 		this.eventIntakeServiceUrl = eventIntakeServiceUrl;
-		this.experimentConfigs = experimentConfigs;
+		this.streamNameToContextualAttributesMap = streamNameToContextualAttributesMap;
 		this.config = config;
 		this.streamName = config.stream_name;
 		this.schemaID = config.schema_id;
@@ -63,12 +65,14 @@ class Experiment {
 		}
 
 		// Extract SDK-specific experiment config
-		const keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
+		const keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit' ];
 		const experiment = {};
 
 		for ( const key of keys ) {
 			experiment[ key ] = this.config[ key ];
 		}
+
+		experiment.coordinator = COORDINATOR_DEFAULT;
 
 		// T421152: Include enrollment information about other experiments that the user is enrolled
 		// in.
@@ -132,7 +136,7 @@ class Experiment {
 
 		// Use the set of contextual attributes for the stream. This can be removed as part of
 		// T408186.
-		if ( !this.experimentConfigs[ streamName ] ) {
+		if ( !this.streamNameToContextualAttributesMap[ streamName ] ) {
 
 			// eslint-disable-next-line no-console
 			console.warn(
@@ -144,7 +148,7 @@ class Experiment {
 			this.contextualAttributes = [];
 		} else {
 			this.contextualAttributes =
-				this.experimentConfigs[ streamName ].contextual_attributes;
+				this.streamNameToContextualAttributesMap[ streamName ];
 		}
 
 		return this;

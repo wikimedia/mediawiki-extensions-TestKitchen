@@ -35,22 +35,10 @@ class Hooks {
 	/**
 	 * Gets a map of experiment configs from the Test Kitchen UI keyed by the experiment name.
 	 *
-	 * Fetches experiment configurations from the ConfigsFetcher service and
-	 * extracts only the fields required by Test Kitchen SDKs.
+	 * Fetches experiment configurations from the ConfigsFetcher service and extracts only the fields required by the
+	 * Test Kitchen SDKs.
 	 *
-	 * Resulting structure:
-	 * [
-	 *   'experiment_name' => [
-	 *     'user_identifier_type' => string,
-	 *     'stream_name' => string,
-	 *     'schema_id' => string,
-	 *     'contextual_attributes' => string[],
-	 *     'exposure_version' => string[]
-	 *   ],
-	 *   ...
-	 * ]
-	 *
-	 * @return array
+	 * @return array<string,array{user_identifier_type:string,stream_name:string,schema_id:string,contextual_attributes:string,exposure_version:string}>
 	 */
 	private static function getExperimentConfigs(): array {
 		$experimentConfigs = Services::getConfigsFetcher()->getExperimentConfigs();
@@ -110,10 +98,10 @@ class Hooks {
 	 *
 	 * Streams without contextual attributes are omitted.
 	 *
-	 * @param Config $config Configuration containing wgTestKitchenExperimentStreamNames
+	 * @param Config $config Configuration containing `$wgTestKitchenExperimentStreamNames`
 	 * @return array<string,string[]>
-	 * @deprecated This method provides data for `mw.testKitchen.Experiment#setStream()`,
-	 * which will be removed in a future release.
+	 * @deprecated This method provides data for `mw.testKitchen.Experiment#setStream()`, which
+	 *  will be removed in a future release
 	 * @see ConfigsFetcher::getExperimentConfigs()
 	 */
 	private static function getStreamNameToContextualAttributesMap( Config $config ): array {
@@ -128,8 +116,7 @@ class Hooks {
 
 		foreach ( $streamConfigs as $streamName => $streamConfig ) {
 			if ( isset( $streamConfig['producers']['metrics_platform_client']['provide_values'] ) ) {
-				$result[ $streamName ]['contextual_attributes'] =
-					$streamConfig['producers']['metrics_platform_client']['provide_values'];
+				$result[ $streamName ] = $streamConfig['producers']['metrics_platform_client']['provide_values'];
 			}
 		}
 		return $result;

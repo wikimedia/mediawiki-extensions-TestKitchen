@@ -6,27 +6,35 @@ const EventFactory = require( './EventFactory.js' );
 const eventSender = require( './eventSender.js' );
 const { Instrument, UnsampledInstrument } = require( './Instrument.js' );
 const ExposureLogTracker = require( './ExposureLogTracker.js' );
+const {
+	overrideExperimentGroup,
+	clearExperimentOverride,
+	clearExperimentOverrides,
+	get,
+	getAsync,
+	getMatching,
+	getMatchingAsync,
+	reset: resetEnrollmentConfigs
+} = require( './enrollmentConfig.js' );
 
-const COORDINATOR_DEFAULT = 'default';
 const SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
-
-const COOKIE_NAME = 'mpo';
 
 const UINT32_MAX = 4294967295; // (2^32) - 1
 
 /**
- * @typedef {Object} Config
+ * @typedef {Object} ConfigFromServer
  * @property {string} EveryoneExperimentEventIntakeServiceUrl
  * @property {string} LoggedInExperimentEventIntakeServiceUrl
  * @property {string} InstrumentEventIntakeServiceUrl
+ * @property {Object.<string,string[]>} streamNameToContextualAttributesMap
  * @property {Object.<string,mw.testKitchen.PartialExperimentConfig>} experimentConfigs
- * @property {Object.<string,mw.testKitchen.InstrumentConfig>} instrumentConfigs
+ * @property {Object.<string,mw.testKitchen.PartialInstrumentConfig>} instrumentConfigs
  *
  * @ignore
  */
 
 /**
- * @type {Config}
+ * @type {ConfigFromServer}
  *
  * @ignore
  */
@@ -37,7 +45,58 @@ const eventFactory = new EventFactory( contextualAttributesFactory );
 const exposureLogTracker = new ExposureLogTracker();
 
 /**
+ * Creates a new {@link mw.testKitchen.ExperimentInterface} instance given the experiment name and
+ * an enrollment config.
+ *
+ * @param {mw.testKitchen.EnrollmentConfig} enrollmentConfig
+ * @return {mw.testKitchen.ExperimentInterface}
+ *
+ * @ignore
+ */
+function newExperiment( enrollmentConfig ) {
+	if ( !enrollmentConfig ) {
+		return new UnenrolledExperiment();
+	}
+
+	const experimentName = enrollmentConfig.enrolled;
+
+	if ( enrollmentConfig.is_override ) {
+		return new OverriddenExperiment( experimentName, enrollmentConfig.assigned );
+	} else if ( !config.experimentConfigs[ experimentName ] ) {
+		return new UnenrolledExperiment();
+	}
+
+	const experimentConfig = config.experimentConfigs[ experimentName ];
+	const isLoggedInExperiment = experimentConfig.user_identifier_type === 'mw-user';
+	const eventIntakeServiceUrl = isLoggedInExperiment ?
+		config.LoggedInExperimentEventIntakeServiceUrl :
+		config.EveryoneExperimentEventIntakeServiceUrl;
+
+	return new Experiment(
+		eventFactory,
+		eventSender,
+		eventIntakeServiceUrl,
+		exposureLogTracker,
+		config.streamNameToContextualAttributesMap,
+		{
+			enrolled: experimentName,
+			assigned: enrollmentConfig.assigned,
+			subject_id: enrollmentConfig.subject_id,
+			sampling_unit: experimentConfig.user_identifier_type,
+			stream_name: experimentConfig.stream_name,
+			schema_id: experimentConfig.schema_id,
+			contextual_attributes: experimentConfig.contextual_attributes,
+			exposure_version: experimentConfig.exposure_version,
+			other_assigned: enrollmentConfig.other_assigned
+		}
+	);
+}
+
+/**
  * Gets the details of an experiment.
+ *
+ * This method is provided for backwards compatibility with existing experiments. Please use
+ * {@link mw.testKitchen.getExperiment} instead.
  *
  * This method always returns an instance of {@link mw.testKitchen.ExperimentInterface} that can:
  *
@@ -61,59 +120,87 @@ const exposureLogTracker = new ExposureLogTracker();
  *   myAwesomeDialog.primaryAction.label = 'Awesome!';
  * }
  *
- * @memberof mw.testKitchen
+ * @memberof mw.testKitchen.compat
  *
  * @param {string} experimentName The experiment name
  * @return {mw.testKitchen.ExperimentInterface}
  */
 function getExperiment( experimentName ) {
-	const userExperiments = mw.config.get( 'wgTestKitchenUserExperiments' );
-	const experimentConfig = config.experimentConfigs[ experimentName ];
+	return newExperiment( get( experimentName ) );
+}
 
-	// First Check if the experiment has been overridden.
-	if ( userExperiments && userExperiments.overrides.includes( experimentName ) ) {
-		return new OverriddenExperiment(
-			experimentName,
-			userExperiments.assigned[ experimentName ]
-		);
-	}
+/**
+ * Gets the details of an experiment.
+ *
+ * This method returns a promise that will always resolve with an instance of
+ * {@link mw.testKitchen.ExperimentInterface} that can:
+ *
+ * 1. Get information about the user's (more precisely, the subject's) enrollment in the experiment
+ * 2. Send analytics events relating to the experiment
+ *
+ * @example
+ * const myAwesomeDialog = require( 'my.awesome.dialog' );
+ *
+ * mw.testKitchen.async.getExperiment( 'my-awesome-non-cache-splitting-experiment' )
+ *   .then( ( e ) => {
+ *     [
+ *       'open',
+ *       'default-action',
+ *       'primary-action'
+ *     ].forEach( ( event ) => {
+ *         myAwesomeDialog.on( event, () => e.send( event ) );
+ *     } );
+ *
+ *     // Was the current user assigned to the treatment group?
+ *     if ( e.isAssignedGroup( 'treatment' ) ) {
+ *       myAwesomeDialog.primaryAction.label = 'Awesome!';
+ *     }
+ *   } );
+ *
+ * @method getExperiment
+ * @memberof mw.testKitchen
+ *
+ * @param {string} experimentName The experiment name
+ * @return {Promise<mw.testKitchen.ExperimentInterface>}
+ */
+function getExperimentAsync( experimentName ) {
+	return getAsync( experimentName ).then( newExperiment );
+}
 
-	// This covers the cases where the experiment config is falsy, the user is not enrolled
-	// in the experiment, or the experiment is not configured.
-	if ( !userExperiments || !userExperiments.assigned[ experimentName ] || !experimentConfig ) {
-		return new UnenrolledExperiment();
-	}
-
-	const assigned = userExperiments.assigned[ experimentName ];
-
-	const samplingUnit = experimentConfig.user_identifier_type;
-	const isLoggedInExperiment = samplingUnit === 'mw-user';
-	const eventIntakeServiceUrl = isLoggedInExperiment ?
-		config.LoggedInExperimentEventIntakeServiceUrl :
-		config.EveryoneExperimentEventIntakeServiceUrl;
-
-	const otherAssigned = Object.assign( {}, userExperiments.assigned );
-	delete otherAssigned[ experimentName ];
-
-	return new Experiment(
-		eventFactory,
-		eventSender,
-		eventIntakeServiceUrl,
-		exposureLogTracker,
-		config.streamNameToContextualAttributesMap,
-		{
-			enrolled: experimentName,
-			assigned,
-			subject_id: userExperiments.subject_ids[ experimentName ],
-			sampling_unit: samplingUnit,
-			coordinator: COORDINATOR_DEFAULT,
-			stream_name: experimentConfig.stream_name,
-			schema_id: experimentConfig.schema_id,
-			contextual_attributes: experimentConfig.contextual_attributes,
-			exposure_version: experimentConfig.exposure_version,
-			other_assigned: otherAssigned
-		}
-	);
+/**
+ * Gets the details of all experiments with names that start with the given prefix.
+ *
+ * This method is provided for backwards compatibility with existing experiment code. Please use
+ * {@link mw.testKitchen.getExperimentsByPrefix} instead.
+ *
+ * This method should only be used for experiments that repeat, e.g. a data collection activity that
+ * lasts three weeks and repeats every week, and therefore usage is expected to be rare. In these
+ * cases, this method can be used to minimize the number of code changes in the experiment.
+ *
+ * Note well that the details are returned in any order.
+ *
+ * @see mw.testKitchen.compat.getExperiment
+ *
+ * @example
+ * // The user is enrolled in the following experiments:
+ * //
+ * // - my-awesome-experiment-1
+ * // - my-awesome-experiment-2
+ * // - my-other-awesome-experiment
+ *
+ * // Gets the details of the "my-awesome-experiment-1" and "my-awesome-experiment-2" experiments
+ * mw.testKitchen.getExperimentByPrefix( 'my-awesome-experiment-' );
+ *
+ * @memberof mw.testKitchen.compat
+ *
+ * @package
+ *
+ * @param {string} experimentNamePrefix
+ * @return {mw.testKitchen.ExperimentInterface[]}
+ */
+function getExperimentsByPrefix( experimentNamePrefix ) {
+	return getMatching( experimentNamePrefix )
+		.map( newExperiment );
 }
 
 /**
@@ -137,25 +224,17 @@ function getExperiment( experimentName ) {
  * // Gets the details of the "my-awesome-experiment-1" and "my-awesome-experiment-2" experiments
  * mw.testKitchen.getExperimentByPrefix( 'my-awesome-experiment-' );
  *
+ * @method getExperimentsByPrefix
  * @memberof mw.testKitchen
  *
  * @package
  *
  * @param {string} experimentNamePrefix
- * @return {mw.testKitchen.ExperimentInterface[]}
+ * @return {Promise<mw.testKitchen.ExperimentInterface[]>}
  */
-function getExperimentsByPrefix( experimentNamePrefix ) {
-	const userExperiments = mw.config.get( 'wgTestKitchenUserExperiments' );
-
-	if ( !userExperiments || userExperiments.enrolled.length === 0 ) {
-		return [];
-	}
-
-	return userExperiments.enrolled.filter(
-		( experimentName ) => experimentName.startsWith( experimentNamePrefix )
-	).map(
-		mw.testKitchen.getExperiment
-	);
+function getExperimentsByPrefixAsync( experimentNamePrefix ) {
+	return getMatchingAsync( experimentNamePrefix )
+		.then( ( matching ) => matching.map( newExperiment ) );
 }
 
 /**
@@ -176,79 +255,6 @@ function getAssignments() {
 	const userExperiments = mw.config.get( 'wgTestKitchenUserExperiments' );
 
 	return userExperiments ? Object.assign( {}, userExperiments.assigned ) : {};
-}
-
-// ---
-
-function setCookieAndReload( value ) {
-	mw.cookie.set( COOKIE_NAME, value );
-
-	// Reloading the window will break the QUnit unit tests. Only do so if we're not in a QUnit
-	// testing environment.
-	if ( !window.QUnit ) {
-		window.location.reload();
-	}
-}
-
-/**
- * Overrides an experiment enrolment and reloads the page.
- *
- * @param {string} experimentName The name of the experiment
- * @param {string} groupName The assigned group that will override the assigned one
- * @memberof mw.testKitchen
- */
-function overrideExperimentGroup(
-	experimentName,
-	groupName
-) {
-	const rawOverrides = mw.cookie.get( COOKIE_NAME, null, '' );
-	const part = `${ experimentName }:${ groupName }`;
-
-	if ( rawOverrides === '' ) {
-		// If the cookie isn't set, then the value of the cookie is the given override.
-		setCookieAndReload( part );
-	} else if ( !rawOverrides.includes( `${ experimentName }:` ) ) {
-		// If the cookie is set but doesn't have an override for the given experiment name/group
-		// variant pair, then append the given override.
-		setCookieAndReload( `${ rawOverrides };${ part }` );
-	} else {
-		setCookieAndReload( rawOverrides.replace(
-			new RegExp( `${ experimentName }:[A-Za-z0-9][-_.A-Za-z0-9]+?(?=;|$)` ),
-			part
-		) );
-	}
-}
-
-/**
- * Clears all enrolment overrides for the experiment and reloads the page.
- *
- * @param {string} experimentName
- * @memberof mw.testKitchen
- */
-function clearExperimentOverride( experimentName ) {
-	const rawOverrides = mw.cookie.get( COOKIE_NAME, null, '' );
-
-	let newRawOverrides = rawOverrides.replace(
-		new RegExp( `;?${ experimentName }:[A-Za-z0-9][-_.A-Za-z0-9]+` ),
-		''
-	);
-
-	// If the new cookie starts with a ';' character, then trim it.
-	newRawOverrides = newRawOverrides.replace( /^;/, '' );
-
-	// If the new cookie is empty, then clear the cookie.
-	newRawOverrides = newRawOverrides || null;
-
-	setCookieAndReload( newRawOverrides );
-}
-
-/**
- * Clears all experiment enrolment overrides for all experiments and reloads the page.
- *
- * @memberof mw.testKitchen
- */
-function clearExperimentOverrides() {
-	setCookieAndReload( null );
 }
 
 // ---
@@ -319,20 +325,17 @@ function getInstrument( instrumentName ) {
  * @namespace mw.testKitchen
  */
 mw.testKitchen = {
-	getExperiment,
-	getExperimentsByPrefix,
+	getExperiment: getExperimentAsync,
+	getExperimentsByPrefix: getExperimentsByPrefixAsync,
 	getAssignments,
 	getInstrument,
 	overrideExperimentGroup,
 	clearExperimentOverride,
-	clearExperimentOverrides,
-	ExposureLogTracker
+	clearExperimentOverrides
 };
 
 /**
  * @namespace mw.testKitchen.compat
- * @borrows mw.testKitchen.getExperiment as getExperiment
- * @borrows mw.testKitchen.getExperimentsByPrefix as getExperimentsByPrefix
  */
 mw.testKitchen.compat = {
 	getExperiment,
@@ -371,9 +374,10 @@ mw.tk = mw.testKitchen;
 
 /**
  * @namespace mw.tk.compat
- * @borrows mw.testKitchen.getExperiment as getExperiment
- * @borrows mw.testKitchen.getExperimentsByPrefix as getExperimentsByPrefix
+ * @borrows mw.testKitchen.compat.getExperiment as getExperiment
+ * @borrows mw.testKitchen.compat.getExperimentsByPrefix as getExperimentsByPrefix
  */
+mw.tk.compat = mw.testKitchen.compat;
 
 // JS overriding experimentation feature
 if ( window.QUnit ) {
@@ -392,7 +396,7 @@ if ( window.QUnit ) {
 		ExposureLogTracker,
 
 		/**
-		 * @param {Config} newConfig
+		 * @param {ConfigFromServer} newConfig
 		 *
 		 * @ignore
 		 */
@@ -408,11 +412,8 @@ if ( window.QUnit ) {
 		},
 
 		useFakeExperiments,
-		useFakeInstruments
-	} );
+		useFakeInstruments,
 
-	mw.tk = Object.assign( mw.tk, {
-		useFakeExperiments,
-		useFakeInstruments
+		resetEnrollmentConfigs
 	} );
 }

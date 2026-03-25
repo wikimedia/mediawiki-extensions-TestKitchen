@@ -1,4 +1,4 @@
-QUnit.module( 'ext.testKitchen/getExperimentsByPrefix()', QUnit.newMwEnvironment( {
+QUnit.module( 'ext.testKitchen.compat/getExperimentsByPrefix()', QUnit.newMwEnvironment( {
 	config: {
 		wgTestKitchenUserExperiments: {
 			enrolled: [
@@ -78,24 +78,25 @@ QUnit.module( 'ext.testKitchen/getExperimentsByPrefix()', QUnit.newMwEnvironment
 	},
 	afterEach() {
 		mw.testKitchen.resetConfig();
+		mw.testKitchen.resetEnrollmentConfigs();
 	}
 } ) );
 
 QUnit.test( 'it handles an unknown experiment', ( assert ) => {
-	const experiments = mw.testKitchen.getExperimentsByPrefix( 'an_experiment_name' );
+	const experiments = mw.testKitchen.compat.getExperimentsByPrefix( 'an_experiment_name' );
 
 	assert.deepEqual( experiments, [] );
 } );
 
 QUnit.test( 'it handles an exact match', ( assert ) => {
-	const experiments = mw.testKitchen.getExperimentsByPrefix( 'bar' );
+	const experiments = mw.testKitchen.compat.getExperimentsByPrefix( 'bar' );
 
 	assert.strictEqual( experiments.length, 1 );
 	assert.strictEqual( experiments[ 0 ].getAssignedGroup(), 'quux' );
 } );
 
 QUnit.test( 'it handles matches', ( assert ) => {
-	const experiments = mw.testKitchen.getExperimentsByPrefix( 'foo' );
+	const experiments = mw.testKitchen.compat.getExperimentsByPrefix( 'foo' );
 
 	assert.strictEqual( experiments.length, 3 );
 	assert.strictEqual( experiments[ 0 ].getAssignedGroup(), 'bar' );
@@ -109,7 +110,7 @@ QUnit.test( 'it handles invalid config', ( assert ) => {
 
 	delete mw.config.values.wgTestKitchenUserExperiments;
 
-	const experiments = mw.testKitchen.getExperimentsByPrefix( 'an_experiment_name' );
+	const experiments = mw.testKitchen.compat.getExperimentsByPrefix( 'an_experiment_name' );
 
 	assert.deepEqual( experiments, [] );
 } );

@@ -46,7 +46,7 @@ class EventFactory {
 	 *
 	 * @param {string} streamName
 	 * @param {string} schemaID
-	 * @param {mw.testKitchen.ContextualAttribute[]} contextualAttributes
+	 * @param {string[]} contextualAttributes
 	 * @param {string} action
 	 * @param {Object} interactionData
 	 * @return {Object}

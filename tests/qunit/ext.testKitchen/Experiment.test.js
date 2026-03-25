@@ -2,13 +2,11 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 	beforeEach: function () {
 		const { Experiment } = mw.testKitchen;
 
-		const experimentConfigs = {
-			my_awesome_stream: {
-				contextual_attributes: [
-					'performer_id',
-					'performer_name'
-				]
-			}
+		const streamNameToContextualAttributesMap = {
+			my_awesome_stream: [
+				'performer_id',
+				'performer_name'
+			]
 		};
 
 		// Stubs
@@ -20,14 +18,16 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 		};
 
 		const eventFactory = {
-			newEvent() {}
+			newEvent() {
+			}
 		};
 
 		this.newEventStub = this.sandbox.stub( eventFactory, 'newEvent' )
 			.returns( this.expectedEvent );
 
 		const eventSender = {
-			sendEvent() {}
+			sendEvent() {
+			}
 		};
 
 		this.sendEventStub = this.sandbox.stub( eventSender, 'sendEvent' );
@@ -56,7 +56,7 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 				eventSender,
 				'http://foo.bar/baz?qux=quux',
 				this.exposureLogTracker,
-				experimentConfigs,
+				streamNameToContextualAttributesMap,
 				experimentConfig
 			);
 		};

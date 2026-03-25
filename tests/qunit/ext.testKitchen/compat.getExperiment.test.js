@@ -1,4 +1,4 @@
-QUnit.module( 'ext.testKitchen/getExperiment()', QUnit.newMwEnvironment( {
+QUnit.module( 'ext.testKitchen.compat/getExperiment()', QUnit.newMwEnvironment( {
 	config: {
 		wgTestKitchenUserExperiments: {
 			enrolled: [
@@ -61,14 +61,19 @@ QUnit.module( 'ext.testKitchen/getExperiment()', QUnit.newMwEnvironment( {
 			},
 			instrumentConfigs: {},
 			streamNameToContextualAttributesMap: {
-				'product_metrics.custom_stream': {
-					contextual_attributes: [ 'page_id', 'page_title' ]
-				}
+				'product_metrics.custom_stream': [ 'page_id', 'page_title' ]
 			}
 		} );
+
+		this.originalMPOCookie = mw.cookie.get( 'mpo' );
+		mw.cookie.set( 'mpo', null );
 	},
 	afterEach() {
+		mw.cookie.set( 'mpo', this.originalMPOCookie );
+
 		mw.testKitchen.resetConfig();
+
+		require( 'ext.testKitchen/enrollmentConfig.js' ).reset();
 	}
 } ) );
 
@@ -78,7 +83,7 @@ QUnit.test( 'it handles invalid config', ( assert ) => {
 
 	delete mw.config.values.wgTestKitchenUserExperiments;
 
-	const e = mw.testKitchen.getExperiment( 'an_experiment_name' );
+	const e = mw.testKitchen.compat.getExperiment( 'an_experiment_name' );
 
 	assert.true( e instanceof mw.testKitchen.UnenrolledExperiment );
 	assert.strictEqual( e.getAssignedGroup(), null );
@@ -93,44 +98,33 @@ QUnit.test.each(
 	},
 	( assert, [ experimentName, expectedAssignedGroup ] ) => {
 		assert.strictEqual(
-			mw.testKitchen.getExperiment( experimentName ).getAssignedGroup(),
+			mw.testKitchen.compat.getExperiment( experimentName ).getAssignedGroup(),
 			expectedAssignedGroup
 		);
 	}
 );
 
 QUnit.test( 'it handles overridden experiment', ( assert ) => {
-	mw.config.set( 'wgTestKitchenUserExperiments', {
-		enrolled: [
-			'fruit'
-		],
-		assigned: {
-			fruit: 'gooseberry'
-		},
-		subject_ids: {
-			fruit: 'overridden'
-		},
-		overrides: [ 'fruit' ]
-	} );
+	mw.testKitchen.overrideExperimentGroup( 'fruit', 'gooseberry' );
 
-	const e = mw.testKitchen.getExperiment( 'fruit' );
+	const e = mw.testKitchen.compat.getExperiment( 'fruit' );
 
 	assert.true( e instanceof mw.testKitchen.OverriddenExperiment );
 	assert.strictEqual( e.getAssignedGroup(), 'gooseberry' );
 } );
 
 QUnit.test( 'it sets event intake service URL', ( assert ) => {
-	const e = mw.testKitchen.getExperiment( 'fruit' );
+	const e = mw.testKitchen.compat.getExperiment( 'fruit' );
 
 	assert.strictEqual( e.eventIntakeServiceUrl, 'http://logged-in.experiments' );
 
-	const e2 = mw.testKitchen.getExperiment( 'supper' );
+	const e2 = mw.testKitchen.compat.getExperiment( 'supper' );
 
 	assert.strictEqual( e2.eventIntakeServiceUrl, 'http://everyone.experiments' );
 } );
 
 QUnit.test( 'it sets stream, schema, and contextual attributes', ( assert ) => {
-	const e = mw.testKitchen.getExperiment( 'fruit' );
+	const e = mw.testKitchen.compat.getExperiment( 'fruit' );
 
 	assert.strictEqual( e.streamName, 'product_metrics.web_base' );
 	assert.strictEqual( e.schemaID, '/analytics/product_metrics/web/base/2.0.0' );
@@ -141,7 +135,14 @@ QUnit.test( 'it sets stream, schema, and contextual attributes', ( assert ) => {
 } );
 
 QUnit.test( 'it passes through correct contextual attributes when stream is set', ( assert ) => {
-	const e = mw.testKitchen.getExperiment( 'fruit' );
+	const e = mw.testKitchen.compat.getExperiment( 'fruit' );
+
+	assert.deepEqual(
+		e.streamNameToContextualAttributesMap,
+		{
+			'product_metrics.custom_stream': [ 'page_id', 'page_title' ]
+		}
+	);
 
 	e.setStream( 'product_metrics.custom_stream' );
 
