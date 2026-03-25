@@ -6,7 +6,7 @@
 			"Clare Ming"
 		]
 	},
-	"testkitchen-desc": "This is the Test Kitchen extension",
+	"testkitchen-desc": "Provides the PHP and JS Test Kitchen SDKs, which developers use to implement experiments and data collection for analytics.",
 	"testkitchen-non-successful-response": "The Test Kitchen API returned a non successful response.",
 	"testkitchen-api-empty-response-body": "The Test Kitchen API returned a response with an empty body."
 }
