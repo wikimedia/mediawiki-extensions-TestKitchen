@@ -112,12 +112,9 @@ class ExperimentManager implements
 	}
 
 	/**
-	 * Get the current user's experiment object.
-	 *
-	 * @param string $experimentName
-	 * @return Experiment
+	 * @inheritDoc
 	 */
-	public function getExperiment( string $experimentName ): Experiment {
+	public function getExperiment( string $experimentName ): ExperimentInterface {
 		// Get experiment configs from Test Kitchen UI.
 		$experiments = $this->configsFetcher->getExperimentConfigs();
 		$enrolledExperiments = $this->enrollmentResult['enrolled'] ?? [];
