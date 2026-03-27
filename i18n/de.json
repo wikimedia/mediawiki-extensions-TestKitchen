@@ -4,7 +4,7 @@
 			"Brettchenweber"
 		]
 	},
-	"testkitchen-desc": "Dies ist die Metrics-Plattform-Erweiterung",
+	"testkitchen-desc": "Bietet die PHP- und JS-Test-Kitchen-SDKs, mit denen Entwickler Experimente durchführen und Daten für Analysezwecke sammeln können.",
 	"testkitchen-non-successful-response": "Die Test-Kitchen-API hat eine nicht erfolgreiche Antwort zurückgegeben.",
 	"testkitchen-api-empty-response-body": "Die Test-Kitchen-API hat eine Antwort mit leerem Inhalt zurückgegeben."
 }
