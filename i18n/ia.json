@@ -4,7 +4,7 @@
 			"McDutchie"
 		]
 	},
-	"testkitchen-desc": "Isto es le extension Test Kitchen",
+	"testkitchen-desc": "Forni le SDKs de PHP e JS Test Kitchen, que le disveloppatores usa pro implementar experimentos e collection de datos pro analyse.",
 	"testkitchen-non-successful-response": "Le API de Test Kitchen ha restituite un responsa que indica un non-successo.",
 	"testkitchen-api-empty-response-body": "Le API de Test Kitchen ha restituite un responsa con un corpore vacue."
 }

@@ -4,7 +4,7 @@
 			"Toliño"
 		]
 	},
-	"testkitchen-desc": "Esta é a extensión de métricas da plataforma",
+	"testkitchen-desc": "Proporciona os SDK de PHP e JS Test Kitchen, que os desenvolvedores empregan para implementaren experimentos e recompilación de datos para análises.",
 	"testkitchen-non-successful-response": "A API de Test Kitchen devolveu unha resposta non exitosa.",
 	"testkitchen-api-empty-response-body": "A API de Test Kitchen devolveu unha resposta cun corpo baleiro."
 }
