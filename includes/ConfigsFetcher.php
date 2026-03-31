@@ -18,7 +18,7 @@ use Wikimedia\ObjectCache\BagOStuff;
 use Wikimedia\Stats\StatsFactory;
 
 class ConfigsFetcher {
-	private const VERSION = 1;
+	private const VERSION = 2;
 	private const HTTP_TIMEOUT = 1;
 	private const INSTRUMENT = 1;
 	private const EXPERIMENT = 2;

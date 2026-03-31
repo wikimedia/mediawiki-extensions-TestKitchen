@@ -67,7 +67,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$expectedKey = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			'instrument',
-			1
+			2
 		);
 
 		$this->assertEquals(
@@ -133,7 +133,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$expectedKey = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			'instrument',
-			1
+			2
 		);
 
 		$this->assertFalse( $this->stash->get( $expectedKey ) );
@@ -150,7 +150,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$key = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			'instrument',
-			1
+			2
 		);
 		$value = array_slice( $this->instrumentConfigs['responseArray'], 0, 2 );
 
@@ -178,7 +178,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$key = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			'instrument',
-			1
+			2
 		);
 		$value = array_slice( $this->instrumentConfigs['responseArray'], 0, 2 );
 
@@ -212,7 +212,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$key = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			'instrument',
-			1
+			2
 		);
 
 		$this->cache->delete( $key );
@@ -237,7 +237,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$key = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			'instrument',
-			1
+			2
 		);
 		$value = array_slice( $this->instrumentConfigs['responseArray'], 0, 2 );
 
