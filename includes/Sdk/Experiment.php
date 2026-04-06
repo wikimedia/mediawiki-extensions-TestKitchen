@@ -70,10 +70,7 @@ class Experiment implements ExperimentInterface {
 				'assigned',
 				'subject_id',
 				'sampling_unit',
-				'coordinator',
-				'stream_name',
-				'schema_id',
-				'contextual_attributes'
+				'coordinator'
 			];
 			$experiment = array_intersect_key( $experimentConfig, array_fill_keys( $keys, true ) );
 

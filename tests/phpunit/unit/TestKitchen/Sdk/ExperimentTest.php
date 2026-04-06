@@ -58,10 +58,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		'assigned',
 		'subject_id',
 		'sampling_unit',
-		'coordinator',
-		'stream_name',
-		'schema_id',
-		'contextual_attributes'
+		'coordinator'
 	];
 
 	private EventSender $eventSender;
@@ -360,13 +357,12 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 
 	public function testSetStreamContextualAttributesAndSend(): void {
 		$newStream = 'product_metrics.custom_stream';
-		$return = $this->experiment->setStream( $newStream, $this->differentContextualAtributes );
+		$return = $this->experiment->setStream( $newStream );
 
 		$expectedExperimentConfig = array_intersect_key(
 			$this->experiment->getExperimentConfig(),
 			array_fill_keys( $this->keys, true )
 		);
-		$expectedExperimentConfig['contextual_attributes'] = $this->differentContextualAtributes;
 
 		$expectedEvent = [
 			'$schema' => $this->experimentConfig['schema_id'],
