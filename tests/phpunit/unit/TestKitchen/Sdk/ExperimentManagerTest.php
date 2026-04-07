@@ -23,6 +23,7 @@ use MediaWikiUnitTestCase;
 use Psr\Log\LoggerInterface;
 use Wikimedia\Assert\ParameterAssertionException;
 use Wikimedia\Stats\StatsFactory;
+use Wikimedia\Stats\UnitTestingHelper;
 
 /**
  * @covers \MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager
@@ -35,6 +36,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 	private EnrollmentsProcessor $enrollmentsProcessor;
 	private CentralIdLookup $centralIdLookup;
 	private ConfigsFetcher $configsFetcher;
+	private UnitTestingHelper $statsHelper;
 	private StatsFactory $statsFactory;
 	private StreamConfigs $staticStreamConfigs;
 	private ExperimentManager $experimentManager;
@@ -50,7 +52,8 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		$this->enrollmentsProcessor = $this->createMock( EnrollmentsProcessor::class );
 		$this->centralIdLookup = $this->createMock( CentralIdLookup::class );
 		$this->configsFetcher = $this->createMock( ConfigsFetcher::class );
-		$this->statsFactory = StatsFactory::newNull();
+		$this->statsHelper = StatsFactory::newUnitTestingHelper();
+		$this->statsFactory = $this->statsHelper->getStatsFactory();
 		$this->exposureLogTracker = $this->createMock( ExposureLogTracker::class );
 
 		$baseStreamConfigs = new BaseStreamConfigs(
@@ -230,6 +233,11 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		);
 
 		$this->assertEquals( $expected, $actual );
+
+		$this->assertSame(
+			[ 'mediawiki.TestKitchen.experiment_known:1|c|#experiment:dessert' ],
+			$this->statsHelper->consumeAllFormatted()
+		);
 	}
 
 	public function testGetOverriddenExperiment(): void {
@@ -380,6 +388,54 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		);
 
 		$this->assertEquals( $expected, $actual );
+	}
+
+	public function testGetExperimentReturnsUnenrolledExperimentForUnknownExperimentButUserIsEnrolled(): void {
+		// Data
+		// ----
+
+		$request = new FauxRequest();
+		$experimentName = 'unknown-but-enrolled';
+		$experimentConfigs = [];
+
+		$enrollments = new EnrollmentResultBuilder();
+		$enrollments->addExperiment( $experimentName, 'awaiting' );
+		$enrollments->addAssignment( $experimentName, 'control' );
+
+		// Mocks
+		// -----
+
+		$this->configsFetcher->expects( $this->any() )
+			->method( 'getExperimentConfigs' )
+			->willReturn( $experimentConfigs );
+
+		// Called by ExperimentManager::setRequest()
+		$this->requestEnrollmentsProcessor->expects( $this->once() )
+			->method( 'process' )
+			->with( $request )
+			->willReturn( $enrollments );
+
+		// Assertions
+		// ----------
+
+		$this->experimentManager->setRequest( $request );
+
+		$actual = $this->experimentManager->getExperiment( $experimentName );
+
+		$expected = new UnenrolledExperiment(
+			$this->eventSender,
+			$this->eventFactory,
+			$this->statsFactory,
+			$this->staticStreamConfigs,
+			$this->exposureLogTracker
+		);
+
+		$this->assertEquals( $expected, $actual );
+
+		$this->assertSame(
+			[ 'mediawiki.TestKitchen.experiment_unknown:1|c|#experiment:unknown_but_enrolled' ],
+			$this->statsHelper->consumeAllFormatted()
+		);
 	}
 
 	public function testGetExperimentUsesExplicitSchemaIdWhenPresent(): void {
