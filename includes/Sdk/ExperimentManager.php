@@ -24,6 +24,9 @@ class ExperimentManager implements
 	// experiments cannot send events, for clarity we can set "overridden" as the value.
 	private const OVERRIDDEN_EXPERIMENT_SAMPLING_UNIT = 'overridden';
 
+	private const COORDINATOR_FORCED = 'forced';
+	private const COORDINATOR_DEFAULT = 'default';
+
 	private EnrollmentResultBuilder $enrollments;
 	private array $enrollmentResult;
 
@@ -115,54 +118,96 @@ class ExperimentManager implements
 	 * @inheritDoc
 	 */
 	public function getExperiment( string $experimentName ): ExperimentInterface {
+		$overriddenExperiments = $this->enrollmentResult['overrides'] ?? [];
+		$isOverridden = in_array( $experimentName, $overriddenExperiments );
+
+		if ( $isOverridden ) {
+			return $this->newOverriddenExperiment( $experimentName );
+		}
+
 		// Get experiment configs from Test Kitchen UI.
 		$experiments = $this->configsFetcher->getExperimentConfigs();
+
+		// The experiment enrollment hasn't been overridden and we don't have a config for it? Treat the user as
+		// unenrolled.
+		//
+		// However, in the case of everyone experiments, this could indicate that the everyone experiments enrollment
+		// authority config has drifted from the config fetched via ConfigsFetcher. Increment a counter so
+		// that this can be monitored.
+		if ( !isset( $experiments[ $experimentName ] ) ) {
+			$this->statsFactory->withComponent( 'TestKitchen' )
+				->getCounter( 'experiment_unknown' )
+				->setLabel( 'experiment', $experimentName )
+				->increment();
+
+			return $this->newUnenrolledExperiment();
+		}
+
 		$enrolledExperiments = $this->enrollmentResult['enrolled'] ?? [];
 
-		if (
-			isset( $experiments[ $experimentName ] ) &&
-			$experiments[$experimentName]['user_identifier_type'] === 'mw-user' &&
-			!in_array( $experimentName, $enrolledExperiments, true )
-		) {
-			// For logged-in experiments we know whether the experiment is active, but the current user
-			// is not enrolled in it
-			$this->logger->info( 'The current user is not enrolled in ' .
-				'the ' . $experimentName . ' experiment' );
-			return new UnenrolledExperiment(
-				$this->eventSender,
-				$this->eventFactory,
-				$this->statsFactory,
-				$this->streamConfigs,
-				$this->exposureLogTracker
-			);
-		} else {
-			if ( !in_array( $experimentName, $enrolledExperiments, true ) ) {
-				return new UnenrolledExperiment(
-					$this->eventSender,
-					$this->eventFactory,
-					$this->statsFactory,
-					$this->streamConfigs,
-					$this->exposureLogTracker
-				);
+		if ( !in_array( $experimentName, $enrolledExperiments, true ) ) {
+			if ( $experiments[$experimentName]['user_identifier_type'] === 'mw-user' ) {
+				// For logged-in experiments we know whether the experiment is active, but the current user is not
+				// enrolled in it.
+				$this->logger->info( 'The current user is not enrolled in the ' . $experimentName . ' experiment' );
 			}
+
+			return $this->newUnenrolledExperiment();
 		}
 
-		// Combine experiment enrollments from Test Kitchen Coordination into the user's
-		// experiment config from the Test Kitchen UI into a single experiment config.
-		$experimentConfig = $this->getExperimentConfig( $experimentName, $experiments );
+		$experimentConfig = $experiments[ $experimentName ];
 
-		// The experiment enrolment has been overridden
-		if ( $experimentConfig['coordinator'] === 'forced' ) {
-			return new OverriddenExperiment(
-				$this->eventSender,
-				$this->eventFactory,
-				$this->statsFactory,
-				$this->streamConfigs,
-				$this->logger,
-				$this->exposureLogTracker,
-				$experimentConfig
-			);
-		}
+		$this->statsFactory->withComponent( 'TestKitchen' )
+			->getCounter( 'experiment_known' )
+			->setLabel( 'experiment', $experimentName )
+			->increment();
+
+		return $this->newExperiment( $experimentName, $experimentConfig );
+	}
+
+	public function getEnrollments(): EnrollmentResultBuilder {
+		return $this->enrollments;
+	}
+
+	private function newUnenrolledExperiment(): UnenrolledExperiment {
+		// TODO: In the JS SDK, UnenrolledExperiment and OverriddenExperiment don't inherit from Experiment because of
+		//  the large number of dependencies. Do the same in the PHP SDK.
+		return new UnenrolledExperiment(
+			$this->eventSender,
+			$this->eventFactory,
+			$this->statsFactory,
+			$this->streamConfigs,
+			$this->exposureLogTracker
+		);
+	}
+
+	private function newOverriddenExperiment( string $experimentName ): OverriddenExperiment {
+		return new OverriddenExperiment(
+			$this->eventSender,
+			$this->eventFactory,
+			$this->statsFactory,
+			$this->streamConfigs,
+			$this->logger,
+			$this->exposureLogTracker,
+			[
+				'enrolled' => $experimentName,
+				'assigned' => $this->enrollmentResult['assigned'][ $experimentName ],
+				'subject_id' => $this->enrollmentResult['subject_ids'][ $experimentName ],
+				'sampling_unit' => self::OVERRIDDEN_EXPERIMENT_SAMPLING_UNIT,
+				'coordinator' => self::COORDINATOR_FORCED,
+				'stream_name' => self::BASE_STREAM,
+				'schema_id' => self::BASE_SCHEMA_ID,
+				'contextual_attributes' => [],
+			]
+		);
+	}
+
+	private function newExperiment( string $experimentName, array $experimentConfig ): Experiment {
+		// Until we pass schema IDs in the Test Kitchen API response, we will default to web base.
+		// In the interim, experiment owners can set schema id with Experiment::setSchema().
+		$schemaID = $experimentConfig['schema_id'] ?? self::BASE_SCHEMA_ID;
+
+		$contextualAttributes = $experimentConfig['contextual_attributes'] ?? [];
 
 		return new Experiment(
 			$this->eventSender,
@@ -170,45 +215,16 @@ class ExperimentManager implements
 			$this->statsFactory,
 			$this->streamConfigs,
 			$this->exposureLogTracker,
-			$experimentConfig
+			[
+				'enrolled' => $experimentName,
+				'assigned' => $this->enrollmentResult['assigned'][ $experimentName ],
+				'subject_id' => $this->enrollmentResult['subject_ids'][ $experimentName ],
+				'sampling_unit' => $experimentConfig['user_identifier_type'],
+				'coordinator' => self::COORDINATOR_DEFAULT,
+				'stream_name' => $experimentConfig[ 'stream_name' ],
+				'schema_id' => $schemaID,
+				'contextual_attributes' => $contextualAttributes,
+			]
 		);
-	}
-
-	/**
-	 * Get the current user's experiment enrollment details.
-	 *
-	 * Stitches together the user's experiment configs and enrollment results.
-	 * 1. Get experiment configs from Test Kitchen UI.
-	 * 2. Get experiment enrollments from Test Kitchen Coordination.
-	 *
-	 * @param string $experimentName
-	 * @param array $experiments
-	 * @return array
-	 */
-	private function getExperimentConfig( string $experimentName, array $experiments ): array {
-		// Until we pass schema ids in the Test Kitchen API response, we will default to web base.
-		// In the interim, experiment owners can set schema id with Experiment::setSchema().
-		$schemaID = $experiments[ $experimentName ]['schema_id'] ?? self::BASE_SCHEMA_ID;
-
-		// If the experiment is overridden, other keys will be overridden.
-		$isOverridden = in_array( $experimentName, $this->enrollmentResult['overrides'] );
-		$samplingUnit = $isOverridden ?
-			self::OVERRIDDEN_EXPERIMENT_SAMPLING_UNIT :
-			$experiments[ $experimentName ]['user_identifier_type'];
-
-		return [
-			'enrolled' => $experimentName,
-			'assigned' => $this->enrollmentResult['assigned'][ $experimentName ],
-			'subject_id' => $this->enrollmentResult['subject_ids'][ $experimentName ],
-			'sampling_unit' => $samplingUnit,
-			'coordinator' => $isOverridden ? 'forced' : 'default',
-			'stream_name' => $isOverridden ? self::BASE_STREAM : $experiments[ $experimentName ][ 'stream_name' ],
-			'schema_id' => $schemaID,
-			'contextual_attributes' => $isOverridden ? [] : $experiments[ $experimentName ]['contextual_attributes']
-		];
-	}
-
-	public function getEnrollments(): EnrollmentResultBuilder {
-		return $this->enrollments;
 	}
 }
