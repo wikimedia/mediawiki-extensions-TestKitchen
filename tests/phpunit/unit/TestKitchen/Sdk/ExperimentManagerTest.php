@@ -370,6 +370,11 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 		$this->assertNull( $actual->getAssignedGroup() );
 		$this->assertFalse( $actual->isAssignedGroup( 'control' ) );
+
+		$this->assertSame(
+			[ 'mediawiki.TestKitchen.experiment_known:1|c|#experiment:active_but_not_enrolled' ],
+			$this->statsHelper->consumeAllFormatted()
+		);
 	}
 
 	public function testGetExperimentReturnsUnenrolledExperimentForUnknownExperiment(): void {
@@ -388,6 +393,11 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		);
 
 		$this->assertEquals( $expected, $actual );
+
+		$this->assertSame(
+			[ 'mediawiki.TestKitchen.experiment_unknown:1|c|#experiment:does_not_exist' ],
+			$this->statsHelper->consumeAllFormatted()
+		);
 	}
 
 	public function testGetExperimentReturnsUnenrolledExperimentForUnknownExperimentButUserIsEnrolled(): void {
@@ -434,6 +444,54 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 		$this->assertSame(
 			[ 'mediawiki.TestKitchen.experiment_unknown:1|c|#experiment:unknown_but_enrolled' ],
+			$this->statsHelper->consumeAllFormatted()
+		);
+	}
+
+	public function testGetExperimentReturnsUnenrolledExperimentWhenTheUserIsNotEnrolled(): void {
+		// Data
+		// ----
+
+		$request = new FauxRequest();
+		$experimentName = 'known-but-unenrolled';
+		$experimentConfigs = [
+			$experimentName => $this->makeExperimentConfig( $experimentName ),
+		];
+
+		$enrollments = new EnrollmentResultBuilder();
+
+		// Mocks
+		// -----
+
+		$this->configsFetcher->expects( $this->any() )
+			->method( 'getExperimentConfigs' )
+			->willReturn( $experimentConfigs );
+
+		// Called by ExperimentManager::setRequest()
+		$this->requestEnrollmentsProcessor->expects( $this->once() )
+			->method( 'process' )
+			->with( $request )
+			->willReturn( $enrollments );
+
+		// Assertions
+		// ----------
+
+		$this->experimentManager->setRequest( $request );
+
+		$actual = $this->experimentManager->getExperiment( $experimentName );
+
+		$expected = new UnenrolledExperiment(
+			$this->eventSender,
+			$this->eventFactory,
+			$this->statsFactory,
+			$this->staticStreamConfigs,
+			$this->exposureLogTracker
+		);
+
+		$this->assertEquals( $expected, $actual );
+
+		$this->assertSame(
+			[ 'mediawiki.TestKitchen.experiment_known:1|c|#experiment:known_but_unenrolled' ],
 			$this->statsHelper->consumeAllFormatted()
 		);
 	}
