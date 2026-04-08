@@ -143,6 +143,11 @@ class ExperimentManager implements
 			return $this->newUnenrolledExperiment();
 		}
 
+		$this->statsFactory->withComponent( 'TestKitchen' )
+			->getCounter( 'experiment_known' )
+			->setLabel( 'experiment', $experimentName )
+			->increment();
+
 		$enrolledExperiments = $this->enrollmentResult['enrolled'] ?? [];
 
 		if ( !in_array( $experimentName, $enrolledExperiments, true ) ) {
@@ -156,11 +161,6 @@ class ExperimentManager implements
 		}
 
 		$experimentConfig = $experiments[ $experimentName ];
-
-		$this->statsFactory->withComponent( 'TestKitchen' )
-			->getCounter( 'experiment_known' )
-			->setLabel( 'experiment', $experimentName )
-			->increment();
 
 		return $this->newExperiment( $experimentName, $experimentConfig );
 	}
