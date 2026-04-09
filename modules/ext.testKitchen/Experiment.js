@@ -60,6 +60,14 @@ class Experiment {
 			experiment[ key ] = this.config[ key ];
 		}
 
+		// T421152: Include enrollment information about other experiments that the user is enrolled
+		// in.
+		const otherAssigned = this.config.other_assigned;
+
+		if ( otherAssigned && Object.keys( otherAssigned ).length > 0 ) {
+			experiment.other_assigned = otherAssigned;
+		}
+
 		interactionData = Object.assign(
 			{},
 			interactionData,

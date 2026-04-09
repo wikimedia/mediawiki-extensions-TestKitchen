@@ -92,6 +92,9 @@ function getExperiment( experimentName ) {
 		config.LoggedInExperimentEventIntakeServiceUrl :
 		config.EveryoneExperimentEventIntakeServiceUrl;
 
+	const otherAssigned = Object.assign( {}, userExperiments.assigned );
+	delete otherAssigned[ experimentName ];
+
 	return new Experiment(
 		eventFactory,
 		eventSender,
@@ -107,7 +110,8 @@ function getExperiment( experimentName ) {
 			stream_name: experimentConfig.stream_name,
 			schema_id: experimentConfig.schema_id,
 			contextual_attributes: experimentConfig.contextual_attributes,
-			exposure_version: experimentConfig.exposure_version
+			exposure_version: experimentConfig.exposure_version,
+			other_assigned: otherAssigned
 		}
 	);
 }

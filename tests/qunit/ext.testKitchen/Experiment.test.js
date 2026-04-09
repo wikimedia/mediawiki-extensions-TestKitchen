@@ -46,49 +46,56 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 			} )
 		};
 
-		this.everyoneExperiment = new Experiment(
-			eventFactory,
-			eventSender,
-			'http://foo.bar/baz?qux=quux',
-			this.exposureLogTracker,
-			experimentConfigs,
-			{
-				enrolled: 'hello_world',
-				assigned: 'A',
-				subject_id: 'awaiting',
-				sampling_unit: 'edge-unique',
-				coordinator: 'default',
-				stream_name: 'product_metrics.web_base',
-				schema_id: '/analytics/product_metrics/web/base/2.0.0',
-				contextual_attributes: [
-					'performer_pageview_id',
-					'mediawiki_database'
-				],
-				exposure_version: 'v1'
-			}
-		);
+		/**
+		 * @param {mw.testKitchen.ExperimentConfig} experimentConfig
+		 * @return {mw.testKitchen.Experiment}
+		 */
+		this.newExperiment = function ( experimentConfig ) {
+			return new Experiment(
+				eventFactory,
+				eventSender,
+				'http://foo.bar/baz?qux=quux',
+				this.exposureLogTracker,
+				experimentConfigs,
+				experimentConfig
+			);
+		};
 
-		this.loggedInExperiment = new Experiment(
-			eventFactory,
-			eventSender,
-			'http://foo.bar/baz?qux=quux',
-			this.exposureLogTracker,
-			experimentConfigs,
-			{
-				enrolled: 'my-awesome-experiment',
-				assigned: 'B',
-				subject_id: '0x0ff1ce',
-				sampling_unit: 'mw-user',
-				coordinator: 'default',
-				stream_name: 'product_metrics.web_base',
-				schema_id: '/analytics/product_metrics/web/base/2.0.0',
-				contextual_attributes: [
-					'performer_pageview_id',
-					'mediawiki_database'
-				],
-				exposure_version: 'v1'
+		this.everyoneExperiment = this.newExperiment( {
+			enrolled: 'hello_world',
+			assigned: 'A',
+			subject_id: 'awaiting',
+			sampling_unit: 'edge-unique',
+			coordinator: 'default',
+			stream_name: 'product_metrics.web_base',
+			schema_id: '/analytics/product_metrics/web/base/2.0.0',
+			contextual_attributes: [
+				'performer_pageview_id',
+				'mediawiki_database'
+			],
+			exposure_version: 'v1',
+			other_assigned: {
+				foo: 'bar'
 			}
-		);
+		} );
+
+		this.loggedInExperiment = this.newExperiment( {
+			enrolled: 'my-awesome-experiment',
+			assigned: 'B',
+			subject_id: '0x0ff1ce',
+			sampling_unit: 'mw-user',
+			coordinator: 'default',
+			stream_name: 'product_metrics.web_base',
+			schema_id: '/analytics/product_metrics/web/base/2.0.0',
+			contextual_attributes: [
+				'performer_pageview_id',
+				'mediawiki_database'
+			],
+			exposure_version: 'v1',
+			other_assigned: {
+				bar: 'baz'
+			}
+		} );
 	}
 } ) );
 
@@ -115,7 +122,10 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					foo: 'bar'
+				}
 			}
 		],
 		[
@@ -125,7 +135,10 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					bar: 'baz'
+				}
 			}
 		]
 	],
@@ -160,7 +173,10 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					foo: 'bar'
+				}
 			}
 		],
 		[
@@ -170,7 +186,10 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					bar: 'baz'
+				}
 			}
 		]
 	],
@@ -206,7 +225,10 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					foo: 'bar'
+				}
 			}
 		],
 		[
@@ -216,7 +238,10 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					bar: 'baz'
+				}
 			}
 		]
 	],
@@ -252,7 +277,10 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					foo: 'bar'
+				}
 			}
 		],
 		[
@@ -262,7 +290,10 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					bar: 'baz'
+				}
 			}
 		]
 	],
@@ -319,7 +350,10 @@ QUnit.test( 'send() - can\'t override experiment', function ( assert ) {
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					foo: 'bar'
+				}
 			}
 		}
 	] );
@@ -347,11 +381,48 @@ QUnit.test( 'send() - overriding stream and schema', function ( assert ) {
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					foo: 'bar'
+				}
 			}
 		}
 	] );
 } );
+
+QUnit.test.each(
+	'send() - doesn\'t set other_assigned if it\'s empty',
+	[
+		undefined,
+		null,
+		{}
+	],
+	function ( assert, otherAssigned ) {
+		const e = this.newExperiment( {
+			enrolled: 'my-awesome-experiment',
+			assigned: 'B',
+			subject_id: '0x0ff1ce',
+			sampling_unit: 'mw-user',
+			coordinator: 'default',
+			stream_name: 'product_metrics.web_base',
+			schema_id: '/analytics/product_metrics/web/base/2.0.0',
+			contextual_attributes: [
+				'performer_pageview_id',
+				'mediawiki_database'
+			],
+			exposure_version: 'v1',
+			other_assigned: otherAssigned
+		} );
+
+		e.send( 'Hello, World!' );
+
+		assert.strictEqual( this.newEventStub.callCount, 1 );
+		assert.strictEqual(
+			this.newEventStub.firstCall.args[ 4 ].experiment.other_assigned,
+			undefined
+		);
+	}
+);
 
 QUnit.test( 'setStream() - warns when stream isn\'t registered', function ( assert ) {
 	this.sandbox.stub( console, 'warn' );
@@ -374,7 +445,10 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					foo: 'bar'
+				}
 			}
 		],
 		[
@@ -384,7 +458,10 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'default'
+				coordinator: 'default',
+				other_assigned: {
+					bar: 'baz'
+				}
 			}
 		]
 	],
