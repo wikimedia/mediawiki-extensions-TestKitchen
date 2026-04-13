@@ -5,7 +5,7 @@
 			"Siebrand"
 		]
 	},
-	"testkitchen-desc": "Dit is de uitbreiding Test Kitchen",
+	"testkitchen-desc": "Biedt de PHP- en JS Test Kitchen SDK's aan, die ontwikkelaars gebruiken om experimenten uit te voeren en gegevens te verzamelen voor analyses.",
 	"testkitchen-non-successful-response": "De Test-Kitchen-API heeft een niet-succesvol antwoord geretourneerd.",
 	"testkitchen-api-empty-response-body": "De API van Test Kitchen heeft een antwoord met een lege inhoud geretourneerd."
 }
