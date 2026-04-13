@@ -18,6 +18,7 @@ use Psr\Log\LoggerInterface;
 use Wikimedia\Message\MessageValue;
 use Wikimedia\ObjectCache\HashBagOStuff;
 use Wikimedia\Stats\StatsFactory;
+use Wikimedia\Stats\UnitTestingHelper;
 
 /**
  * @covers \MediaWiki\Extension\TestKitchen\ConfigsFetcher
@@ -28,7 +29,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 	private \BagOStuff $stash;
 	private HttpRequestFactory $httpRequestFactory;
 	private LoggerInterface $logger;
-	private StatsFactory $statsFactory;
+	private UnitTestingHelper $statsHelper;
 	private StatusFormatter $statusFormatter;
 	private ConfigsFetcher $fetcher;
 
@@ -40,7 +41,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$this->stash = new HashBagOStuff();
 		$this->httpRequestFactory = $this->createMock( HttpRequestFactory::class );
 		$this->logger = $this->createMock( LoggerInterface::class );
-		$this->statsFactory = StatsFactory::newNull();
+		$this->statsHelper = StatsFactory::newUnitTestingHelper();
 		$this->statusFormatter = $this->createMock( StatusFormatter::class );
 		$this->fetcher = new ConfigsFetcher(
 			$this->mockOptions(),
@@ -49,7 +50,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 			$this->stash,
 			$this->httpRequestFactory,
 			$this->logger,
-			$this->statsFactory,
+			$this->statsHelper->getStatsFactory(),
 			$this->statusFormatter
 		);
 	}
@@ -172,6 +173,14 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 			$this->fetcher->getInstrumentConfigs(),
 			'If there is a value in the cache, then it is used'
 		);
+
+		$this->assertEquals(
+			[
+				'mediawiki.TestKitchen.get_configs_internal_calls_total:1|c',
+				'mediawiki.TestKitchen.get_configs_internal_hits_total:1|c|#layer:cache'
+			],
+			$this->statsHelper->consumeAllFormatted()
+		);
 	}
 
 	public function testGetConfigsCacheMissStashHit(): void {
@@ -206,6 +215,14 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 			$this->cache->get( $key ),
 			'The cache has been updated with the value fetched from the stash'
 		);
+
+		$this->assertEquals(
+			[
+				'mediawiki.TestKitchen.get_configs_internal_calls_total:1|c',
+				'mediawiki.TestKitchen.get_configs_internal_hits_total:1|c|#layer:stash'
+			],
+			$this->statsHelper->consumeAllFormatted()
+		);
 	}
 
 	public function testGetConfigsCacheMissStashMiss(): void {
@@ -230,6 +247,13 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$this->assertFalse(
 			$this->stash->get( $key ),
 			'The stash has not been updated'
+		);
+
+		$this->assertEquals(
+			[
+				'mediawiki.TestKitchen.get_configs_internal_calls_total:1|c'
+			],
+			$this->statsHelper->consumeAllFormatted()
 		);
 	}
 

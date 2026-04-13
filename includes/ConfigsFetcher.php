@@ -115,11 +115,19 @@ class ConfigsFetcher {
 	}
 
 	private function getConfigsInternal( int $type ): array {
+		$statsFactory = $this->statsFactory->withComponent( 'TestKitchen' );
+		$statsFactory->getCounter( 'get_configs_internal_calls_total' )
+			->increment();
+
 		$key = $this->makeCacheKey( $type );
 		$configs = $this->cache->get( $key );
 
 		// Cache hit?
 		if ( $configs !== false ) {
+			$statsFactory->getCounter( 'get_configs_internal_hits_total' )
+				->setLabel( 'layer', 'cache' )
+				->increment();
+
 			return $this->processConfigs( $configs, $type );
 		}
 
@@ -127,6 +135,9 @@ class ConfigsFetcher {
 
 		// Stash hit?
 		if ( $configs !== false ) {
+			$statsFactory->getCounter( 'get_configs_internal_hits_total' )
+				->setLabel( 'layer', 'stash' )
+				->increment();
 
 			// There was a value in the stash but not in the cache? Update the cache. This situation can occur because
 			// the value in the cache was evicted due to pressure.
