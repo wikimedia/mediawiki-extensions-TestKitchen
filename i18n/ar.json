@@ -5,7 +5,7 @@
 			"NEHAOUA"
 		]
 	},
-	"testkitchen-desc": "هذا هو امتداد منصة المقاييس",
+	"testkitchen-desc": "يوفر هذا البرنامج مجموعات تطوير البرامج (SDKs) الخاصة بـ PHP و JS Test Kitchen، والتي يستخدمها المطورون لتنفيذ التجارب وجمع البيانات لأغراض التحليل.",
 	"testkitchen-non-successful-response": "أرجعت واجهة برمجة التطبيقات Test Kitchen استجابة غير ناجحة.",
 	"testkitchen-api-empty-response-body": "أرجعت واجهة برمجة التطبيقات Test Kitchen استجابة بنص فارغ."
 }
