@@ -5,6 +5,12 @@ const EXPOSURE_CONTEXTUAL_ATTRIBUTES = [
 	'mediawiki_database'
 ];
 
+// T423574: If cookies are disabled, then act as if the user isn't enrolled in any
+// experiment.
+//
+// eslint-disable-next-line compat/compat
+const COOKIES_DISABLED = navigator.cookieEnabled !== undefined ? !navigator.cookieEnabled : false;
+
 /**
  * @class
  * @implements {mw.testKitchen.ExperimentInterface}
@@ -52,6 +58,10 @@ class Experiment {
 	}
 
 	send( action, interactionData, contextualAttributes ) {
+		if ( COOKIES_DISABLED ) {
+			return;
+		}
+
 		// Extract SDK-specific experiment config
 		const keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'coordinator' ];
 		const experiment = {};
