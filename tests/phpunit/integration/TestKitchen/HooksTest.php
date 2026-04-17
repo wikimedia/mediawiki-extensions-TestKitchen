@@ -12,10 +12,10 @@ use MediaWiki\MediaWikiEntryPoint;
 use MediaWiki\Output\OutputPage;
 use MediaWiki\Skin\Skin;
 use MediaWiki\User\CentralId\CentralIdLookup;
+use MediaWiki\User\User;
 use MediaWikiIntegrationTestCase;
 use MockHttpTrait;
 use Psr\Log\LoggerInterface;
-use User;
 
 /**
  * @covers \MediaWiki\Extension\TestKitchen\Hooks

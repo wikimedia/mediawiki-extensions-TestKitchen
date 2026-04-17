@@ -1,5 +1,6 @@
 <?php
 
+use MediaWiki\Deferred\DeferredUpdates;
 use MediaWiki\Extension\EventBus\EventBus;
 use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use Wikimedia\TestingAccessWrapper;

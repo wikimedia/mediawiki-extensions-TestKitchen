@@ -9,13 +9,14 @@ use MediaWiki\Config\HashConfig;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 use MediaWiki\Http\HttpRequestFactory;
+use MediaWiki\Http\MWHttpRequest;
 use MediaWiki\Json\FormatJson;
 use MediaWiki\Status\Status;
 use MediaWiki\Status\StatusFormatter;
 use MediaWikiUnitTestCase;
-use MWHttpRequest;
 use Psr\Log\LoggerInterface;
 use Wikimedia\Message\MessageValue;
+use Wikimedia\ObjectCache\BagOStuff;
 use Wikimedia\ObjectCache\HashBagOStuff;
 use Wikimedia\Stats\StatsFactory;
 use Wikimedia\Stats\UnitTestingHelper;
@@ -25,8 +26,8 @@ use Wikimedia\Stats\UnitTestingHelper;
  */
 class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 	private array $instrumentConfigs;
-	private \BagOStuff $cache;
-	private \BagOStuff $stash;
+	private BagOStuff $cache;
+	private BagOStuff $stash;
 	private HttpRequestFactory $httpRequestFactory;
 	private LoggerInterface $logger;
 	private UnitTestingHelper $statsHelper;
