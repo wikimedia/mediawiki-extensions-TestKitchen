@@ -127,17 +127,22 @@ class ExperimentManager implements
 
 		// Get experiment configs from Test Kitchen UI.
 		$experiments = $this->configsFetcher->getExperimentConfigs();
+		$enrolledExperiments = $this->enrollmentResult['enrolled'] ?? [];
 
 		// The experiment enrollment hasn't been overridden and we don't have a config for it? Treat the user as
 		// unenrolled.
 		//
-		// However, in the case of everyone experiments, this could indicate that the everyone experiments enrollment
+		// However, in the case of everyone experiments, this could indicate that the everyone experiment enrollment
 		// authority config has drifted from the config fetched via ConfigsFetcher. Increment a counter so
 		// that this can be monitored.
 		if ( !isset( $experiments[ $experimentName ] ) ) {
 			$this->statsFactory->withComponent( 'TestKitchen' )
 				->getCounter( 'experiment_unknown' )
 				->setLabel( 'experiment', $experimentName )
+				->setLabel(
+					'enrolled',
+					in_array( $experimentName, $enrolledExperiments, true ) ? 'true' : 'false'
+				)
 				->increment();
 
 			return $this->newUnenrolledExperiment();
@@ -147,8 +152,6 @@ class ExperimentManager implements
 			->getCounter( 'experiment_known' )
 			->setLabel( 'experiment', $experimentName )
 			->increment();
-
-		$enrolledExperiments = $this->enrollmentResult['enrolled'] ?? [];
 
 		if ( !in_array( $experimentName, $enrolledExperiments, true ) ) {
 			if ( $experiments[$experimentName]['user_identifier_type'] === 'mw-user' ) {

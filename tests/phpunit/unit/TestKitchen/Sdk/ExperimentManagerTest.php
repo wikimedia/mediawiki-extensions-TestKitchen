@@ -395,7 +395,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		$this->assertEquals( $expected, $actual );
 
 		$this->assertSame(
-			[ 'mediawiki.TestKitchen.experiment_unknown:1|c|#experiment:does_not_exist' ],
+			[ 'mediawiki.TestKitchen.experiment_unknown:1|c|#experiment:does_not_exist,enrolled:false' ],
 			$this->statsHelper->consumeAllFormatted()
 		);
 	}
@@ -443,7 +443,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		$this->assertEquals( $expected, $actual );
 
 		$this->assertSame(
-			[ 'mediawiki.TestKitchen.experiment_unknown:1|c|#experiment:unknown_but_enrolled' ],
+			[ 'mediawiki.TestKitchen.experiment_unknown:1|c|#experiment:unknown_but_enrolled,enrolled:true' ],
 			$this->statsHelper->consumeAllFormatted()
 		);
 	}
