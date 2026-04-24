@@ -190,6 +190,7 @@
  * @method setStream
  * @instance
  * @memberof mw.testKitchen.ExperimentInterface
+ * @deprecated
  *
  * @param {string} streamName
  * @return {mw.testKitchen.ExperimentInterface} The instance on which this method was called

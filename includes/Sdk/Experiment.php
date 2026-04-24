@@ -110,6 +110,7 @@ class Experiment implements ExperimentInterface {
 	 *
 	 * @param string $streamName
 	 * @return $this
+	 * @deprecated
 	 */
 	public function setStream( string $streamName ): self {
 		$this->experimentConfig['stream_name'] = $streamName;
