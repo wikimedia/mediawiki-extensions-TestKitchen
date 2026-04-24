@@ -22,8 +22,6 @@ class EnrollmentsProcessor {
 			$experimentName = $experiment['name'];
 			$subjectID = $this->userSplitterInstrumentation->getSubjectId( $identifier, $experimentName );
 
-			$result->addExperiment( $experimentName, $subjectID );
-
 			$groups = $experiment['groups'];
 			$userHash = $this->userSplitterInstrumentation->getUserHash( $identifier, $experimentName );
 
@@ -35,6 +33,8 @@ class EnrollmentsProcessor {
 			);
 
 			if ( $isInSample ) {
+				$result->addExperiment( $experimentName, $subjectID );
+
 				$result->addAssignment(
 					$experimentName,
 					// UserSplitterInstrumentation#getBucket() returns null if $buckets ($groups here) is empty.
