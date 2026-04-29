@@ -1,8 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"Suleiman the Magnificent Television"
+			"Suleiman the Magnificent Television",
+			"Tensama0415"
 		]
 	},
-	"testkitchen-desc": "이것은 매트릭스 플랫폼 확장입니다."
+	"testkitchen-desc": "개발자들이 구현 실험 및 분석을 위한 데이터 수집을 수행하는 데 사용하는, PHP 및 JS 테스트 키친 SDK를 제공합니다.",
+	"testkitchen-non-successful-response": "테스트 키친 API에서 실패 응답이 반환되었습니다.",
+	"testkitchen-api-empty-response-body": "테스트 키친 API에서 본문이 비어있는 응답이 반환되었습니다."
 }
