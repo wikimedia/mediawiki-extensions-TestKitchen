@@ -342,22 +342,6 @@ mw.testKitchen.compat = {
 	getExperimentsByPrefix
 };
 
-mw.log.deprecate(
-	mw.testKitchen.compat,
-	'getExperiment',
-	mw.testKitchen.compat.getExperiment,
-	'mw.testKitchen.compat.getExperiment() is provided for backwards compatibility with existing experiment code. Use mw.testKitchen.getExperiment() instead.',
-	'mw.testKitchen.compat.getExperiment()'
-);
-
-mw.log.deprecate(
-	mw.testKitchen.compat,
-	'getExperimentsByPrefix',
-	mw.testKitchen.compat.getExperimentsByPrefix,
-	'mw.testKitchen.compat.getExperimentByPrefix() is provided for backwards compatibility with existing experiment code. Use mw.testKitchen.getExperimentByPrefix() instead.',
-	'mw.testKitchen.compat.getExperimentsByPrefix()'
-);
-
 /**
  * @namespace mw.tk
  * @borrows mw.testKitchen.getExperiment as getExperiment
