@@ -15,9 +15,11 @@ use MediaWiki\Status\Status;
 use MediaWiki\Status\StatusFormatter;
 use MediaWikiUnitTestCase;
 use Psr\Log\LoggerInterface;
+use Wikimedia\LightweightObjectStore\ExpirationAwareness;
 use Wikimedia\Message\MessageValue;
 use Wikimedia\ObjectCache\BagOStuff;
 use Wikimedia\ObjectCache\HashBagOStuff;
+use Wikimedia\ObjectCache\WANObjectCache;
 use Wikimedia\Stats\StatsFactory;
 use Wikimedia\Stats\UnitTestingHelper;
 
@@ -26,7 +28,7 @@ use Wikimedia\Stats\UnitTestingHelper;
  */
 class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 	private array $instrumentConfigs;
-	private BagOStuff $cache;
+	private WANObjectCache $cache;
 	private BagOStuff $stash;
 	private HttpRequestFactory $httpRequestFactory;
 	private LoggerInterface $logger;
@@ -38,7 +40,11 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		parent::setUp();
 
 		$this->instrumentConfigs = self::getMockResponse();
-		$this->cache = new HashBagOStuff();
+
+		$this->cache = new WANObjectCache( [
+			'cache' => new HashBagOStuff(),
+		] );
+
 		$this->stash = new HashBagOStuff();
 		$this->httpRequestFactory = $this->createMock( HttpRequestFactory::class );
 		$this->logger = $this->createMock( LoggerInterface::class );
@@ -66,7 +72,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$this->fetcher->updateInstrumentConfigs();
 
 		$expectedValue = $this->instrumentConfigs['responseArray'];
-		$expectedKey = $this->stash->makeGlobalKey(
+		$expectedStashKey = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			'instrument',
 			2
@@ -74,13 +80,16 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 
 		$this->assertEquals(
 			$expectedValue,
-			$this->stash->get( $expectedKey ),
+			$this->stash->get( $expectedStashKey ),
 			'The backing store contains the parsed response'
 		);
-		$this->assertEquals(
-			$expectedValue,
-			$this->cache->get( $expectedKey ),
-			'The cache contains the parsed response'
+
+		$expectedCacheKey = $this->cache->makeGlobalKey( 'TestKitchen', 'instrument' );
+
+		$this->assertSame(
+			false,
+			$this->cache->get( $expectedCacheKey ),
+			'The cache is not updated'
 		);
 	}
 
@@ -132,14 +141,13 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 
 		$this->fetcher->updateInstrumentConfigs();
 
-		$expectedKey = $this->stash->makeGlobalKey(
-			'TestKitchen',
-			'instrument',
-			2
-		);
+		$expectedStashKey = $this->stash->makeGlobalKey( 'TestKitchen', 'instrument', 2 );
 
-		$this->assertFalse( $this->stash->get( $expectedKey ) );
-		$this->assertFalse( $this->cache->get( $expectedKey ) );
+		$this->assertFalse( $this->stash->get( $expectedStashKey ) );
+
+		$expectedCacheKey = $this->cache->makeGlobalKey( 'TestKitchen', 'instrument' );
+
+		$this->assertFalse( $this->cache->get( $expectedCacheKey ) );
 
 		$this->assertFalse( $status->isGood() );
 
@@ -149,15 +157,24 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testGetConfigsCacheHit(): void {
-		$key = $this->stash->makeGlobalKey(
+		$stashKey = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			'instrument',
 			2
 		);
+		$this->stash->delete( $stashKey );
+
+		$cacheKey = $this->cache->makeGlobalKey( 'TestKitchen', 'instrument' );
 		$value = array_slice( $this->instrumentConfigs['responseArray'], 0, 2 );
 
-		$this->cache->set( $key, $value );
-		$this->stash->delete( $key );
+		$this->cache->set(
+			$cacheKey,
+			$value,
+			ExpirationAwareness::TTL_INDEFINITE,
+			[
+				'version' => 2,
+			]
+		);
 
 		$expectedValue = $value;
 		$expectedValue[0]['sample'] = [
@@ -178,22 +195,20 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		$this->assertEquals(
 			[
 				'mediawiki.TestKitchen.get_configs_internal_calls_total:1|c',
-				'mediawiki.TestKitchen.get_configs_internal_hits_total:1|c|#layer:cache'
 			],
 			$this->statsHelper->consumeAllFormatted()
 		);
 	}
 
 	public function testGetConfigsCacheMissStashHit(): void {
-		$key = $this->stash->makeGlobalKey(
+		$expectedStashKey = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			'instrument',
 			2
 		);
 		$value = array_slice( $this->instrumentConfigs['responseArray'], 0, 2 );
 
-		$this->cache->delete( $key );
-		$this->stash->set( $key, $value );
+		$this->stash->set( $expectedStashKey, $value );
 
 		$expectedValue = $value;
 		$expectedValue[0]['sample'] = [
@@ -211,48 +226,52 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 			'If there is a value in the stash, then it is used'
 		);
 
+		$expectedCacheKey = $this->cache->makeGlobalKey( 'TestKitchen', 'instrument' );
+
 		$this->assertSame(
 			$value,
-			$this->cache->get( $key ),
+			$this->cache->get( $expectedCacheKey ),
 			'The cache has been updated with the value fetched from the stash'
 		);
 
 		$this->assertEquals(
 			[
 				'mediawiki.TestKitchen.get_configs_internal_calls_total:1|c',
-				'mediawiki.TestKitchen.get_configs_internal_hits_total:1|c|#layer:stash'
+				'mediawiki.TestKitchen.get_configs_internal_misses_total:1|c|#layer:cache'
 			],
 			$this->statsHelper->consumeAllFormatted()
 		);
 	}
 
 	public function testGetConfigsCacheMissStashMiss(): void {
-		$key = $this->stash->makeGlobalKey(
+		$expectedValue = [];
+
+		$this->assertEquals( $expectedValue, $this->fetcher->getInstrumentConfigs()	);
+
+		$expectedCacheKey = $this->cache->makeGlobalKey( 'TestKitchen', 'instrument' );
+
+		$this->assertEquals(
+			$expectedValue,
+			$this->cache->get( $expectedCacheKey ),
+			'The cache has been updated temporarily'
+		);
+
+		$expectedStashKey = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			'instrument',
 			2
 		);
 
-		$this->cache->delete( $key );
-		$this->stash->delete( $key );
-
-		$expectedValue = [];
-
-		$this->assertEquals( $expectedValue, $this->fetcher->getInstrumentConfigs()	);
-
-		$this->assertEquals(
-			$expectedValue,
-			$this->cache->get( $key ),
-			'The cache has been updated temporarily'
-		);
 		$this->assertFalse(
-			$this->stash->get( $key ),
+			$this->stash->get( $expectedStashKey ),
 			'The stash has not been updated'
 		);
 
 		$this->assertEquals(
 			[
-				'mediawiki.TestKitchen.get_configs_internal_calls_total:1|c'
+				'mediawiki.TestKitchen.get_configs_internal_calls_total:1|c',
+				'mediawiki.TestKitchen.get_configs_internal_misses_total:1|c|#layer:cache',
+				'mediawiki.TestKitchen.get_configs_internal_misses_total:1|c|#layer:stash',
 			],
 			$this->statsHelper->consumeAllFormatted()
 		);

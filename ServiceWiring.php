@@ -38,14 +38,11 @@ return [
 			$config
 		);
 
-		$cache = $services->getObjectCacheFactory()->getLocalClusterInstance();
-		$stash = $services->getMainObjectStash();
-
 		return new ConfigsFetcher(
 			$options,
 			$config,
-			$cache,
-			$stash,
+			$services->getMainWANObjectCache(),
+			$services->getMainObjectStash(),
 			$services->getHttpRequestFactory(),
 			$services->getService( 'TestKitchen.Logger' ),
 			$services->getStatsFactory()->withComponent( 'TestKitchen' ),

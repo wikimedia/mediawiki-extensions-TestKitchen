@@ -15,6 +15,7 @@ use MediaWiki\Status\StatusFormatter;
 use Psr\Log\LoggerInterface;
 use Wikimedia\LightweightObjectStore\ExpirationAwareness;
 use Wikimedia\ObjectCache\BagOStuff;
+use Wikimedia\ObjectCache\WANObjectCache;
 use Wikimedia\Stats\StatsFactory;
 
 class ConfigsFetcher {
@@ -40,7 +41,7 @@ class ConfigsFetcher {
 	public function __construct(
 		private readonly ServiceOptions $options,
 		private readonly Config $config,
-		private readonly BagOStuff $cache,
+		private readonly WANObjectCache $cache,
 		private readonly BagOStuff $stash,
 		private readonly HttpRequestFactory $httpRequestFactory,
 		private readonly LoggerInterface $logger,
@@ -119,47 +120,55 @@ class ConfigsFetcher {
 		$statsFactory->getCounter( 'get_configs_internal_calls_total' )
 			->increment();
 
-		$key = $this->makeCacheKey( $type );
-		$configs = $this->cache->get( $key );
+		$isExperiment = $type === self::EXPERIMENT;
+		$cacheKeyFragment = $isExperiment ? 'experiment' : 'instrument';
+		$cacheKey = $this->cache->makeGlobalKey( 'TestKitchen', $cacheKeyFragment );
 
-		// Cache hit?
-		if ( $configs !== false ) {
-			$statsFactory->getCounter( 'get_configs_internal_hits_total' )
-				->setLabel( 'layer', 'cache' )
-				->increment();
+		$stash = $this->stash;
 
-			return $this->processConfigs( $configs, $type );
-		}
+		$configs = $this->cache->getWithSetCallback(
+			$cacheKey,
 
-		$configs = $this->stash->get( $key );
+			// 10 minutes
+			10 * ExpirationAwareness::TTL_MINUTE,
 
-		// Stash hit?
-		if ( $configs !== false ) {
-			$statsFactory->getCounter( 'get_configs_internal_hits_total' )
-				->setLabel( 'layer', 'stash' )
-				->increment();
+			static function ( $oldValue, &$ttl ) use ( $statsFactory, $stash, $cacheKeyFragment ) {
+				$statsFactory->getCounter( 'get_configs_internal_misses_total' )
+					->setLabel( 'layer', 'cache' )
+					->increment();
 
-			// There was a value in the stash but not in the cache? Update the cache. This situation can occur because
-			// the value in the cache was evicted due to pressure.
-			$this->cache->set( $key, $configs, ExpirationAwareness::TTL_WEEK );
+				$stashKey = $stash->makeGlobalKey(
+					'TestKitchen',
+					$cacheKeyFragment,
+					self::VERSION
+				);
+				$result = $stash->get( $stashKey );
 
-			return $this->processConfigs( $configs, $type );
-		}
+				// There was a value in the stash but not in the cache?
+				if ( $result !== false ) {
+					return $result;
+				}
 
-		// There was no value in the cache or the stash? Cache the empty list for a minute to keep load on the stash to
-		// a minimum (e.g. see https://phabricator.wikimedia.org/T398422#11023104 onwards) while waiting for the stash
-		// to be updated.
-		//
-		// This situation can occur in two very-different states:
-		//
-		// 1. The stash is cold because ConfigsFetcher::VERSION has changed (this includes an initial deployment where
-		//    ::VERSION changes from 0 to 1, effectively)
-		// 2. An old value was evicted from the stash due to pressure and the stash hasn't been updated yet
-		$configs = [];
+				$statsFactory->getCounter( 'get_configs_internal_misses_total' )
+					->setLabel( 'layer', 'stash' )
+					->increment();
 
-		$this->cache->set( $key, $configs, ExpirationAwareness::TTL_MINUTE );
+				// There was no value in the cache or the stash? Cache the empty list for 1 minute to keep load on the
+				// stash to a minimum (e.g. see https://phabricator.wikimedia.org/T398422#11023104 onwards) while
+				// waiting for the stash to be updated.
+				$ttl = ExpirationAwareness::TTL_MINUTE;
 
-		return $configs;
+				return [];
+			},
+			[
+				// Cache the result of the callback in the process cache for the lifetime of the request
+				'pcTTL' => ExpirationAwareness::TTL_INDEFINITE,
+
+				'version' => self::VERSION,
+			]
+		);
+
+		return $this->processConfigs( $configs, $type );
 	}
 
 	/**
@@ -199,27 +208,24 @@ class ConfigsFetcher {
 		$newValue = $newValueStatus->getValue();
 		$newValueJson = FormatJson::encode( $newValue );
 
-		$key = $this->makeCacheKey( $type );
-		$oldValue = $this->stash->get( $key );
-		$oldValueJson = FormatJson::encode( $oldValue );
-
-		if ( $newValueJson !== $oldValueJson ) {
-			$this->logger->info( 'Change detected. Updating ' . $configsTypeFragment );
-
-			$this->stash->delete( $key );
-			$this->stash->set( $key, $newValue, ExpirationAwareness::TTL_WEEK );
-			$this->cache->set( $key, $newValue, ExpirationAwareness::TTL_WEEK );
-		}
-
-		$this->logger->debug( 'End updating ' . $configsTypeFragment );
-	}
-
-	private function makeCacheKey( int $type ): string {
-		return $this->stash->makeGlobalKey(
+		$stashKey = $this->stash->makeGlobalKey(
 			'TestKitchen',
 			$type === self::EXPERIMENT ? 'experiment' : 'instrument',
 			self::VERSION
 		);
+
+		$oldValue = $this->stash->get( $stashKey );
+		$oldValueJson = FormatJson::encode( $oldValue );
+
+		// The configs have changed? Update the value in the stash and allow the cache to be updated in up to 10 minutes
+		// during a regular #getConfigs() call.
+		if ( $newValueJson !== $oldValueJson ) {
+			$this->logger->info( 'Change detected. Updating ' . $configsTypeFragment );
+
+			$this->stash->set( $stashKey, $newValue, ExpirationAwareness::TTL_WEEK );
+		}
+
+		$this->logger->debug( 'End updating ' . $configsTypeFragment );
 	}
 
 	private function fetchConfigs( int $type ): Status {
