@@ -22,7 +22,6 @@ use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManagerInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\ExposureLogTracker;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManagerInterface;
-use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
 use MediaWiki\Extension\TestKitchen\Sdk\UserEditCountService;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
@@ -111,9 +110,6 @@ return [
 			$options
 		);
 	},
-	'TestKitchen.StaticStreamConfigs' => static function ( MediaWikiServices $services ): StreamConfigs {
-		return new StreamConfigs( $services->get( 'EventStreamConfig.StreamConfigs' ) );
-	},
 	'TestKitchen.EventSender' => static function ( MediaWikiServices $services ): EventSender {
 		if ( defined( 'MW_PHPUNIT_TEST' ) ) {
 			return new DisabledEventSender();
@@ -149,7 +145,6 @@ return [
 			$services->getService( 'TestKitchen.EnrollmentsProcessor' ),
 			$services->getCentralIdLookup(),
 			$services->getService( 'TestKitchen.ConfigsFetcher' ),
-			$services->getService( 'TestKitchen.StaticStreamConfigs' ),
 			$services->getService( 'TestKitchen.ExposureLogTracker' )
 		);
 	},

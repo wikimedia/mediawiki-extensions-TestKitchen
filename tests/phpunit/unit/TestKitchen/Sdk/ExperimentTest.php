@@ -2,12 +2,10 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventStreamConfig\StreamConfigs as BaseStreamConfigs;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
 use MediaWiki\Extension\TestKitchen\Sdk\ExposureLogTracker;
-use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
 use MediaWikiUnitTestCase;
 use Wikimedia\Stats\StatsFactory;
 use Wikimedia\Stats\UnitTestingHelper;
@@ -64,7 +62,6 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 	private EventSender $eventSender;
 	private EventFactory $eventFactory;
 	private StatsFactory $statsFactory;
-	private StreamConfigs $streamConfigs;
 	private UnitTestingHelper $statsHelper;
 	private ExposureLogTracker $exposureLogTracker;
 
@@ -77,38 +74,10 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		$this->statsFactory = $this->statsHelper->getStatsFactory();
 		$this->exposureLogTracker = $this->createMock( ExposureLogTracker::class );
 
-		$baseStreamConfigs = new BaseStreamConfigs(
-			[
-				'product_metrics.web_base' => [
-					'producers' => [
-						'metrics_platform_client' => [
-							'provide_values' => [
-								'agent_client_platform',
-								'agent_client_platform_family',
-							]
-						],
-					],
-				],
-				'product_metrics.custom_stream' => [
-					'producers' => [
-						'metrics_platform_client' => [
-							'provide_values' => [
-								'performer_id',
-								'performer_edit_count',
-							]
-						],
-					],
-				],
-			],
-			[]
-		);
-		$this->streamConfigs = new StreamConfigs( $baseStreamConfigs );
-
 		$this->experiment = new Experiment(
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->streamConfigs,
 			$this->exposureLogTracker,
 			$this->experimentConfig
 		);
@@ -124,7 +93,6 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->streamConfigs,
 			$this->exposureLogTracker,
 			[]
 		);
@@ -307,7 +275,6 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->streamConfigs,
 			$this->exposureLogTracker,
 			[]
 		);
@@ -331,18 +298,6 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		);
 	}
 
-	public function testSetStream(): void {
-		$newStream = 'product_metrics.custom_stream';
-
-		$return = $this->experiment->setStream( $newStream );
-
-		$this->assertSame( $this->experiment, $return );
-		$this->assertSame(
-			$newStream,
-			$this->experiment->getExperimentConfig()['stream_name']
-		);
-	}
-
 	public function testSetSchema(): void {
 		$newSchema = '/analytics/product_metrics/web/custom/1.0.0';
 
@@ -352,57 +307,6 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		$this->assertSame(
 			$newSchema,
 			$this->experiment->getExperimentConfig()['schema_id']
-		);
-	}
-
-	public function testSetStreamContextualAttributesAndSend(): void {
-		$newStream = 'product_metrics.custom_stream';
-		$return = $this->experiment->setStream( $newStream );
-
-		$expectedExperimentConfig = array_intersect_key(
-			$this->experiment->getExperimentConfig(),
-			array_fill_keys( $this->keys, true )
-		);
-
-		$expectedEvent = [
-			'$schema' => $this->experimentConfig['schema_id'],
-			'dt' => ConvertibleTimestamp::now( TimestampFormat::ISO_8601 ),
-		];
-
-		$this->eventFactory->expects( $this->once() )
-			->method( 'newEvent' )
-			->with(
-				$newStream,
-				$this->experimentConfig['schema_id'],
-				$this->differentContextualAtributes,
-				$this->action,
-				array_merge( $this->interactionData, [ 'experiment' => $expectedExperimentConfig ] )
-			)
-			->willReturn( $expectedEvent );
-
-		$this->eventSender->expects( $this->once() )
-			->method( 'sendEvent' )
-			->with( $expectedEvent );
-
-		$this->assertSame( $this->experiment, $return );
-
-		$this->assertSame(
-			$newStream,
-			$this->experiment->getExperimentConfig()['stream_name'] ?? null,
-			'setStream() should update experimentConfig stream_name'
-		);
-
-		$this->assertSame(
-			$this->differentContextualAtributes,
-			$this->experiment->getExperimentConfig()['contextual_attributes'] ?? null,
-			'setStream() should update experimentConfig contextual_attributes'
-		);
-
-		$this->experiment->send( $this->action, $this->interactionData );
-
-		$this->assertSame(
-			[ 'mediawiki.TestKitchen.experiment_events_sent_total:1|c|#experiment:test_experiment' ],
-			$this->statsHelper->consumeAllFormatted()
 		);
 	}
 
@@ -520,7 +424,6 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->streamConfigs,
 			$this->exposureLogTracker,
 			[]
 		);

@@ -22,7 +22,6 @@ class Experiment implements ExperimentInterface {
 		private readonly EventSender $eventSender,
 		private readonly EventFactory $eventFactory,
 		private readonly StatsFactory $statsFactory,
-		private readonly StreamConfigs $staticStreamConfigs,
 		protected ExposureLogTracker $exposureLogTracker,
 		array $experimentConfig
 	) {
@@ -103,20 +102,6 @@ class Experiment implements ExperimentInterface {
 	 */
 	public function getExperimentConfig(): array {
 		return $this->experimentConfig;
-	}
-
-	/**
-	 * Sets the stream and its corresponding contextual attributes to send analytics events.
-	 *
-	 * @param string $streamName
-	 * @return $this
-	 * @deprecated
-	 */
-	public function setStream( string $streamName ): self {
-		$this->experimentConfig['stream_name'] = $streamName;
-		$this->experimentConfig['contextual_attributes'] =
-			$this->staticStreamConfigs->getContextualAttributesForStream( $streamName );
-		return $this;
 	}
 
 	/**

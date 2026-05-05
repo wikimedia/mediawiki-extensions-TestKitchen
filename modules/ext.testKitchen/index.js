@@ -26,7 +26,6 @@ const UINT32_MAX = 4294967295; // (2^32) - 1
  * @property {string} EveryoneExperimentEventIntakeServiceUrl
  * @property {string} LoggedInExperimentEventIntakeServiceUrl
  * @property {string} InstrumentEventIntakeServiceUrl
- * @property {Object.<string,string[]>} streamNameToContextualAttributesMap
  * @property {Object.<string,mw.testKitchen.PartialExperimentConfig>} experimentConfigs
  * @property {Object.<string,mw.testKitchen.PartialInstrumentConfig>} instrumentConfigs
  *
@@ -77,7 +76,6 @@ function newExperiment( enrollmentConfig ) {
 		eventSender,
 		eventIntakeServiceUrl,
 		exposureLogTracker,
-		config.streamNameToContextualAttributesMap,
 		{
 			enrolled: experimentName,
 			assigned: enrollmentConfig.assigned,

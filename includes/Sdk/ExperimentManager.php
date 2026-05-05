@@ -30,9 +30,6 @@ class ExperimentManager implements
 	private EnrollmentResultBuilder $enrollments;
 	private array $enrollmentResult;
 
-	private array $baseStreamContextualAttributes;
-	private StreamConfigs $streamConfigs;
-	private array $streamNameToContextualAttributesMap;
 	private ExposureLogTracker $exposureLogTracker;
 
 	public function __construct(
@@ -44,17 +41,10 @@ class ExperimentManager implements
 		private readonly EnrollmentsProcessor $enrollmentsProcessor,
 		private readonly CentralIdLookup $centralIdLookup,
 		private readonly ConfigsFetcher $configsFetcher,
-		StreamConfigs $staticStreamConfigs,
 		ExposureLogTracker $exposureLogTracker
 	) {
 		$this->enrollmentResult = [];
-		$this->streamConfigs = $staticStreamConfigs;
-		$this->baseStreamContextualAttributes =
-			$staticStreamConfigs->getContextualAttributesForStream( self::BASE_STREAM );
-
 		$this->enrollments = new EnrollmentResultBuilder();
-		$this->enrollmentResult = [];
-		$this->streamNameToContextualAttributesMap = [];
 		$this->exposureLogTracker = $exposureLogTracker;
 	}
 
@@ -179,7 +169,6 @@ class ExperimentManager implements
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->streamConfigs,
 			$this->exposureLogTracker
 		);
 	}
@@ -189,7 +178,6 @@ class ExperimentManager implements
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->streamConfigs,
 			$this->logger,
 			$this->exposureLogTracker,
 			[
@@ -216,7 +204,6 @@ class ExperimentManager implements
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->streamConfigs,
 			$this->exposureLogTracker,
 			[
 				'enrolled' => $experimentName,

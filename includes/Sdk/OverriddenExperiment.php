@@ -14,7 +14,6 @@ class OverriddenExperiment extends Experiment {
 		EventSender $eventSender,
 		EventFactory $eventFactory,
 		StatsFactory $statsFactory,
-		StreamConfigs $streamConfigs,
 		private readonly LoggerInterface $logger,
 		protected ExposureLogTracker $exposureLogTracker,
 		array $experimentConfig
@@ -23,7 +22,6 @@ class OverriddenExperiment extends Experiment {
 			$eventSender,
 			$eventFactory,
 			$statsFactory,
-			$streamConfigs,
 			$exposureLogTracker,
 			$experimentConfig
 		);

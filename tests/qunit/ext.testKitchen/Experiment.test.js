@@ -2,13 +2,6 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 	beforeEach: function () {
 		const { Experiment } = mw.testKitchen;
 
-		const streamNameToContextualAttributesMap = {
-			my_awesome_stream: [
-				'performer_id',
-				'performer_name'
-			]
-		};
-
 		// Stubs
 		// =====
 
@@ -56,7 +49,6 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 				eventSender,
 				'http://foo.bar/baz?qux=quux',
 				this.exposureLogTracker,
-				streamNameToContextualAttributesMap,
 				experimentConfig
 			);
 		};
@@ -361,18 +353,17 @@ QUnit.test( 'send() - can\'t override experiment', function ( assert ) {
 	assert.strictEqual( this.sendEventStub.callCount, 1 );
 } );
 
-QUnit.test( 'send() - overriding stream and schema', function ( assert ) {
-	this.everyoneExperiment.setStream( 'my_awesome_stream' )
-		.setSchema( '/my/awesome/schema/0.0.1' )
+QUnit.test( 'send() - overriding schema', function ( assert ) {
+	this.everyoneExperiment.setSchema( '/my/awesome/schema/0.0.1' )
 		.send( 'Hello, World!' );
 
 	assert.strictEqual( this.newEventStub.callCount, 1 );
 	assert.deepEqual( this.newEventStub.firstCall.args, [
-		'my_awesome_stream',
+		'product_metrics.web_base',
 		'/my/awesome/schema/0.0.1',
 		[
-			'performer_id',
-			'performer_name'
+			'performer_pageview_id',
+			'mediawiki_database'
 		],
 		'Hello, World!',
 		{
@@ -423,17 +414,6 @@ QUnit.test.each(
 		);
 	}
 );
-
-QUnit.test( 'setStream() - warns when stream isn\'t registered', function ( assert ) {
-	this.sandbox.stub( console, 'warn' );
-
-	this.everyoneExperiment.setStream( 'my_other_awesome_stream' );
-
-	// eslint-disable-next-line no-console
-	assert.strictEqual( console.warn.callCount, 1 );
-
-	assert.deepEqual( this.everyoneExperiment.contextualAttributes, [] );
-} );
 
 QUnit.test.each(
 	'sendExposure()',
@@ -538,12 +518,6 @@ QUnit.test( 'sendExposure() rethrows when sending exposure fails', function ( as
 
 QUnit.module( 'ext.testKitchen/UnenrolledExperiment' );
 
-QUnit.test( 'setStream() - doesn\'t trigger an error', ( assert ) => {
-	const e = new mw.testKitchen.UnenrolledExperiment( 'hello_world' );
-
-	assert.strictEqual( e.setStream( 'my_awesome_stream' ), e );
-} );
-
 QUnit.test( 'setSchema() - doesn\'t trigger an error', ( assert ) => {
 	const e = new mw.testKitchen.UnenrolledExperiment( 'hello_world' );
 
@@ -577,10 +551,6 @@ QUnit.test( 'send()', function ( assert ) {
 		action,
 		JSON.stringify( interactionData, null, 2 )
 	] );
-} );
-
-QUnit.test( 'setStream() - doesn\'t trigger an error', function ( assert ) {
-	assert.strictEqual( this.experiment.setStream( 'my_awesome_stream' ), this.experiment );
 } );
 
 QUnit.test( 'setSchema() - doesn\'t trigger an error', function ( assert ) {

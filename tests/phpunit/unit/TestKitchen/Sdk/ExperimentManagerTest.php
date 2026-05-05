@@ -2,7 +2,6 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventStreamConfig\StreamConfigs as BaseStreamConfigs;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentResultBuilder;
 use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentsProcessor;
@@ -13,7 +12,6 @@ use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\ExposureLogTracker;
 use MediaWiki\Extension\TestKitchen\Sdk\OverriddenExperiment;
-use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
 use MediaWiki\Extension\TestKitchen\Sdk\UnenrolledExperiment;
 use MediaWiki\Request\FauxRequest;
 use MediaWiki\Request\WebRequest;
@@ -38,7 +36,6 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 	private ConfigsFetcher $configsFetcher;
 	private UnitTestingHelper $statsHelper;
 	private StatsFactory $statsFactory;
-	private StreamConfigs $staticStreamConfigs;
 	private ExperimentManager $experimentManager;
 	private ExposureLogTracker $exposureLogTracker;
 
@@ -56,25 +53,6 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		$this->statsFactory = $this->statsHelper->getStatsFactory();
 		$this->exposureLogTracker = $this->createMock( ExposureLogTracker::class );
 
-		$baseStreamConfigs = new BaseStreamConfigs(
-			[
-				'product_metrics.web_base' => [
-					'schema_title' => 'analytics/product_metrics/web/base',
-					'producers' => [
-						'metrics_platform_client' => [
-							'provide_values' => [
-								'agent_client_platform',
-								'agent_client_platform_family',
-							],
-						],
-					],
-				],
-			],
-			[]
-		);
-
-		$this->staticStreamConfigs = new StreamConfigs( $baseStreamConfigs );
-
 		$this->experimentManager = new ExperimentManager(
 			$this->logger,
 			$this->eventSender,
@@ -84,7 +62,6 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->enrollmentsProcessor,
 			$this->centralIdLookup,
 			$this->configsFetcher,
-			$this->staticStreamConfigs,
 			$this->exposureLogTracker
 		);
 	}
@@ -216,7 +193,6 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->staticStreamConfigs,
 			$this->exposureLogTracker,
 			$this->makeExpectedSdkConfig(
 				$experimentName,
@@ -290,7 +266,6 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->staticStreamConfigs,
 			$this->logger,
 			$this->exposureLogTracker,
 			$this->makeExpectedSdkConfig(
@@ -362,7 +337,6 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->staticStreamConfigs,
 			$this->exposureLogTracker
 		);
 
@@ -388,7 +362,6 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->staticStreamConfigs,
 			$this->exposureLogTracker
 		);
 
@@ -436,7 +409,6 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->staticStreamConfigs,
 			$this->exposureLogTracker
 		);
 
@@ -484,7 +456,6 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->staticStreamConfigs,
 			$this->exposureLogTracker
 		);
 
@@ -529,7 +500,6 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->staticStreamConfigs,
 			$this->exposureLogTracker,
 			$this->makeExpectedSdkConfig(
 				$experimentName,
@@ -552,7 +522,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		$experimentName = 'main-course';
 
 		$enrollments = new EnrollmentResultBuilder();
-		$enrollments->addExperiment( $experimentName, 'overridden', 'overridden' );
+		$enrollments->addExperiment( $experimentName, 'overridden' );
 		$enrollments->addAssignment( $experimentName, 'control', true );
 
 		$experimentConfigs = [

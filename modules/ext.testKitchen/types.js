@@ -111,10 +111,8 @@
  * [the `fragment/analytics/product_metrics/experiment` schema fragment][0].
  *
  * By default, the analytics event will be sent to the `product_metrics.web_base` stream and be
- * validated with the `/analytics/product_metrics/web/base/2.0.0` schema. The stream and schema
- * can be overridden with {@link mw.testKitchen.ExperimentInterface#setStream} and
- * {@link mw.testKitchen.ExperimentInterface#setSchema},
- * respectively.
+ * validated with the `/analytics/product_metrics/web/base/2.0.0` schema. The schema
+ * can be overridden with {@link mw.testKitchen.ExperimentInterface#setSchema}
  *
  * Per-event contextual attributes can be passed as contextualAttributes. In this case, they will
  * be added to the events along with the ones that are defined in the experiment config
@@ -171,20 +169,6 @@
  * @method sendExposure
  * @instance
  * @memberof mw.testKitchen.ExperimentInterface
- */
-
-/**
- * Sets the stream to send analytics events to with {@link mw.testKitchen.ExperimentInterface#send}.
- *
- * This method is chainable.
- *
- * @method setStream
- * @instance
- * @memberof mw.testKitchen.ExperimentInterface
- * @deprecated
- *
- * @param {string} streamName
- * @return {mw.testKitchen.ExperimentInterface} The instance on which this method was called
  */
 
 /**

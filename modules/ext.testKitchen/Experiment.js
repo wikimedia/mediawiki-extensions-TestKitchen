@@ -28,7 +28,6 @@ class Experiment {
 	 * @param {mw.testKitchen.EventSenderInterface} eventSender
 	 * @param {string} eventIntakeServiceUrl
 	 * @param {mw.testKitchen.ExposureLogTracker} exposureLogTracker
-	 * @param {Object.<string,string[]>} streamNameToContextualAttributesMap
 	 * @param {mw.testKitchen.ExperimentConfig} config
 	 */
 	constructor(
@@ -36,13 +35,11 @@ class Experiment {
 		eventSender,
 		eventIntakeServiceUrl,
 		exposureLogTracker,
-		streamNameToContextualAttributesMap,
 		config
 	) {
 		this.eventFactory = eventFactory;
 		this.eventSender = eventSender;
 		this.eventIntakeServiceUrl = eventIntakeServiceUrl;
-		this.streamNameToContextualAttributesMap = streamNameToContextualAttributesMap;
 		this.config = config;
 		this.streamName = config.stream_name;
 		this.schemaID = config.schema_id;
@@ -131,43 +128,12 @@ class Experiment {
 		} );
 	}
 
-	setStream( streamName ) {
-		this.streamName = streamName;
-
-		// Use the set of contextual attributes for the stream. This can be removed as part of
-		// T408186.
-		if ( !this.streamNameToContextualAttributesMap[ streamName ] ) {
-
-			// eslint-disable-next-line no-console
-			console.warn(
-				'%s: The stream %s isn\'t registered. Have you added %s to $wgTestKitchenExperimentStreamNames?',
-				this.config.enrolled,
-				streamName
-			);
-
-			this.contextualAttributes = [];
-		} else {
-			this.contextualAttributes =
-				this.streamNameToContextualAttributesMap[ streamName ];
-		}
-
-		return this;
-	}
-
 	setSchema( schemaID ) {
 		this.schemaID = schemaID;
 
 		return this;
 	}
 }
-
-mw.log.deprecate(
-	Experiment.prototype,
-	'setStream',
-	Experiment.prototype.setStream,
-	'Experiment#setStream is deprecated and will be removed.',
-	'mw.testKitchen.Experiment#setStream()'
-);
 
 /**
  * @class
@@ -190,11 +156,6 @@ class UnenrolledExperiment {
 	submitInteraction( action, interactionData, contextualAttributes ) {}
 
 	sendExposure() {}
-
-	// eslint-disable-next-line no-unused-vars
-	setStream( streamName ) {
-		return this;
-	}
 
 	// eslint-disable-next-line no-unused-vars
 	setSchema( schemaID ) {
@@ -251,11 +212,6 @@ class OverriddenExperiment {
 
 	// eslint-disable-next-line no-unused-vars
 	setSchema( schemaID ) {
-		return this;
-	}
-
-	// eslint-disable-next-line no-unused-vars
-	setStream( streamName ) {
 		return this;
 	}
 }

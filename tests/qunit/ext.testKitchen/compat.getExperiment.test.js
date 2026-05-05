@@ -133,22 +133,3 @@ QUnit.test( 'it sets stream, schema, and contextual attributes', ( assert ) => {
 		'page_namespace'
 	] );
 } );
-
-QUnit.test( 'it passes through correct contextual attributes when stream is set', ( assert ) => {
-	const e = mw.testKitchen.compat.getExperiment( 'fruit' );
-
-	assert.deepEqual(
-		e.streamNameToContextualAttributesMap,
-		{
-			'product_metrics.custom_stream': [ 'page_id', 'page_title' ]
-		}
-	);
-
-	e.setStream( 'product_metrics.custom_stream' );
-
-	assert.deepEqual(
-		e.contextualAttributes,
-		[ 'page_id', 'page_title' ],
-		'uses contextual attributes from the stream map when stream is set'
-	);
-} );

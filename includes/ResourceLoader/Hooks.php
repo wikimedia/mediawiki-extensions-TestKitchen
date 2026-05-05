@@ -4,7 +4,6 @@ namespace MediaWiki\Extension\TestKitchen\ResourceLoader;
 
 use MediaWiki\Config\Config;
 use MediaWiki\Extension\TestKitchen\Services;
-use MediaWiki\MediaWikiServices;
 use MediaWiki\ResourceLoader as RL;
 
 class Hooks {
@@ -27,7 +26,6 @@ class Hooks {
 
 			'experimentConfigs' => self::getExperimentConfigs(),
 			'instrumentConfigs' => self::getInstrumentConfigs(),
-			'streamNameToContextualAttributesMap' => self::getStreamNameToContextualAttributesMap( $config ),
 			'exposureResetEpoch' => $config->get( 'TestKitchenExposureResetEpoch' ),
 		];
 	}
@@ -87,39 +85,6 @@ class Hooks {
 		$json = json_encode( $semanticConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 
 		return substr( hash( 'sha256', $json ), 0, 16 );
-	}
-
-	/**
-	 * Builds a map of stream names to their contextual attributes.
-	 *
-	 * Retrieves stream configurations from the EventStreamConfig service for the streams in
-	 * the `$wgTestKitchenExperimentStreamNames` config variable into a map of the experiment
-	 * to their corresponding contextual attributes.
-	 *
-	 * Streams without contextual attributes are omitted.
-	 *
-	 * @param Config $config Configuration containing `$wgTestKitchenExperimentStreamNames`
-	 * @return array<string,string[]>
-	 * @deprecated This method provides data for `mw.testKitchen.Experiment#setStream()`, which
-	 *  will be removed in a future release
-	 * @see ConfigsFetcher::getExperimentConfigs()
-	 */
-	private static function getStreamNameToContextualAttributesMap( Config $config ): array {
-		$streamNames = $config->get( 'TestKitchenExperimentStreamNames' );
-
-		// NOTE: TestKitchen has a hard dependency on EventStreamConfig. If this code is executing, then
-		// EventStreamConfig is loaded and this service is defined.
-		$streamConfigs = MediaWikiServices::getInstance()->getService( 'EventStreamConfig.StreamConfigs' )
-			->get( $streamNames );
-
-		$result = [];
-
-		foreach ( $streamConfigs as $streamName => $streamConfig ) {
-			if ( isset( $streamConfig['producers']['metrics_platform_client']['provide_values'] ) ) {
-				$result[ $streamName ] = $streamConfig['producers']['metrics_platform_client']['provide_values'];
-			}
-		}
-		return $result;
 	}
 
 	/**

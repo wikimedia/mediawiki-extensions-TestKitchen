@@ -2,13 +2,11 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
-use MediaWiki\Extension\EventStreamConfig\StreamConfigs as BaseStreamConfigs;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\Instrument;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManager;
-use MediaWiki\Extension\TestKitchen\Sdk\StreamConfigs;
 use MediaWiki\Extension\TestKitchen\Sdk\UnsampledInstrument;
 use MediaWikiUnitTestCase;
 
@@ -19,7 +17,6 @@ class InstrumentManagerTest extends MediaWikiUnitTestCase {
 	private EventSender $eventSender;
 	private EventFactory $eventFactory;
 	private InstrumentManager $instrumentManager;
-	private StreamConfigs $staticStreamConfigs;
 	private ConfigsFetcher $configsFetcher;
 
 	public function setUp(): void {
@@ -28,23 +25,6 @@ class InstrumentManagerTest extends MediaWikiUnitTestCase {
 		$this->eventSender = $this->createMock( EventSender::class );
 		$this->eventFactory = $this->createMock( EventFactory::class );
 		$this->configsFetcher = $this->createMock( ConfigsFetcher::class );
-
-		$baseStreamConfigs = new BaseStreamConfigs(
-			[
-				'product_metrics.web_base' => [
-					'producers' => [
-						'metrics_platform_client' => [
-							'provide_values' => [
-								'performer_name',
-								'page_id'
-							]
-						],
-					],
-				],
-			],
-			[]
-		);
-		$this->staticStreamConfigs = new StreamConfigs( $baseStreamConfigs );
 
 		$this->instrumentManager = new InstrumentManager(
 			$this->eventSender,

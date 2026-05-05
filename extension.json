@@ -13,7 +13,6 @@
 	"requires": {
 		"MediaWiki": ">= 1.47.0",
 		"extensions": {
-			"EventStreamConfig": "*",
 			"EventBus": "*"
 		}
 	},
