@@ -230,6 +230,10 @@ function getRawHeader() {
 				let result = '';
 
 				entries.forEach( ( entry ) => {
+					if ( !entry.serverTiming ) {
+						return;
+					}
+
 					entry.serverTiming.forEach( ( serverTimingEntry ) => {
 						if ( serverTimingEntry.name === HEADER_NAME ) {
 							result = serverTimingEntry.description;
