@@ -246,10 +246,22 @@ function getRawHeader() {
 				resolve( result );
 			} );
 
-		observer.observe( {
-			type: 'navigation',
-			buffered: true
-		} );
+		try {
+			observer.observe( {
+				type: 'navigation',
+				buffered: true
+			} );
+		} catch ( e ) {
+			// iOS 12 Safari doesn't support both (1) the single-`type` form of
+			// observe() and throws synchronously; and (2) buffered mode, where
+			// past entries are also processed. We could solve for (1) but
+			// wouldn't be able to retrieve the external-facing enrollments
+			// header from the initial response because of (2).
+			//
+			// Resolve with no enrollments rather than aborting module-execute
+			// as we can't meaningfully recover (T423287).
+			resolve( '' );
+		}
 	} );
 
 	return rawHeaderPromise;
