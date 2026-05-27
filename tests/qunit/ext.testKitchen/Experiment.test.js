@@ -565,8 +565,7 @@ QUnit.test( 'sendExposure()', function ( assert ) {
 		.once()
 		.withExactArgs(
 			'hello_world: The enrollment for this experiment has been overridden. The following event will not be sent:\n',
-			'experiment_exposure',
-			undefined
+			'experiment_exposure'
 		);
 
 	const e = new mw.testKitchen.OverriddenExperiment(

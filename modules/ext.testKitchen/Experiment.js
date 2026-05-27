@@ -194,12 +194,14 @@ class OverriddenExperiment {
 			`${ this.name }: The enrollment for this experiment has been overridden. ` +
 			'The following event will not be sent:\n';
 
+		const args = [ message, action ];
+
+		if ( interactionData ) {
+			args.push( JSON.stringify( interactionData, null, 2 ) );
+		}
+
 		// eslint-disable-next-line no-console
-		console.log(
-			message,
-			action,
-			JSON.stringify( interactionData, null, 2 )
-		);
+		console.log.apply( console, args );
 	}
 
 	submitInteraction( action, interactionData, contextualAttributes ) {
