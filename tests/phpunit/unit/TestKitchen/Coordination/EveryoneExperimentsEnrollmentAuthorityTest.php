@@ -69,48 +69,26 @@ class EveryoneExperimentsEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 			->method( 'getRawEveryoneExperimentsEnrollments' )
 			->willReturn( 'foo_experiment=bar;qux_experiment=quux;' );
 
-		// withConsecutive was deprecated in PHPUnit 9 and removed in 10. The following is based on the replacement
-		// suggested by Tomas Votruba in
-		// https://tomasvotruba.com/blog/how-to-upgrade-deprecated-phpunit-with-consecutive.
-
-		$addExperimentInvokedCount = $this->exactly( 2 );
-
-		$this->result->expects( $addExperimentInvokedCount )
+		$addExperimentExpectedParameters = [
+			[ 'foo_experiment', 'awaiting' ],
+			[ 'qux_experiment', 'awaiting' ],
+		];
+		$this->result->expects( $this->exactly( 2 ) )
 			->method( 'addExperiment' )
-			->willReturnCallback( function ( ...$parameters ) use ( $addExperimentInvokedCount ) {
-				if ( $addExperimentInvokedCount->getInvocationCount() === 1 ) {
-					$this->assertSame(
-						[ 'foo_experiment', 'awaiting' ],
-						$parameters
-					);
-				}
-
-				if ( $addExperimentInvokedCount->getInvocationCount() === 2 ) {
-					$this->assertSame(
-						[ 'qux_experiment', 'awaiting' ],
-						$parameters
-					);
-				}
+			->willReturnCallback( function ( ...$parameters ) use ( &$addExperimentExpectedParameters ): void {
+				$expectedParameters = array_shift( $addExperimentExpectedParameters );
+				$this->assertSame( $expectedParameters, $parameters );
 			} );
 
-		$addEnrollmentInvokedCount = $this->exactly( 2 );
-
-		$this->result->expects( $addEnrollmentInvokedCount )
+		$addEnrollmentExpectedParameters = [
+			[ 'foo_experiment', 'bar', false ],
+			[ 'qux_experiment', 'quux', false ],
+		];
+		$this->result->expects( $this->exactly( 2 ) )
 			->method( 'addAssignment' )
-			->willReturnCallback( function ( ...$parameters ) use ( $addEnrollmentInvokedCount ) {
-				if ( $addEnrollmentInvokedCount->getInvocationCount() === 1 ) {
-					$this->assertSame(
-						[ 'foo_experiment', 'bar', false ],
-						$parameters
-					);
-				}
-
-				if ( $addEnrollmentInvokedCount->getInvocationCount() === 2 ) {
-					$this->assertSame(
-						[ 'qux_experiment', 'quux', false ],
-						$parameters
-					);
-				}
+			->willReturnCallback( function ( ...$parameters ) use ( &$addEnrollmentExpectedParameters ): void {
+				$expectedParameters = array_shift( $addEnrollmentExpectedParameters );
+				$this->assertSame( $expectedParameters, $parameters );
 			} );
 
 		$this->authority->enrollUser( $this->request, $this->result );

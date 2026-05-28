@@ -108,54 +108,32 @@ class LoggedInExperimentsEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 				]
 			] );
 
-		// withConsecutive was deprecated in PHPUnit 9 and removed in 10. The following is based on the replacement
-		// suggested by Tomas Votruba in
-		// https://tomasvotruba.com/blog/how-to-upgrade-deprecated-phpunit-with-consecutive.
-
-		$addExperimentInvokedCount = $this->exactly( 2 );
-
-		$this->result->expects( $addExperimentInvokedCount )
+		$addExperimentExpectedParameters = [
+			[
+				'foo',
+				'377195904c99497c2cdb7aaecaf541ca717f34e5357dace55ebb1711d54190c2'
+			],
+			[
+				'bar',
+				'92bd577d056dc2d6fe69083f638d4ce8bf4e8e4b88b351bcb8bbdf2dcef6a437',
+			],
+		];
+		$this->result->expects( $this->exactly( 2 ) )
 			->method( 'addExperiment' )
-			->willReturnCallback( function ( ...$parameters ) use ( $addExperimentInvokedCount ) {
-				if ( $addExperimentInvokedCount->getInvocationCount() === 1 ) {
-					$this->assertSame(
-						[
-							'foo',
-							'377195904c99497c2cdb7aaecaf541ca717f34e5357dace55ebb1711d54190c2'
-						],
-						$parameters
-					);
-				}
-
-				if ( $addExperimentInvokedCount->getInvocationCount() === 2 ) {
-					$this->assertSame(
-						[
-							'bar',
-							'92bd577d056dc2d6fe69083f638d4ce8bf4e8e4b88b351bcb8bbdf2dcef6a437',
-						],
-						$parameters
-					);
-				}
+			->willReturnCallback( function ( ...$parameters ) use ( &$addExperimentExpectedParameters ): void {
+				$expectedParameters = array_shift( $addExperimentExpectedParameters );
+				$this->assertSame( $expectedParameters, $parameters );
 			} );
 
-		$addEnrollmentInvokedCount = $this->exactly( 2 );
-
-		$this->result->expects( $addEnrollmentInvokedCount )
+		$addEnrollmentExpectedParameters = [
+			[ 'foo', 'control', false ],
+			[ 'bar', 'treatment', false ],
+		];
+		$this->result->expects( $this->exactly( 2 ) )
 			->method( 'addAssignment' )
-			->willReturnCallback( function ( ...$parameters ) use ( $addEnrollmentInvokedCount ) {
-				if ( $addEnrollmentInvokedCount->getInvocationCount() === 1 ) {
-					$this->assertSame(
-						[ 'foo', 'control', false ],
-						$parameters
-					);
-				}
-
-				if ( $addEnrollmentInvokedCount->getInvocationCount() === 2 ) {
-					$this->assertSame(
-						[ 'bar', 'treatment', false ],
-						$parameters
-					);
-				}
+			->willReturnCallback( function ( ...$parameters ) use ( &$addEnrollmentExpectedParameters ): void {
+				$expectedParameters = array_shift( $addEnrollmentExpectedParameters );
+				$this->assertSame( $expectedParameters, $parameters );
 			} );
 
 		$this->authority->enrollUser( $this->request, $this->result );
