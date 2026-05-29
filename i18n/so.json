@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"AhmedG612"
+		]
+	},
+	"testkitchen-desc": "Waxay bixisaa PHP iyo JS Test Kitchen SDKs, kuwaas oo horumariyeyaashu u adeegsadaan hirgelinta tijaabooyin iyo ururinta xogta falanqaynta.",
+	"testkitchen-non-successful-response": "API-ga Test Kitchen wuxuu soo celiyay jawaab aan guul ahayn.",
+	"testkitchen-api-empty-response-body": "API-ga Test Kitchen wuxuu soo celiyay jawaab aan lahayn wax nuxur ah."
+}
