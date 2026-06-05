@@ -30,6 +30,7 @@
  * @property {string} user_identifier_type
  * @property {string} schema_id
  * @property {string} exposure_version
+ * @property {string} version
  * @property {number} phase_index The phase index of the experiment
  *
  * @package
@@ -59,6 +60,7 @@
  * @property {string} schema_id The ID of the schema used to validate experiment-related analytics
  *  events with
  * @property {number} phase_index The phase index of the experiment
+ * @property {string} version The version of the experiment
  * @property {string[]} contextual_attributes
  * @property {Object<string,string>} other_assigned Enrollment information for all other experiments
  *  that the user is enrolled in expressed as a map of experiment name (enrolled) to group

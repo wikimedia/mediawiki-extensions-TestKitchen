@@ -81,6 +81,7 @@ function newExperiment( enrollmentConfig ) {
 		contextual_attributes: experimentConfig.contextual_attributes,
 		exposure_version: experimentConfig.exposure_version,
 		other_assigned: enrollmentConfig.other_assigned,
+		version: experimentConfig.version,
 		phase_index: experimentConfig.phase_index
 	};
 

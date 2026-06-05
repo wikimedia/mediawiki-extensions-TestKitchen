@@ -69,6 +69,10 @@ class Experiment {
 			experiment[ key ] = this.config[ key ];
 		}
 
+		if ( this.config.version !== undefined ) {
+			experiment.version = this.config.version;
+		}
+
 		experiment.coordinator = COORDINATOR_DEFAULT;
 
 		// T421152: Include enrollment information about other experiments that the user is enrolled

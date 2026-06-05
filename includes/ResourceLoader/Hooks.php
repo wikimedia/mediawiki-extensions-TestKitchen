@@ -36,7 +36,7 @@ class Hooks {
 	 * Fetches experiment configurations from the ConfigsFetcher service and extracts only the fields required by the
 	 * Test Kitchen SDKs.
 	 *
-	 * @return array<string,array{user_identifier_type:string,stream_name:string,schema_id:string,contextual_attributes:string,exposure_version:string}>
+	 * @return array<string,array{user_identifier_type:string,stream_name:string,schema_id:string,contextual_attributes:string,exposure_version:string,version:string}>
 	 */
 	private static function getExperimentConfigs(): array {
 		$experimentConfigs = Services::getConfigsFetcher()->getExperimentConfigs();
@@ -44,48 +44,18 @@ class Hooks {
 
 		foreach ( $experimentConfigs as $experimentConfig ) {
 			$experimentName = $experimentConfig['name'];
-			$schemaId = array_key_exists( 'schema_id', $experimentConfig )
-				? $experimentConfig['schema_id']
-				: self::BASE_SCHEMA_ID;
 
 			$result[ $experimentName ] = [
 				'user_identifier_type' => $experimentConfig['user_identifier_type'],
 				'stream_name' => $experimentConfig['stream_name'],
-				'schema_id' => $schemaId,
+				'schema_id' => $experimentConfig['schema_id'],
 				'contextual_attributes' => $experimentConfig['contextual_attributes'],
-				'exposure_version' => self::getExposureVersion( $experimentConfig, $schemaId ),
+				'exposure_version' => $experimentConfig['exposure_version'],
+				'version' => $experimentConfig['version'],
 				'phase_index' => $experimentConfig['phase_index'],
 			];
 		}
 		return $result;
-	}
-
-	/**
-	 * Build a stable version string for exposure logging from the semantic
-	 * experiment config. This value is consumed by client SDKs to invalidate
-	 * previously stored exposure memory when experiment semantics change.
-	 *
-	 * @param array $experimentConfig
-	 * @param string $schemaID
-	 * @return string
-	 */
-	private static function getExposureVersion( array $experimentConfig, string $schemaID ): string {
-		$groups = $experimentConfig['groups'] ?? [];
-		sort( $groups );
-
-		$semanticConfig = [
-			'name' => $experimentConfig['name'],
-			'user_identifier_type' => $experimentConfig['user_identifier_type'],
-			'groups' => $groups,
-			'sample_rate' => $experimentConfig['sample_rate'] ?? [],
-			'stream_name' => $experimentConfig['stream_name'],
-			'schema_id' => $schemaID,
-			'contextual_attributes' => $experimentConfig['contextual_attributes'] ?? [],
-		];
-
-		$json = json_encode( $semanticConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
-
-		return substr( hash( 'sha256', $json ), 0, 16 );
 	}
 
 	/**

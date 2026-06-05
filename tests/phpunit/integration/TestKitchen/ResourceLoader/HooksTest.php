@@ -115,23 +115,35 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * Tests that {@link Hooks::getExperimentConfigs()} normalizes experiment configs with
-	 * a computed exposure_version.
+	 * Tests that {@link Hooks::getExperimentConfigs()} passes through normalized experiment
+	 * config fields from {@link ConfigsFetcher}.
 	 */
 	public function testGetExperimentConfigs(): void {
+		$lunchConfig = $this->makeExperimentConfig(
+			'lunch',
+			[
+				'contextual_attributes' => [ 'performer_is_logged_in', 'performer_is_temp' ],
+			]
+		);
+		$supperConfig = $this->makeExperimentConfig(
+			'supper',
+			[
+				'contextual_attributes' => [ 'page_id' ],
+			]
+		);
+
+		$schemaId = '/analytics/product_metrics/web/base/2.1.0';
+		$lunchConfig['schema_id'] = $schemaId;
+		$lunchConfig['exposure_version'] = $this->computeExpectedExposureVersion( $lunchConfig, $schemaId );
+		$lunchConfig['version'] = $lunchConfig['exposure_version'];
+
+		$supperConfig['schema_id'] = $schemaId;
+		$supperConfig['exposure_version'] = $this->computeExpectedExposureVersion( $supperConfig, $schemaId );
+		$supperConfig['version'] = 'api-provided-version';
+
 		$experimentConfigs = [
-			$this->makeExperimentConfig(
-				'lunch',
-				[
-					'contextual_attributes' => [ 'performer_is_logged_in', 'performer_is_temp' ],
-				]
-			),
-			$this->makeExperimentConfig(
-				'supper',
-				[
-					'contextual_attributes' => [ 'page_id' ],
-				]
-			),
+			$lunchConfig,
+			$supperConfig,
 		];
 
 		$this->configsFetcher->expects( $this->once() )
@@ -147,7 +159,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 		$lunch = $actual['lunch'];
 		$supper = $actual['supper'];
 
-		// Assert stable fields (exclude exposure_version)
+		// Assert stable fields (exclude version fields)
 		$this->assertSame(
 			[
 				'user_identifier_type' => 'mw-user',
@@ -156,7 +168,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 				'contextual_attributes' => [ 'performer_is_logged_in', 'performer_is_temp' ],
 				'phase_index' => 0,
 			],
-			$this->withoutExposureVersion( $lunch )
+			$this->withoutVersionFields( $lunch )
 		);
 
 		$this->assertSame(
@@ -167,33 +179,13 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 				'contextual_attributes' => [ 'page_id' ],
 				'phase_index' => 0,
 			],
-			$this->withoutExposureVersion( $supper )
+			$this->withoutVersionFields( $supper )
 		);
 
-		// Assert exposure_version exists + is non-empty
-		$this->assertIsString( $lunch['exposure_version'] );
-		$this->assertNotSame( '', $lunch['exposure_version'] );
-
-		$this->assertIsString( $supper['exposure_version'] );
-		$this->assertNotSame( '', $supper['exposure_version'] );
-
-		$expectedLunchVersion = $this->computeExpectedExposureVersion(
-			$experimentConfigs[0],
-			'/analytics/product_metrics/web/base/2.1.0'
-		);
-		$expectedSupperVersion = $this->computeExpectedExposureVersion(
-			$experimentConfigs[1],
-			'/analytics/product_metrics/web/base/2.1.0'
-		);
-
-		$this->assertSame( $expectedLunchVersion, $lunch['exposure_version'] );
-		$this->assertSame( $expectedSupperVersion, $supper['exposure_version'] );
-
-		// Ensure different semantic configs produce different versions
-		$this->assertNotSame(
-			$lunch['exposure_version'],
-			$supper['exposure_version']
-		);
+		$this->assertSame( $lunchConfig['exposure_version'], $lunch['exposure_version'] );
+		$this->assertSame( $lunchConfig['version'], $lunch['version'] );
+		$this->assertSame( $supperConfig['exposure_version'], $supper['exposure_version'] );
+		$this->assertSame( $supperConfig['version'], $supper['version'] );
 	}
 
 	private function makeExperimentConfig( string $name, array $overrides = [] ): array {
@@ -216,13 +208,13 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * Remove exposure_version from an experiment config for stable field assertions.
+	 * Remove version fields from an experiment config for stable field assertions.
 	 *
 	 * @param array $config
 	 * @return array
 	 */
-	private function withoutExposureVersion( array $config ): array {
-		unset( $config['exposure_version'] );
+	private function withoutVersionFields( array $config ): array {
+		unset( $config['exposure_version'], $config['version'] );
 		return $config;
 	}
 

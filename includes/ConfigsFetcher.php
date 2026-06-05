@@ -20,6 +20,7 @@ use Wikimedia\Stats\StatsFactory;
 
 class ConfigsFetcher {
 	private const VERSION = 2;
+	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.1.0';
 	private const HTTP_TIMEOUT = 1;
 	private const INSTRUMENT = 1;
 	private const EXPERIMENT = 2;
@@ -100,7 +101,62 @@ class ConfigsFetcher {
 	 * @return array Associative array keyed by experiment name.
 	 */
 	private function formatExperimentConfigs( array $experiments ): array {
+		$experiments = array_map(
+			self::normalizeExperimentConfigRow( ... ),
+			$experiments
+		);
+
 		return array_column( $experiments, null, 'name' );
+	}
+
+	/**
+	 * Normalizes an experiment config row by ensuring schema_id, exposure_version, and version
+	 * are set. Uses the API-provided version if present, otherwise falls back to exposure_version.
+	 *
+	 * @param array $config
+	 * @return array
+	 */
+	private static function normalizeExperimentConfigRow( array $config ): array {
+		$schemaId = $config['schema_id'] ?? self::BASE_SCHEMA_ID;
+
+		$exposureVersion = self::calculateExposureVersion(
+			$config,
+			$schemaId
+		);
+
+		$config['schema_id'] = $schemaId;
+		$config['exposure_version'] = $exposureVersion;
+		$config['version'] ??= $exposureVersion;
+
+		return $config;
+	}
+
+	/**
+	 * Build a stable version string for exposure logging from the semantic
+	 * experiment config. This value is consumed by client SDKs to invalidate
+	 * previously stored exposure memory when experiment semantics change.
+	 *
+	 * @param array $experimentConfig
+	 * @param string $schemaID
+	 * @return string
+	 */
+	private static function calculateExposureVersion( array $experimentConfig, string $schemaID ): string {
+		$groups = $experimentConfig['groups'] ?? [];
+		sort( $groups );
+
+		$semanticConfig = [
+			'name' => $experimentConfig['name'],
+			'user_identifier_type' => $experimentConfig['user_identifier_type'],
+			'groups' => $groups,
+			'sample_rate' => $experimentConfig['sample_rate'] ?? [],
+			'stream_name' => $experimentConfig['stream_name'],
+			'schema_id' => $schemaID,
+			'contextual_attributes' => $experimentConfig['contextual_attributes'] ?? [],
+		];
+
+		$json = json_encode( $semanticConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+
+		return substr( hash( 'sha256', $json ), 0, 16 );
 	}
 
 	private function getConfigs( int $type ): array {

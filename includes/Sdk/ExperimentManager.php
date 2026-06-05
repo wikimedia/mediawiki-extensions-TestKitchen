@@ -211,6 +211,7 @@ class ExperimentManager implements
 			'schema_id' => $schemaID,
 			'contextual_attributes' => $contextualAttributes,
 			'phase_index' => $experimentConfig['phase_index'],
+			'version' => $experimentConfig['version']
 		];
 
 		return new Experiment(

@@ -32,6 +32,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			'agent_client_platform_family',
 		],
 		'phase_index' => 1,
+		'version' => 'abc123def4567890',
 	];
 
 	/** @var array */
@@ -58,7 +59,8 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		'subject_id',
 		'sampling_unit',
 		'coordinator',
-		'phase_index'
+		'phase_index',
+		'version',
 	];
 
 	private EventSender $eventSender;

@@ -298,6 +298,100 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 		);
 	}
 
+	public function testGetExperimentConfigsComputesVersionWhenApiVersionMissing(): void {
+		$fetcher = $this->newFetcherWithExperiments( [
+			$this->makeExperimentConfigRow( 'lunch' ),
+		] );
+
+		$configs = $fetcher->getExperimentConfigs();
+
+		$this->assertArrayHasKey( 'lunch', $configs );
+		$this->assertSame(
+			'/analytics/product_metrics/web/base/2.1.0',
+			$configs['lunch']['schema_id']
+		);
+		$this->assertSame(
+			$this->computeExpectedExposureVersion( $configs['lunch'] ),
+			$configs['lunch']['exposure_version']
+		);
+		$this->assertSame(
+			$configs['lunch']['exposure_version'],
+			$configs['lunch']['version']
+		);
+	}
+
+	public function testGetExperimentConfigsUsesApiVersionWhenPresent(): void {
+		$fetcher = $this->newFetcherWithExperiments( [
+			$this->makeExperimentConfigRow( 'lunch', [ 'version' => 'api-v7' ] ),
+		] );
+
+		$configs = $fetcher->getExperimentConfigs();
+
+		$this->assertSame( 'api-v7', $configs['lunch']['version'] );
+		$this->assertNotSame(
+			$configs['lunch']['version'],
+			$configs['lunch']['exposure_version']
+		);
+	}
+
+	private function newFetcherWithExperiments( array $experiments ): ConfigsFetcher {
+		return new ConfigsFetcher(
+			$this->mockOptions(),
+			new HashConfig( [
+				'TestKitchenInstrumentConfiguratorBaseUrl' => 'baseUrl',
+				'DBname' => 'enwiki',
+				'TestKitchenEnableConfigsFetching' => false,
+				'TestKitchenExperiments' => $experiments,
+			] ),
+			$this->cache,
+			$this->stash,
+			$this->httpRequestFactory,
+			$this->logger,
+			$this->statsHelper->getStatsFactory(),
+			$this->statusFormatter
+		);
+	}
+
+	private function makeExperimentConfigRow( string $name, array $overrides = [] ): array {
+		$now = new DateTimeImmutable( 'now', new DateTimeZone( 'UTC' ) );
+
+		return array_replace(
+			[
+				'name' => $name,
+				'start' => $now->modify( '-1 month' )->format( 'Y-m-d\TH:i:s\Z' ),
+				'end' => $now->modify( '+1 month' )->format( 'Y-m-d\TH:i:s\Z' ),
+				'user_identifier_type' => 'mw-user',
+				'groups' => [ 'control', 'treatment' ],
+				'sample_rate' => [
+					'default' => 1,
+				],
+				'stream_name' => 'product_metrics.web_base',
+				'contextual_attributes' => [ 'page_id' ],
+			],
+			$overrides
+		);
+	}
+
+	private function computeExpectedExposureVersion( array $experimentConfig ): string {
+		$schemaId = $experimentConfig['schema_id'] ?? '/analytics/product_metrics/web/base/2.1.0';
+		$groups = $experimentConfig['groups'] ?? [];
+		sort( $groups );
+
+		$semanticConfig = [
+			'name' => $experimentConfig['name'],
+			'user_identifier_type' => $experimentConfig['user_identifier_type'],
+			'groups' => $groups,
+			'sample_rate' => $experimentConfig['sample_rate'] ?? [],
+			'stream_name' => $experimentConfig['stream_name'],
+			'schema_id' => $schemaId,
+			'contextual_attributes' => $experimentConfig['contextual_attributes'] ?? [],
+		];
+
+		$json = json_encode( $semanticConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+
+		return substr( hash( 'sha256', $json ), 0, 16 );
+	}
+
 	private function mockConfig() {
 		return new HashConfig( [
 			'TestKitchenInstrumentConfiguratorBaseUrl' => 'baseUrl',

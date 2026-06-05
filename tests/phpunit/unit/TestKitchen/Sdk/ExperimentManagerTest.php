@@ -262,22 +262,25 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 
 		$actual = $this->experimentManager->getExperiment( $experimentName );
 
+		$expectedConfig = $this->makeExpectedSdkConfig(
+			$experimentName,
+			[
+				'assigned' => 'control',
+				'subject_id' => 'overridden',
+				'sampling_unit' => 'overridden',
+				'coordinator' => 'forced',
+				'contextual_attributes' => [],
+			]
+		);
+		unset( $expectedConfig['version'] );
+
 		$expected = new OverriddenExperiment(
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->logger,
 			$this->exposureLogTracker,
-			$this->makeExpectedSdkConfig(
-				$experimentName,
-				[
-					'assigned' => 'control',
-					'subject_id' => 'overridden',
-					'sampling_unit' => 'overridden',
-					'coordinator' => 'forced',
-					'contextual_attributes' => [],
-				]
-			)
+			$expectedConfig
 		);
 
 		$this->assertEquals( $expected, $actual );
@@ -590,6 +593,9 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 					'performer_is_temp',
 				],
 				'phase_index' => 0,
+				'schema_id' => '/analytics/product_metrics/web/base/2.1.0',
+				'exposure_version' => 'abc123def4567890',
+				'version' => 'abc123def4567890',
 			],
 			$overrides
 		);
@@ -615,6 +621,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 					'performer_is_temp',
 				],
 				'phase_index' => 0,
+				'version' => 'abc123def4567890',
 			],
 			$overrides
 		);
