@@ -96,13 +96,16 @@ function newExperiment( enrollmentConfig ) {
  * This method is provided for backwards compatibility with existing experiments. Please use
  * {@link mw.testKitchen.getExperiment} instead.
  *
+ * This method **will not** work for non-cache-splitting experiments and will always return an
+ * instance of {@link mw.testKitchen.UnenrolledExperiment}.
+ *
  * This method always returns an instance of {@link mw.testKitchen.ExperimentInterface} that can:
  *
  * 1. Get information about the user's (more precisely, the subject's) enrollment in the experiment
  * 2. Send analytics events relating to the experiment
  *
  * @example
- * const e = mw.testKitchen.getExperiment( 'my-awesome-experiment' );
+ * const e = mw.testKitchen.compat.getExperiment( 'my-awesome-experiment' );
  * const myAwesomeDialog = require( 'my.awesome.dialog' );
  *
  * [
