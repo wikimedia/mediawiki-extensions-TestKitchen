@@ -62,7 +62,7 @@ class Experiment {
 		}
 
 		// Extract SDK-specific experiment config
-		const keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit' ];
+		const keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'phase_index' ];
 		const experiment = {};
 
 		for ( const key of keys ) {

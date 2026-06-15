@@ -78,7 +78,7 @@ class InstrumentManagerTest extends MediaWikiUnitTestCase {
 				],
 				'stream_name' => 'product_metrics.web_base.foo',
 				'schema_title' => 'analytics/product_metrics/web/base',
-				'schema_id' => 'analytics/product_metrics/web/base/2.0.0',
+				'schema_id' => 'analytics/product_metrics/web/base/2.1.0',
 				'contextual_attributes' => [
 					'performer_name',
 					'page_id',
@@ -86,7 +86,7 @@ class InstrumentManagerTest extends MediaWikiUnitTestCase {
 			]
 		);
 		$actualInstrument = $this->instrumentManager->getInstrument( 'my-instrument' );
-		$actualInstrument->setSchema( 'analytics/product_metrics/web/base/2.0.0' );
+		$actualInstrument->setSchema( 'analytics/product_metrics/web/base/2.1.0' );
 
 		$this->assertEquals( $expectedInstrument, $actualInstrument );
 	}

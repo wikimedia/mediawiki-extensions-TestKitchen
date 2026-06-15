@@ -18,7 +18,7 @@ class ExperimentManager implements
 	ExperimentCoordinatorInterface
 {
 	private const BASE_STREAM = 'product_metrics.web_base';
-	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
+	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.1.0';
 
 	// The experiment.sampling_unit field can be one of "mw-user", "edge-unique", or "session" but, because overridden
 	// experiments cannot send events, for clarity we can set "overridden" as the value.
@@ -189,6 +189,7 @@ class ExperimentManager implements
 				'stream_name' => self::BASE_STREAM,
 				'schema_id' => self::BASE_SCHEMA_ID,
 				'contextual_attributes' => [],
+				'phase_index' => 0,
 			]
 		);
 	}
@@ -200,21 +201,24 @@ class ExperimentManager implements
 
 		$contextualAttributes = $experimentConfig['contextual_attributes'] ?? [];
 
+		$configArray = [
+			'enrolled' => $experimentName,
+			'assigned' => $this->enrollmentResult['assigned'][ $experimentName ],
+			'subject_id' => $this->enrollmentResult['subject_ids'][ $experimentName ],
+			'sampling_unit' => $experimentConfig['user_identifier_type'],
+			'coordinator' => self::COORDINATOR_DEFAULT,
+			'stream_name' => $experimentConfig[ 'stream_name' ],
+			'schema_id' => $schemaID,
+			'contextual_attributes' => $contextualAttributes,
+			'phase_index' => $experimentConfig['phase_index'],
+		];
+
 		return new Experiment(
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->exposureLogTracker,
-			[
-				'enrolled' => $experimentName,
-				'assigned' => $this->enrollmentResult['assigned'][ $experimentName ],
-				'subject_id' => $this->enrollmentResult['subject_ids'][ $experimentName ],
-				'sampling_unit' => $experimentConfig['user_identifier_type'],
-				'coordinator' => self::COORDINATOR_DEFAULT,
-				'stream_name' => $experimentConfig[ 'stream_name' ],
-				'schema_id' => $schemaID,
-				'contextual_attributes' => $contextualAttributes,
-			]
+			$configArray
 		);
 	}
 }

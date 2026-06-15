@@ -33,7 +33,7 @@ QUnit.module( 'ext.testKitchen.compat/getExperimentsByPrefix()', QUnit.newMwEnvi
 					sample_rate: { default: 0 },
 					groups: [ 'control', 'bar' ],
 					stream_name: 'product_metrics.web_base',
-					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					schema_id: '/analytics/product_metrics/web/base/2.1.0',
 					contextual_attributes: [
 						'mediawiki_database',
 						'page_namespace'
@@ -44,7 +44,7 @@ QUnit.module( 'ext.testKitchen.compat/getExperimentsByPrefix()', QUnit.newMwEnvi
 					sample_rate: { default: 0 },
 					groups: [ 'control', 'baz' ],
 					stream_name: 'product_metrics.web_base',
-					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					schema_id: '/analytics/product_metrics/web/base/2.1.0',
 					contextual_attributes: [
 						'mediawiki_database',
 						'page_namespace'
@@ -55,7 +55,7 @@ QUnit.module( 'ext.testKitchen.compat/getExperimentsByPrefix()', QUnit.newMwEnvi
 					sample_rate: { default: 0 },
 					groups: [ 'control', 'qux' ],
 					stream_name: 'product_metrics.web_base',
-					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					schema_id: '/analytics/product_metrics/web/base/2.1.0',
 					contextual_attributes: [
 						'mediawiki_database',
 						'page_namespace'
@@ -66,7 +66,7 @@ QUnit.module( 'ext.testKitchen.compat/getExperimentsByPrefix()', QUnit.newMwEnvi
 					sample_rate: { default: 0 },
 					groups: [ 'control', 'quux' ],
 					stream_name: 'product_metrics.web_base',
-					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					schema_id: '/analytics/product_metrics/web/base/2.1.0',
 					contextual_attributes: [
 						'mediawiki_database',
 						'page_namespace'

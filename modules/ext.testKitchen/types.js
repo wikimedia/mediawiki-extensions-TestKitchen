@@ -29,6 +29,8 @@
  * @typedef {mw.testKitchen.PartialInstrumentConfig} mw.testKitchen.PartialExperimentConfig
  * @property {string} user_identifier_type
  * @property {string} schema_id
+ * @property {string} exposure_version
+ * @property {number} phase_index The phase index of the experiment
  *
  * @package
  */
@@ -56,6 +58,7 @@
  *  events to
  * @property {string} schema_id The ID of the schema used to validate experiment-related analytics
  *  events with
+ * @property {number} phase_index The phase index of the experiment
  * @property {string[]} contextual_attributes
  * @property {Object<string,string>} other_assigned Enrollment information for all other experiments
  *  that the user is enrolled in expressed as a map of experiment name (enrolled) to group
@@ -111,7 +114,7 @@
  * [the `fragment/analytics/product_metrics/experiment` schema fragment][0].
  *
  * By default, the analytics event will be sent to the `product_metrics.web_base` stream and be
- * validated with the `/analytics/product_metrics/web/base/2.0.0` schema. The schema
+ * validated with the `/analytics/product_metrics/web/base/2.1.0` schema. The schema
  * can be overridden with {@link mw.testKitchen.ExperimentInterface#setSchema}
  *
  * Per-event contextual attributes can be passed as contextualAttributes. In this case, they will
@@ -222,7 +225,7 @@
  * Sends an analytics event.
  *
  * By default, the analytics event will be validated with the
- * `/analytics/product_metrics/web/base/2.0.0` schema. The schema can be overridden with
+ * `/analytics/product_metrics/web/base/2.1.0` schema. The schema can be overridden with
  * {@link mw.testKitchen.InstrumentInterface#setSchema}.
  *
  * @method send

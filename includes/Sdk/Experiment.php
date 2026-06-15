@@ -69,7 +69,8 @@ class Experiment implements ExperimentInterface {
 				'assigned',
 				'subject_id',
 				'sampling_unit',
-				'coordinator'
+				'coordinator',
+				'phase_index'
 			];
 			$experiment = array_intersect_key( $experimentConfig, array_fill_keys( $keys, true ) );
 

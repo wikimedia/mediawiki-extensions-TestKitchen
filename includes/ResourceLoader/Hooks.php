@@ -7,7 +7,7 @@ use MediaWiki\Extension\TestKitchen\Services;
 use MediaWiki\ResourceLoader as RL;
 
 class Hooks {
-	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
+	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.1.0';
 
 	/**
 	 * Gets the contents of the `config.json` file for the `ext.testKitchen` ResourceLoader module.
@@ -54,6 +54,7 @@ class Hooks {
 				'schema_id' => $schemaId,
 				'contextual_attributes' => $experimentConfig['contextual_attributes'],
 				'exposure_version' => self::getExposureVersion( $experimentConfig, $schemaId ),
+				'phase_index' => $experimentConfig['phase_index'],
 			];
 		}
 		return $result;

@@ -17,7 +17,7 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 	private array $instrumentConfig = [
 		'name' => 'my-instrument',
 		'stream_name' => 'product_metrics.web_base',
-		'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+		'schema_id' => '/analytics/product_metrics/web/base/2.1.0',
 		'contextual_attributes' => [
 			'performer_name',
 			'page_id'
@@ -55,7 +55,7 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 
 	public function testSendArgumentsDefault() {
 		$expectedEvent = [
-			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
+			'$schema' => '/analytics/product_metrics/web/base/2.1.0',
 			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 ),
 		];
 
@@ -63,7 +63,7 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 			->method( 'newEvent' )
 			->with(
 				'product_metrics.web_base',
-				'/analytics/product_metrics/web/base/2.0.0',
+				'/analytics/product_metrics/web/base/2.1.0',
 				[
 					'performer_name',
 					'page_id'
@@ -83,7 +83,7 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 
 	public function testSendArgumentsNoInteractionData() {
 		$expectedEvent = [
-			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
+			'$schema' => '/analytics/product_metrics/web/base/2.1.0',
 			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 )
 		];
 
@@ -91,7 +91,7 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 			->method( 'newEvent' )
 			->with(
 				'product_metrics.web_base',
-				'/analytics/product_metrics/web/base/2.0.0',
+				'/analytics/product_metrics/web/base/2.1.0',
 				[
 					'performer_name',
 					'page_id'
@@ -115,12 +115,12 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 		$instrumentConfig = [
 			'name' => 'my-instrument',
 			'stream_name' => 'product_metrics.web_base',
-			'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+			'schema_id' => '/analytics/product_metrics/web/base/2.1.0',
 			'contextual_attributes' => []
 		];
 
 		$expectedEvent = [
-			'$schema' => '/analytics/product_metrics/web/base/2.0.0',
+			'$schema' => '/analytics/product_metrics/web/base/2.1.0',
 			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 )
 		];
 
@@ -134,7 +134,7 @@ class InstrumentTest extends MediaWikiUnitTestCase {
 			->method( 'newEvent' )
 			->with(
 				'product_metrics.web_base',
-				'/analytics/product_metrics/web/base/2.0.0',
+				'/analytics/product_metrics/web/base/2.1.0',
 				[],
 				$this->action,
 				$this->interactionData

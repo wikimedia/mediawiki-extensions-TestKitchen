@@ -30,7 +30,7 @@ QUnit.module( 'ext.testKitchen.compat/getExperiment()', QUnit.newMwEnvironment( 
 					sample_rate: { default: 0 },
 					groups: [ 'control', 'tropical' ],
 					stream_name: 'product_metrics.web_base',
-					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					schema_id: '/analytics/product_metrics/web/base/2.1.0',
 					contextual_attributes: [
 						'mediawiki_database',
 						'page_namespace'
@@ -41,7 +41,7 @@ QUnit.module( 'ext.testKitchen.compat/getExperiment()', QUnit.newMwEnvironment( 
 					sample_rate: { default: 0 },
 					groups: [ 'control', 'ice-cream' ],
 					stream_name: 'product_metrics.web_base',
-					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					schema_id: '/analytics/product_metrics/web/base/2.1.0',
 					contextual_attributes: [
 						'mediawiki_database',
 						'page_namespace'
@@ -52,7 +52,7 @@ QUnit.module( 'ext.testKitchen.compat/getExperiment()', QUnit.newMwEnvironment( 
 					sample_rate: { default: 0 },
 					groups: [ 'control', 'fish-pie' ],
 					stream_name: 'product_metrics.web_base',
-					schema_id: '/analytics/product_metrics/web/base/2.0.0',
+					schema_id: '/analytics/product_metrics/web/base/2.1.0',
 					contextual_attributes: [
 						'mediawiki_database',
 						'page_namespace'
@@ -127,7 +127,7 @@ QUnit.test( 'it sets stream, schema, and contextual attributes', ( assert ) => {
 	const e = mw.testKitchen.compat.getExperiment( 'fruit' );
 
 	assert.strictEqual( e.streamName, 'product_metrics.web_base' );
-	assert.strictEqual( e.schemaID, '/analytics/product_metrics/web/base/2.0.0' );
+	assert.strictEqual( e.schemaID, '/analytics/product_metrics/web/base/2.1.0' );
 	assert.deepEqual( e.contextualAttributes, [
 		'mediawiki_database',
 		'page_namespace'

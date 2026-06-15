@@ -17,7 +17,7 @@ const {
 	reset: resetEnrollmentConfigs
 } = require( './enrollmentConfig.js' );
 
-const SCHEMA_ID = '/analytics/product_metrics/web/base/2.0.0';
+const SCHEMA_ID = '/analytics/product_metrics/web/base/2.1.0';
 
 const UINT32_MAX = 4294967295; // (2^32) - 1
 
@@ -71,22 +71,25 @@ function newExperiment( enrollmentConfig ) {
 		config.LoggedInExperimentEventIntakeServiceUrl :
 		config.EveryoneExperimentEventIntakeServiceUrl;
 
+	const configToPass = {
+		enrolled: experimentName,
+		assigned: enrollmentConfig.assigned,
+		subject_id: enrollmentConfig.subject_id,
+		sampling_unit: experimentConfig.user_identifier_type,
+		stream_name: experimentConfig.stream_name,
+		schema_id: experimentConfig.schema_id,
+		contextual_attributes: experimentConfig.contextual_attributes,
+		exposure_version: experimentConfig.exposure_version,
+		other_assigned: enrollmentConfig.other_assigned,
+		phase_index: experimentConfig.phase_index
+	};
+
 	return new Experiment(
 		eventFactory,
 		eventSender,
 		eventIntakeServiceUrl,
 		exposureLogTracker,
-		{
-			enrolled: experimentName,
-			assigned: enrollmentConfig.assigned,
-			subject_id: enrollmentConfig.subject_id,
-			sampling_unit: experimentConfig.user_identifier_type,
-			stream_name: experimentConfig.stream_name,
-			schema_id: experimentConfig.schema_id,
-			contextual_attributes: experimentConfig.contextual_attributes,
-			exposure_version: experimentConfig.exposure_version,
-			other_assigned: enrollmentConfig.other_assigned
-		}
+		configToPass
 	);
 }
 

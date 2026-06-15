@@ -6,7 +6,7 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 		// =====
 
 		this.expectedEvent = {
-			$schema: '/analytics/product_metrics/web/base/2.0.0',
+			$schema: '/analytics/product_metrics/web/base/2.1.0',
 			dt: new Date().toISOString()
 		};
 
@@ -59,8 +59,9 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 			subject_id: 'awaiting',
 			sampling_unit: 'edge-unique',
 			coordinator: 'default',
+			phase_index: 0,
 			stream_name: 'product_metrics.web_base',
-			schema_id: '/analytics/product_metrics/web/base/2.0.0',
+			schema_id: '/analytics/product_metrics/web/base/2.1.0',
 			contextual_attributes: [
 				'performer_pageview_id',
 				'mediawiki_database'
@@ -77,8 +78,9 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 			subject_id: '0x0ff1ce',
 			sampling_unit: 'mw-user',
 			coordinator: 'default',
+			phase_index: 1,
 			stream_name: 'product_metrics.web_base',
-			schema_id: '/analytics/product_metrics/web/base/2.0.0',
+			schema_id: '/analytics/product_metrics/web/base/2.1.0',
 			contextual_attributes: [
 				'performer_pageview_id',
 				'mediawiki_database'
@@ -115,6 +117,7 @@ QUnit.test.each(
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
 				coordinator: 'default',
+				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
 				}
@@ -128,6 +131,7 @@ QUnit.test.each(
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
 				coordinator: 'default',
+				phase_index: 1,
 				other_assigned: {
 					bar: 'baz'
 				}
@@ -140,7 +144,7 @@ QUnit.test.each(
 		assert.strictEqual( this.newEventStub.callCount, 1 );
 		assert.deepEqual( this.newEventStub.firstCall.args, [
 			'product_metrics.web_base',
-			'/analytics/product_metrics/web/base/2.0.0',
+			'/analytics/product_metrics/web/base/2.1.0',
 			[
 				'performer_pageview_id',
 				'mediawiki_database'
@@ -166,6 +170,7 @@ QUnit.test.each(
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
 				coordinator: 'default',
+				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
 				}
@@ -179,6 +184,7 @@ QUnit.test.each(
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
 				coordinator: 'default',
+				phase_index: 1,
 				other_assigned: {
 					bar: 'baz'
 				}
@@ -191,7 +197,7 @@ QUnit.test.each(
 		assert.strictEqual( this.newEventStub.callCount, 1 );
 		assert.deepEqual( this.newEventStub.firstCall.args, [
 			'product_metrics.web_base',
-			'/analytics/product_metrics/web/base/2.0.0',
+			'/analytics/product_metrics/web/base/2.1.0',
 			[
 				'performer_pageview_id',
 				'mediawiki_database'
@@ -218,6 +224,7 @@ QUnit.test.each(
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
 				coordinator: 'default',
+				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
 				}
@@ -231,6 +238,7 @@ QUnit.test.each(
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
 				coordinator: 'default',
+				phase_index: 1,
 				other_assigned: {
 					bar: 'baz'
 				}
@@ -243,7 +251,7 @@ QUnit.test.each(
 		assert.strictEqual( this.newEventStub.callCount, 1 );
 		assert.deepEqual( this.newEventStub.firstCall.args, [
 			'product_metrics.web_base',
-			'/analytics/product_metrics/web/base/2.0.0',
+			'/analytics/product_metrics/web/base/2.1.0',
 			[
 				'performer_is_bot',
 				'performer_pageview_id',
@@ -270,6 +278,7 @@ QUnit.test.each(
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
 				coordinator: 'default',
+				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
 				}
@@ -283,6 +292,7 @@ QUnit.test.each(
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
 				coordinator: 'default',
+				phase_index: 1,
 				other_assigned: {
 					bar: 'baz'
 				}
@@ -300,7 +310,7 @@ QUnit.test.each(
 		assert.strictEqual( this.newEventStub.callCount, 1 );
 		assert.deepEqual( this.newEventStub.firstCall.args, [
 			'product_metrics.web_base',
-			'/analytics/product_metrics/web/base/2.0.0',
+			'/analytics/product_metrics/web/base/2.1.0',
 			[
 				'performer_is_bot',
 				'performer_is_logged_in',
@@ -330,7 +340,7 @@ QUnit.test( 'send() - can\'t override experiment', function ( assert ) {
 	assert.strictEqual( this.newEventStub.callCount, 1 );
 	assert.deepEqual( this.newEventStub.firstCall.args, [
 		'product_metrics.web_base',
-		'/analytics/product_metrics/web/base/2.0.0',
+		'/analytics/product_metrics/web/base/2.1.0',
 		[
 			'performer_pageview_id',
 			'mediawiki_database'
@@ -343,6 +353,7 @@ QUnit.test( 'send() - can\'t override experiment', function ( assert ) {
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
 				coordinator: 'default',
+				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
 				}
@@ -373,6 +384,7 @@ QUnit.test( 'send() - overriding schema', function ( assert ) {
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
 				coordinator: 'default',
+				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
 				}
@@ -396,7 +408,7 @@ QUnit.test.each(
 			sampling_unit: 'mw-user',
 			coordinator: 'default',
 			stream_name: 'product_metrics.web_base',
-			schema_id: '/analytics/product_metrics/web/base/2.0.0',
+			schema_id: '/analytics/product_metrics/web/base/2.1.0',
 			contextual_attributes: [
 				'performer_pageview_id',
 				'mediawiki_database'
@@ -426,6 +438,7 @@ QUnit.test.each(
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
 				coordinator: 'default',
+				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
 				}
@@ -439,6 +452,7 @@ QUnit.test.each(
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
 				coordinator: 'default',
+				phase_index: 1,
 				other_assigned: {
 					bar: 'baz'
 				}
@@ -475,7 +489,7 @@ QUnit.test.each(
 			this.newEventStub.firstCall.args,
 			[
 				'product_metrics.web_base',
-				'/analytics/product_metrics/web/base/2.0.0',
+				'/analytics/product_metrics/web/base/2.1.0',
 				[
 					'performer_is_logged_in',
 					'performer_is_temp',

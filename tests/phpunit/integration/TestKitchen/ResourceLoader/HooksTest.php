@@ -152,8 +152,9 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			[
 				'user_identifier_type' => 'mw-user',
 				'stream_name' => 'product_metrics.web_base',
-				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+				'schema_id' => '/analytics/product_metrics/web/base/2.1.0',
 				'contextual_attributes' => [ 'performer_is_logged_in', 'performer_is_temp' ],
+				'phase_index' => 0,
 			],
 			$this->withoutExposureVersion( $lunch )
 		);
@@ -162,8 +163,9 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			[
 				'user_identifier_type' => 'mw-user',
 				'stream_name' => 'product_metrics.web_base',
-				'schema_id' => '/analytics/product_metrics/web/base/2.0.0',
+				'schema_id' => '/analytics/product_metrics/web/base/2.1.0',
 				'contextual_attributes' => [ 'page_id' ],
+				'phase_index' => 0,
 			],
 			$this->withoutExposureVersion( $supper )
 		);
@@ -177,11 +179,11 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 
 		$expectedLunchVersion = $this->computeExpectedExposureVersion(
 			$experimentConfigs[0],
-			'/analytics/product_metrics/web/base/2.0.0'
+			'/analytics/product_metrics/web/base/2.1.0'
 		);
 		$expectedSupperVersion = $this->computeExpectedExposureVersion(
 			$experimentConfigs[1],
-			'/analytics/product_metrics/web/base/2.0.0'
+			'/analytics/product_metrics/web/base/2.1.0'
 		);
 
 		$this->assertSame( $expectedLunchVersion, $lunch['exposure_version'] );
@@ -207,6 +209,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 				'groups' => [ 'control', 'treatment' ],
 				'stream_name' => 'product_metrics.web_base',
 				'contextual_attributes' => [ 'page_id' ],
+				'phase_index' => 0,
 			],
 			$overrides
 		);
