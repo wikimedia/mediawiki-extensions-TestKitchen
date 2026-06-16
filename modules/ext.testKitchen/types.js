@@ -177,6 +177,7 @@
  *
  * This method is chainable.
  *
+ * @deprecated
  * @method setSchema
  * @instance
  * @memberof mw.testKitchen.ExperimentInterface

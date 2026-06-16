@@ -109,6 +109,7 @@ class Experiment implements ExperimentInterface {
 	 *
 	 * @param string $schemaId
 	 * @return $this
+	 * @deprecated
 	 */
 	public function setSchema( string $schemaId ): self {
 		$this->experimentConfig['schema_id'] = $schemaId;

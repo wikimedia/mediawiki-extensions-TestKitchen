@@ -128,6 +128,9 @@ class Experiment {
 		} );
 	}
 
+	/**
+	 * @deprecated
+	 */
 	setSchema( schemaID ) {
 		this.schemaID = schemaID;
 
@@ -157,6 +160,9 @@ class UnenrolledExperiment {
 
 	sendExposure() {}
 
+	/**
+	 * @deprecated
+	 */
 	// eslint-disable-next-line no-unused-vars
 	setSchema( schemaID ) {
 		return this;
@@ -212,6 +218,9 @@ class OverriddenExperiment {
 		this.send( 'experiment_exposure' );
 	}
 
+	/**
+	 * @deprecated
+	 */
 	// eslint-disable-next-line no-unused-vars
 	setSchema( schemaID ) {
 		return this;
