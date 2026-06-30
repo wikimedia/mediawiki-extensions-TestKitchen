@@ -123,7 +123,7 @@ class HooksTest
 				"groups": [ "control", "group-another-thing" ],
 				"stream_name": "product_metrics.web_base",
 				"contextual_attributes": [
-					"performer_active_browsing_session_token"
+					"performer_session_id"
 				]
 			}
 		]' ) );
