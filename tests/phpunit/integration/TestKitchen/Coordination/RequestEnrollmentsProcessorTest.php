@@ -161,7 +161,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 
-	public function testOverrideCookieAndQueryAreEmpty(): void {
+	public function testOverrideQueryIsEmpty(): void {
 		$request = new FauxRequest();
 
 		$expected = new EnrollmentResultBuilder();
@@ -169,28 +169,13 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 
-	public static function provideOverrideCookieAndQuery(): Generator {
+	public static function provideOverrideQuery(): Generator {
 		yield [
-			'foo:bar',
-			'',
-			[ 'foo' => 'bar' ],
-		];
-		yield [
-			'',
 			'qux:quux',
 			[ 'qux' => 'quux' ],
 		];
 		yield [
-			'foo:bar',
-			'qux:quux',
-			[
-				'foo' => 'bar',
-				'qux' => 'quux',
-			],
-		];
-		yield [
 			'foo:bar;qux:quux',
-			'',
 			[
 				'foo' => 'bar',
 				'qux' => 'quux',
@@ -199,15 +184,13 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * @dataProvider provideOverrideCookieAndQuery
+	 * @dataProvider provideOverrideQuery
 	 */
-	public function testOverrideCookieAndQuery(
-		string $rawCookie,
+	public function testOverrideQuery(
 		string $rawQuery,
 		array $expectedOverrides
 	): void {
 		$request = new FauxRequest( [ 'mpo' => $rawQuery ] );
-		$request->setCookie( 'mpo', $rawCookie );
 
 		$expected = new EnrollmentResultBuilder();
 

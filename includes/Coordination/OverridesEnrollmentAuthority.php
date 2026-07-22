@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
  * into an experiment and assigned the desired group, or we could provide them a mechanism to
  * override experiment enrollments.
  *
- * `OverridesEnrollmentAuthority` parses a cookie and/or a query parameter and adds overrides to
+ * `OverridesEnrollmentAuthority` parses a query parameter and adds overrides to
  * the enrollment result.
  *
  * See https://doc.wikimedia.org/TestKitchen/master/js/mw.testKitchen.html#.overrideExperimentGroup
@@ -32,13 +32,8 @@ class OverridesEnrollmentAuthority implements EnrollmentAuthorityInterface {
 	}
 
 	public function enrollUser( EnrollmentRequest $request, EnrollmentResultBuilder $result ): void {
-		$assignments = array_merge(
-			$this->processRawEnrollmentOverrides(
-				$request->getRawEnrollmentOverridesFromCookie()
-			),
-			$this->processRawEnrollmentOverrides(
-				$request->getRawEnrollmentOverridesFromQuery()
-			)
+		$assignments = $this->processRawEnrollmentOverrides(
+			$request->getRawEnrollmentOverridesFromQuery()
 		);
 
 		foreach ( $assignments as $experimentName => $groupName ) {

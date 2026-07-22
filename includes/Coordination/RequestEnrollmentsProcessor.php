@@ -100,12 +100,7 @@ class RequestEnrollmentsProcessor {
 		$queryValues = $request->getQueryValues();
 		$queryValue = $queryValues[self::OVERRIDES_PARAM_NAME] ?? '';
 
-		$cookieValue = $request->getCookie( self::OVERRIDES_PARAM_NAME, null, '' );
-
-		$assignments = array_merge(
-			$this->processRawEnrollmentOverrides( $cookieValue ),
-			$this->processRawEnrollmentOverrides( $queryValue )
-		);
+		$assignments = $this->processRawEnrollmentOverrides( $queryValue );
 
 		foreach ( $assignments as $experimentName => $groupName ) {
 			$enrollmentResult->addExperiment(

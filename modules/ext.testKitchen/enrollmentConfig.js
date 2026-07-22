@@ -11,77 +11,6 @@ const SUBJECT_ID_AWAITING = 'awaiting';
 // https://gerrit.wikimedia.org/g/operations/puppet/+/33c2c7f16099cd1aa8e30915fa1d80af391e4324/modules/varnish/templates/wikimedia-frontend.vcl.erb#1209
 const HEADER_NAME = 'WMF-Uniq';
 
-function setCookieAndReload( value ) {
-	mw.cookie.set( OVERRIDE_PARAM_NAME, value );
-
-	// Reloading the window will break the QUnit unit tests. Only do so if we're not in a QUnit
-	// testing environment.
-	if ( !window.QUnit ) {
-		window.location.reload();
-	}
-}
-
-/**
- * Overrides an experiment enrolment and reloads the page.
- *
- * @param {string} experimentName The name of the experiment
- * @param {string} groupName The assigned group that will override the assigned one
- * @memberof mw.testKitchen
- */
-function overrideExperimentGroup(
-	experimentName,
-	groupName
-) {
-	const rawOverrides = mw.cookie.get( OVERRIDE_PARAM_NAME, null, '' );
-	const part = `${ experimentName }:${ groupName }`;
-
-	if ( rawOverrides === '' ) {
-		// If the cookie isn't set, then the value of the cookie is the given override.
-		setCookieAndReload( part );
-	} else if ( !rawOverrides.includes( `${ experimentName }:` ) ) {
-		// If the cookie is set but doesn't have an override for the given experiment name/group
-		// variant pair, then append the given override.
-		setCookieAndReload( `${ rawOverrides };${ part }` );
-	} else {
-		setCookieAndReload( rawOverrides.replace(
-			new RegExp( `${ experimentName }:[A-Za-z0-9][-_.A-Za-z0-9]+?(?=;|$)` ),
-			part
-		) );
-	}
-}
-
-/**
- * Clears all enrolment overrides for the experiment and reloads the page.
- *
- * @param {string} experimentName
- * @memberof mw.testKitchen
- */
-function clearExperimentOverride( experimentName ) {
-	const rawOverrides = mw.cookie.get( OVERRIDE_PARAM_NAME, null, '' );
-
-	let newRawOverrides = rawOverrides.replace(
-		new RegExp( `;?${ experimentName }:[A-Za-z0-9][-_.A-Za-z0-9]+` ),
-		''
-	);
-
-	// If the new cookie starts with a ';' character, then trim it.
-	newRawOverrides = newRawOverrides.replace( /^;/, '' );
-
-	// If the new cookie is empty, then clear the cookie.
-	newRawOverrides = newRawOverrides || null;
-
-	setCookieAndReload( newRawOverrides );
-}
-
-/**
- * Clears all experiment enrolment overrides for all experiments and reloads the page.
- *
- * @memberof mw.testKitchen
- */
-function clearExperimentOverrides() {
-	setCookieAndReload( null );
-}
-
 // ---
 
 /**
@@ -182,13 +111,7 @@ function getOverriddenEnrollments() {
 
 	overriddenEnrollmentConfigs = {};
 
-	processRawOverrideValue(
-		overriddenEnrollmentConfigs,
-		mw.cookie.get( OVERRIDE_PARAM_NAME, null, '' ),
-		'cookie'
-	);
-
-	// Process the querystring second so that it takes priority.
+	// Process the querystring parameter for overrides
 	processRawOverrideValue(
 		overriddenEnrollmentConfigs,
 		new URLSearchParams( window.location.search ).get( OVERRIDE_PARAM_NAME ),
@@ -344,7 +267,7 @@ function getInternal( experimentName, fromHeader ) {
 	}
 
 	// 3. Does the enrollment information from the server contain enrollment information for the
-	//   experiment?
+	//    experiment?
 	if (
 		fromServer &&
 		fromServer.assigned &&
@@ -502,9 +425,6 @@ function getMatchingAsync( experimentNamePrefix ) {
 }
 
 module.exports = {
-	overrideExperimentGroup,
-	clearExperimentOverride,
-	clearExperimentOverrides,
 	get,
 	getAsync,
 	getMatching,

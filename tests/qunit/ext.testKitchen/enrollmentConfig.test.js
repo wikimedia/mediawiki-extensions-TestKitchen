@@ -67,33 +67,15 @@ QUnit.module(
 	'ext.testKitchen/enrollmentConfig/getOverriddenEnrollments()',
 	QUnit.newMwEnvironment( {
 		beforeEach: function () {
-			this.originalMPOCookie = mw.cookie.get( 'mpo' );
-			mw.cookie.set( 'mpo', null );
-
 			this.enrollmentConfig = require( 'ext.testKitchen/enrollmentConfig.js' );
 		},
 		afterEach: function () {
-			mw.cookie.set( 'mpo', this.originalMPOCookie );
-
 			this.enrollmentConfig.reset();
 		}
 	} )
 );
 
-QUnit.test( 'it should process the cookie value', function ( assert ) {
-	// Note: This doesn't end with a ';', which processRawValue is expecting
-	mw.cookie.set( 'mpo', 'foo:bar;baz:qux' );
-
-	assert.deepEqual(
-		this.enrollmentConfig.getOverriddenEnrollments(),
-		{
-			foo: 'bar',
-			baz: 'qux'
-		}
-	);
-} );
-
-QUnit.test( 'it should handle an empty cookie', function ( assert ) {
+QUnit.test( 'it should handle empty overrides', function ( assert ) {
 	assert.deepEqual(
 		this.enrollmentConfig.getOverriddenEnrollments(),
 		{}
@@ -101,30 +83,10 @@ QUnit.test( 'it should handle an empty cookie', function ( assert ) {
 } );
 
 QUnit.test( 'it should memoize the result', function ( assert ) {
-	mw.cookie.set( 'mpo', 'foo:bar;baz:qux' );
-
 	assert.strictEqual(
 		this.enrollmentConfig.getOverriddenEnrollments(),
 		this.enrollmentConfig.getOverriddenEnrollments()
 	);
-} );
-
-QUnit.test( 'it should log an error if processing the cookie value fails', function ( assert ) {
-	mw.cookie.set( 'mpo', 'garbage;' );
-
-	this.sandbox.stub( mw.errorLogger, 'logError' );
-
-	assert.deepEqual(
-		this.enrollmentConfig.getOverriddenEnrollments(),
-		{}
-	);
-
-	assert.strictEqual( mw.errorLogger.logError.callCount, 1 );
-
-	const args = mw.errorLogger.logError.args[ 0 ];
-
-	assert.true( args[ 0 ] instanceof Error, 'It passes through the error' );
-	assert.strictEqual( args[ 1 ], 'error.test_kitchen.process_raw_override_value.cookie' );
 } );
 
 QUnit.module(
@@ -139,7 +101,7 @@ QUnit.module(
 	} )
 );
 
-QUnit.test( 'it should process the cookie value', function ( assert ) {
+QUnit.test( 'it should process the header value', function ( assert ) {
 	const done = assert.async();
 
 	this.enrollmentConfig.setRawHeaderPromise( Promise.resolve( 'foo=bar;baz=qux;' ) );
