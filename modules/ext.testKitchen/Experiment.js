@@ -2,6 +2,7 @@ const EXPOSURE_CONTEXTUAL_ATTRIBUTES = [
 	'performer_is_logged_in',
 	'performer_is_temp',
 	'performer_is_bot',
+	'performer_edit_count',
 	'mediawiki_database'
 ];
 

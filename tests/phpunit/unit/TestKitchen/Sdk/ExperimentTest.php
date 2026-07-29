@@ -424,7 +424,13 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 				array_unique(
 					array_merge(
 						$this->experimentConfig[ 'contextual_attributes' ],
-						[ 'performer_is_logged_in', 'performer_is_temp', 'performer_is_bot', 'mediawiki_database' ]
+						[
+							'performer_is_logged_in',
+							'performer_is_temp',
+							'performer_is_bot',
+							'performer_edit_count',
+							'mediawiki_database'
+						]
 					)
 				),
 				'experiment_exposure',

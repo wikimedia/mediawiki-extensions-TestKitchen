@@ -43,9 +43,9 @@ interface ExperimentInterface {
 	/**
 	 * Sends an exposure event
 	 *
-	 * `performer_is_logged_in`, `performer_is_temp`, `performer_is_bot` and `mediawiki_database` contextual attributes
-	 * are needed in exposure events, so they will be added if not included already in the stream configuration of the
-	 * current experiment
+	 * `performer_is_logged_in`, `performer_is_temp`, `performer_is_bot`, `performer_edit_count` and
+	 * `mediawiki_database` contextual attributes are needed in exposure events, so they will be added if not included
+	 * already in the stream configuration of the current experiment
 	 */
 	public function sendExposure(): void;
 }
