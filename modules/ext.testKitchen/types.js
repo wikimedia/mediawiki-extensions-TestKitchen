@@ -1,31 +1,4 @@
 /**
- * @interface EventSenderInterface
- * @memberof mw.testKitchen
- */
-
-/**
- * Sends the event to the URL using [the Beacon API][0].
- *
- * By default, the event is added to a queue, which is then drained after 5 seconds or if the
- * page is hidden, e.g. when the user switches to another tab. If the page is unloading,
- * however, the event will be sent immediately.
- *
- * When the queue is drained, events are grouped by URL and then those groups of events are sent
- * in a single beacon request to that URL.
- *
- * [0]: https://developer.mozilla.org/en-US/docs/Web/API/Beacon_API
- *
- * @method sendEvent
- * @instance
- * @memberof mw.testKitchen.EventSenderInterface
- *
- * @param {Object} event
- * @param {string} url
- */
-
-// ---
-
-/**
  * @typedef {mw.testKitchen.PartialInstrumentConfig} mw.testKitchen.PartialExperimentConfig
  * @property {string} user_identifier_type
  * @property {string} schema_id
@@ -73,7 +46,47 @@
 // ---
 
 /**
+ * @interface EventSenderInterface
+ * @memberof mw.testKitchen
+ */
+
+/**
+ * Sends an analytics event.
+ *
+ * If the event sender is an experiment, then the event is decorated with experiment-related data
+ * before it is sent. The experiment-related data are specified and documented in
+ * [the `fragment/analytics/product_metrics/experiment` schema fragment][0].
+ *
+ * If per-event contextual attributes are passed via the `contextualAttributes` param, then they are
+ * added to the event before it is sent.
+ *
+ * [0]: https://gitlab.wikimedia.org/repos/data-engineering/schemas-event-secondary/-/blob/master/jsonschema/fragment/analytics/product_metrics/experiment/current.yaml?ref_type=heads
+ *
+ * @method send
+ * @instance
+ * @memberof mw.testKitchen.EventSenderInterface
+ *
+ * @param {string} action The action that the user enrolled in this experiment took, e.g.
+ *  "hover", "click"
+ * @param {Object} [interactionData] Additional data about the action that the user enrolled in
+ *  the experiment took
+ * @param {string[]} [contextualAttributes] Per-event contextual attributes
+ */
+
+// ---
+
+/**
+ * An instrumentation module that can be used in the context of both product health measurements,
+ * "instruments", or experiments.
+ *
+ * @typedef {{( mw.testKitchen.EventSenderInterface ):void}} mw.testKitchen.GenericInstrumentation
+ */
+
+// ---
+
+/**
  * @interface ExperimentInterface
+ * @extends mw.testKitchen.EventSenderInterface
  * @memberof mw.testKitchen
  */
 
@@ -109,31 +122,16 @@
  */
 
 /**
- * Sends an analytics event related to the experiment.
+ * Uses the generic instrumentation to send analytics events for this experiment.
  *
- * If the user is enrolled in the experiment, then the event is decorated with
- * experiment-related data and sent. The experiment-related data are specified and documented in
- * [the `fragment/analytics/product_metrics/experiment` schema fragment][0].
+ * This method is chainable.
  *
- * By default, the analytics event will be sent to the `product_metrics.web_base` stream and be
- * validated with the `/analytics/product_metrics/web/base/2.1.0` schema. The schema
- * can be overridden with {@link mw.testKitchen.ExperimentInterface#setSchema}
- *
- * Per-event contextual attributes can be passed as contextualAttributes. In this case, they will
- * be added to the events along with the ones that are defined in the experiment config
- *
- *
- * [0]: https://gitlab.wikimedia.org/repos/data-engineering/schemas-event-secondary/-/blob/master/jsonschema/fragment/analytics/product_metrics/experiment/current.yaml?ref_type=heads
- *
- * @method send
+ * @method use
  * @instance
  * @memberof mw.testKitchen.ExperimentInterface
  *
- * @param {string} action The action that the user enrolled in this experiment took, e.g.
- *  "hover", "click"
- * @param {Object} [interactionData] Additional data about the action that the user enrolled in
- *  the experiment took
- * @param {string[]} [contextualAttributes] Per-event contextual attributes
+ * @param {mw.testKitchen.GenericInstrumentation} instrumentation
+ * @return {mw.testKitchen.ExperimentInterface}
  */
 
 /**
@@ -143,6 +141,9 @@
  * `ext.wikimediaEvents.testKitchen` ResourceLoader module][0] by proxying to
  * {@link mw.testKitchen.ExperimentInterface#send}. Calling this outside of Test Kitchen is not
  * supported.
+ *
+ * If per-event contextual attributes are passed via the `contextualAttributes` param, then they are
+ * added to the event before it is sent.
  *
  * [0]: https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/extensions/WikimediaEvents/+/master/modules/ext.wikimediaEvents.testKitchen/ClickThroughRateInstrument.js
  *
@@ -221,23 +222,21 @@
 
 /**
  * @interface InstrumentInterface
+ * @extends mw.testKitchen.EventSenderInterface
  * @memberof mw.testKitchen
  */
 
 /**
- * Sends an analytics event.
+ * Uses the generic instrumentation to send analytics events for this instrument.
  *
- * By default, the analytics event will be validated with the
- * `/analytics/product_metrics/web/base/2.1.0` schema. The schema can be overridden with
- * {@link mw.testKitchen.InstrumentInterface#setSchema}.
+ * This method is chainable.
  *
- * @method send
+ * @method use
  * @instance
  * @memberof mw.testKitchen.InstrumentInterface
  *
- * @param {string} action The action that the user enrolled in this experiment took, e.g.
- *  "hover", "click"
- * @param {Object} [interactionData] Additional data
+ * @param {mw.testKitchen.GenericInstrumentation} instrumentation
+ * @return {mw.testKitchen.InstrumentInterface}
  */
 
 /**
@@ -247,6 +246,9 @@
  * [the click-through rate implementation in the `ext.wikimediaEvents.testKitchen` ResourceLoader
  * module][0] by proxying to {@link mw.testKitchen.InstrumentInterface#send}. Calling this outside
  * of Test Kitchen is not supported.
+ *
+ * If per-event contextual attributes are passed via the `contextualAttributes` param, then they are
+ * added to the event before it is sent.
  *
  * [0]: https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/extensions/WikimediaEvents/+/master/modules/ext.wikimediaEvents.testKitchen/ClickThroughRateInstrument.js
  *
@@ -260,6 +262,7 @@
  *
  * @param {string} action The action related to the submitted event
  * @param {Object} [interactionData] Additional data
+ * @param {string[]} [contextualAttributes] Per-event contextual attributes
  */
 
 /**
@@ -268,6 +271,7 @@
  *
  * This method is chainable.
  *
+ * @deprecated
  * @method setSchema
  * @instance
  * @memberof mw.testKitchen.InstrumentInterface

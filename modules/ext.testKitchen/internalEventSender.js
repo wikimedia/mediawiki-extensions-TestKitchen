@@ -54,17 +54,34 @@ function onVisibilityChange( documentHidden ) {
  *
  *  [0]: https://gitlab.wikimedia.org/repos/data-engineering/metrics-platform/-/blob/759ce7203ad50776d1e29b1c0979ef3bb50c6a33/js/src/DefaultEventSubmitter.js
  *
- * @class EventSender
- * @implements {mw.testKitchen.EventSenderInterface}
+ * @class InternalEventSender
  * @hideconstructor
  * @singleton
  * @memberof mw.testKitchen
  *
- * @borrows mw.testKitchen.EventSenderInterface#sendEvent as #sendEvent
- *
  * @package
  */
 module.exports = {
+
+	/**
+	 * Sends the event to the URL using [the Beacon API][0].
+	 *
+	 * By default, the event is added to a queue, which is then drained after 5 seconds or if the
+	 * page is hidden, e.g. when the user switches to another tab. If the page is unloading,
+	 * however, the event will be sent immediately.
+	 *
+	 * When the queue is drained, events are grouped by URL and then those groups of events are sent
+	 * in a single beacon request to that URL.
+	 *
+	 * [0]: https://developer.mozilla.org/en-US/docs/Web/API/Beacon_API
+	 *
+	 * @method sendEvent
+	 * @instance
+	 * @memberof mw.testKitchen.InternalEventSender
+	 *
+	 * @param {Object} event
+	 * @param {string} url
+	 */
 	sendEvent( event, url ) {
 		if ( isDocumentUnloading ) {
 			doSendEvents( [ event ], url );

@@ -3,7 +3,7 @@
 const { Experiment, UnenrolledExperiment, OverriddenExperiment } = require( './Experiment.js' );
 const ContextualAttributesFactory = require( './ContextualAttributesFactory.js' );
 const EventFactory = require( './EventFactory.js' );
-const eventSender = require( './eventSender.js' );
+const internalEventSender = require( './internalEventSender.js' );
 const { Instrument, UnsampledInstrument } = require( './Instrument.js' );
 const ExposureLogTracker = require( './ExposureLogTracker.js' );
 const {
@@ -85,7 +85,7 @@ function newExperiment( enrollmentConfig ) {
 
 	return new Experiment(
 		eventFactory,
-		eventSender,
+		internalEventSender,
 		eventIntakeServiceUrl,
 		exposureLogTracker,
 		configToPass
@@ -315,7 +315,7 @@ function getInstrument( instrumentName ) {
 
 	return new Instrument(
 		eventFactory,
-		eventSender,
+		internalEventSender,
 		config.InstrumentEventIntakeServiceUrl,
 		instrumentName,
 		instrumentConfig
@@ -371,7 +371,7 @@ if ( window.QUnit ) {
 
 	mw.testKitchen = Object.assign( mw.testKitchen, {
 		EventFactory,
-		eventSender,
+		internalEventSender,
 		Experiment,
 		UnenrolledExperiment,
 		OverriddenExperiment,

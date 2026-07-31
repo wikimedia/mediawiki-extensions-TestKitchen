@@ -1,28 +1,26 @@
 QUnit.module( 'ext.testKitchen/Instrument', QUnit.newMwEnvironment( {
 	beforeEach: function () {
-		const { Instrument } = mw.testKitchen;
-
 		// Stubs
 		// =====
 
-		const eventFactory = {
+		this.eventFactory = {
 			newEvent() {}
 		};
 
-		this.newEventStub = this.sandbox.stub( eventFactory, 'newEvent' );
+		this.newEventStub = this.sandbox.stub( this.eventFactory, 'newEvent' );
 
-		const eventSender = {
+		this.eventSender = {
 			sendEvent() {}
 		};
 
-		this.sendEventStub = this.sandbox.stub( eventSender, 'sendEvent' );
+		this.sendEventStub = this.sandbox.stub( this.eventSender, 'sendEvent' );
 
 		// Code Under Test
 		// ===============
 
-		this.instrument = new Instrument(
-			eventFactory,
-			eventSender,
+		this.instrument = new mw.testKitchen.Instrument(
+			this.eventFactory,
+			this.eventSender,
 			'https://foo.bar/baz?qux=quux',
 			'foo_instrument',
 			{
@@ -80,6 +78,35 @@ QUnit.test( 'send()', function ( assert ) {
 	] );
 } );
 
+QUnit.test( 'send() - handles per-event contextual attributes', function ( assert ) {
+	this.instrument.send(
+		'my-awesome-action', {
+			foo: 'bar'
+		},
+		[
+			'namespace_name',
+			'performer_session_id'
+		]
+	);
+
+	assert.strictEqual( this.newEventStub.callCount, 1 );
+	assert.deepEqual( this.newEventStub.firstCall.args, [
+		'my-awesome-stream',
+		'/my/awesome/schema/1.0.0',
+		[
+			'namespace_name',
+			'performer_pageview_id',
+			'performer_session_id'
+		],
+		'my-awesome-action',
+		{
+			foo: 'bar',
+			instrument_name: 'foo_instrument',
+			funnel_event_sequence_position: 1
+		}
+	] );
+} );
+
 QUnit.test( 'send() - increments FESP', function ( assert ) {
 	this.instrument.send( 'my-awesome-action' );
 	this.instrument.send( 'my-awesome-action' );
@@ -103,6 +130,50 @@ QUnit.test( 'send() - can\'t override FESP', function ( assert ) {
 	} );
 
 	assert.strictEqual( this.newEventStub.firstCall.args[ 4 ].funnel_event_sequence_position, 1 );
+} );
+
+QUnit.test( 'send() - handles undefined/null contextual_attributes', function ( assert ) {
+	const instrument = new mw.testKitchen.Instrument(
+		this.eventFactory,
+		this.eventSender,
+		'https://foo.bar/baz?qux=quux',
+		'foo_instrument',
+		{
+			sample: {
+				unit: 'session',
+				rate: 1.0
+			},
+			stream_name: 'my-awesome-stream',
+			schema_id: '/my/awesome/schema/1.0.0'
+		}
+	);
+
+	instrument.send(
+		'my-awesome-action',
+		{
+			foo: 'bar'
+		},
+		[
+			'namespace_name',
+			'performer_session_id'
+		]
+	);
+
+	assert.strictEqual( this.newEventStub.callCount, 1 );
+	assert.deepEqual( this.newEventStub.firstCall.args, [
+		'my-awesome-stream',
+		'/my/awesome/schema/1.0.0',
+		[
+			'namespace_name',
+			'performer_session_id'
+		],
+		'my-awesome-action',
+		{
+			foo: 'bar',
+			instrument_name: 'foo_instrument',
+			funnel_event_sequence_position: 1
+		}
+	] );
 } );
 
 QUnit.test( 'setSchema()', function ( assert ) {

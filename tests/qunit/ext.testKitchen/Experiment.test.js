@@ -253,9 +253,9 @@ QUnit.test.each(
 			'product_metrics.web_base',
 			'/analytics/product_metrics/web/base/2.1.0',
 			[
-				'performer_is_bot',
 				'performer_pageview_id',
-				'mediawiki_database'
+				'mediawiki_database',
+				'performer_is_bot'
 			],
 			'Hello, World!',
 			{
@@ -312,10 +312,10 @@ QUnit.test.each(
 			'product_metrics.web_base',
 			'/analytics/product_metrics/web/base/2.1.0',
 			[
-				'performer_is_bot',
-				'performer_is_logged_in',
 				'performer_pageview_id',
-				'mediawiki_database'
+				'mediawiki_database',
+				'performer_is_bot',
+				'performer_is_logged_in'
 			],
 			'Hello, World!',
 			{
@@ -328,6 +328,55 @@ QUnit.test.each(
 		assert.strictEqual( this.sendEventStub.callCount, 1 );
 	}
 );
+
+QUnit.test( 'send() - handles undefined/null contextual_attributes', function ( assert ) {
+	const experiment = this.newExperiment( {
+		enrolled: 'hello_world',
+		assigned: 'A',
+		subject_id: 'awaiting',
+		sampling_unit: 'edge-unique',
+		coordinator: 'default',
+		phase_index: 0,
+		stream_name: 'product_metrics.web_base',
+		schema_id: '/analytics/product_metrics/web/base/2.1.0',
+		exposure_version: 'v1'
+	} );
+
+	experiment.send(
+		'my-awesome-action',
+		{
+			foo: 'bar'
+		},
+		[
+			'namespace_name',
+			'performer_session_id'
+		]
+	);
+
+	assert.strictEqual( this.newEventStub.callCount, 1 );
+	assert.deepEqual( this.newEventStub.firstCall.args, [
+		'product_metrics.web_base',
+		'/analytics/product_metrics/web/base/2.1.0',
+		[
+			'namespace_name',
+			'performer_session_id'
+		],
+		'my-awesome-action',
+		{
+			foo: 'bar',
+			experiment: {
+				enrolled: 'hello_world',
+				assigned: 'A',
+				subject_id: 'awaiting',
+				sampling_unit: 'edge-unique',
+				coordinator: 'default',
+				phase_index: 0
+			}
+		}
+	] );
+
+	assert.strictEqual( this.sendEventStub.callCount, 1 );
+} );
 
 QUnit.test( 'send() - can\'t override experiment', function ( assert ) {
 	this.everyoneExperiment.send( 'Hello, World!', {
@@ -491,12 +540,12 @@ QUnit.test.each(
 				'product_metrics.web_base',
 				'/analytics/product_metrics/web/base/2.1.0',
 				[
+					'performer_pageview_id',
+					'mediawiki_database',
 					'performer_is_logged_in',
 					'performer_is_temp',
 					'performer_is_bot',
-					'performer_edit_count',
-					'mediawiki_database',
-					'performer_pageview_id'
+					'performer_edit_count'
 				],
 				'experiment_exposure',
 				{

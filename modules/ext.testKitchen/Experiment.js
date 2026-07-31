@@ -26,20 +26,20 @@ class Experiment {
 
 	/**
 	 * @param {mw.testKitchen.EventFactory} eventFactory
-	 * @param {mw.testKitchen.EventSenderInterface} eventSender
+	 * @param {mw.testKitchen.InternalEventSender} internalEventSender
 	 * @param {string} eventIntakeServiceUrl
 	 * @param {mw.testKitchen.ExposureLogTracker} exposureLogTracker
 	 * @param {mw.testKitchen.ExperimentConfig} config
 	 */
 	constructor(
 		eventFactory,
-		eventSender,
+		internalEventSender,
 		eventIntakeServiceUrl,
 		exposureLogTracker,
 		config
 	) {
 		this.eventFactory = eventFactory;
-		this.eventSender = eventSender;
+		this.internalEventSender = internalEventSender;
 		this.eventIntakeServiceUrl = eventIntakeServiceUrl;
 		this.config = config;
 		this.streamName = config.stream_name;
@@ -55,6 +55,12 @@ class Experiment {
 
 	isAssignedGroup( ...groups ) {
 		return groups.includes( this.getAssignedGroup() );
+	}
+
+	use( instrumentation ) {
+		instrumentation( this );
+
+		return this;
 	}
 
 	send( action, interactionData, contextualAttributes ) {
@@ -90,11 +96,11 @@ class Experiment {
 			{ experiment }
 		);
 
-		// if present, per-event contextual attributes will be added
-		let eventContextualAttributes = this.contextualAttributes;
+		// If present, per-event contextual attributes will be added
+		let eventContextualAttributes = this.contextualAttributes || [];
 		if ( contextualAttributes && contextualAttributes.length > 0 ) {
 			eventContextualAttributes = [ ...new Set(
-				contextualAttributes.concat( this.contextualAttributes )
+				eventContextualAttributes.concat( contextualAttributes )
 			) ];
 		}
 
@@ -106,7 +112,7 @@ class Experiment {
 			interactionData
 		);
 
-		this.eventSender.sendEvent( event, this.eventIntakeServiceUrl );
+		this.internalEventSender.sendEvent( event, this.eventIntakeServiceUrl );
 	}
 
 	submitInteraction( action, interactionData, contextualAttributes ) {
@@ -127,7 +133,7 @@ class Experiment {
 		} );
 
 		// trySend marks that an experiment exposure event is about to be sent.
-		// If the callback throws an error, then it tidies up.
+		// If the instrumentation throws an error, then it tidies up.
 		this.tracker.trySend( key, () => {
 			this.send( 'experiment_exposure', {}, EXPOSURE_CONTEXTUAL_ATTRIBUTES );
 		} );
@@ -156,6 +162,11 @@ class UnenrolledExperiment {
 
 	// eslint-disable-next-line no-unused-vars
 	isAssignedGroup( ...groups ) {}
+
+	// eslint-disable-next-line no-unused-vars
+	use( instrumentation ) {
+		return this;
+	}
 
 	// eslint-disable-next-line no-unused-vars
 	send( action, interactionData, contextualAttributes ) {}
@@ -197,6 +208,12 @@ class OverriddenExperiment {
 
 	isAssignedGroup( ...groups ) {
 		return groups.includes( this.assigned );
+	}
+
+	use( instrumentation ) {
+		instrumentation( this );
+
+		return this;
 	}
 
 	// eslint-disable-next-line no-unused-vars
