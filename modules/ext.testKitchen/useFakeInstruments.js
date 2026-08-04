@@ -29,10 +29,6 @@ class StubInstrument {
 		return true;
 	}
 
-	sendImmediately( action, interactionData ) {
-		this.send( action, interactionData );
-	}
-
 	// eslint-disable-next-line no-unused-vars
 	setSchema( schemaID ) {
 		return this;

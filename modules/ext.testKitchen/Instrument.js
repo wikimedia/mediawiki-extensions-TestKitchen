@@ -35,17 +35,6 @@ class Instrument {
 		this.eventSender.sendEvent( event, this.eventIntakeServiceUrl );
 	}
 
-	sendImmediately( action, interactionData ) {
-		const event = this.buildEvent( action, interactionData );
-
-		// T417143 Send events directly to the new path.
-		try {
-			navigator.sendBeacon( this.eventIntakeServiceUrl, JSON.stringify( event ) );
-		} catch ( e ) {
-			// Ignoring errors similar to doSendEvents() in eventSender.js.
-		}
-	}
-
 	submitInteraction( action, interactionData ) {
 		this.send( action, interactionData );
 	}
@@ -97,9 +86,6 @@ class UnsampledInstrument {
 
 	// eslint-disable-next-line no-unused-vars
 	send( action, interactionData ) {}
-
-	// eslint-disable-next-line no-unused-vars
-	sendImmediately( action, interactionData ) {}
 
 	// eslint-disable-next-line no-unused-vars
 	submitInteraction( action, interactionData ) {}
