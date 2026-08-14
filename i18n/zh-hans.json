@@ -2,10 +2,11 @@
 	"@metadata": {
 		"authors": [
 			"GuoPC",
-			"Huajing"
+			"Huajing",
+			"Ouclie"
 		]
 	},
-	"testkitchen-desc": "这是 Test Kitchen 扩展",
+	"testkitchen-desc": "提供PHP和JS Test Kitchen SDK，开发者可以使用这些SDK来实现实验和数据收集，以进行分析。",
 	"testkitchen-non-successful-response": "Test Kitchen API返回了不成功的响应。",
 	"testkitchen-api-empty-response-body": "Test Kitchen API返回了空的响应。"
 }
