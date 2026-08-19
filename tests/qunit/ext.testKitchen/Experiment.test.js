@@ -6,7 +6,7 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 		// =====
 
 		this.expectedEvent = {
-			$schema: '/analytics/product_metrics/web/base/2.1.0',
+			$schema: '/analytics/product_metrics/web/base/2.2.0',
 			dt: new Date().toISOString()
 		};
 
@@ -58,10 +58,9 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 			assigned: 'A',
 			subject_id: 'awaiting',
 			sampling_unit: 'edge-unique',
-			coordinator: 'default',
 			phase_index: 0,
 			stream_name: 'product_metrics.web_base',
-			schema_id: '/analytics/product_metrics/web/base/2.1.0',
+			schema_id: '/analytics/product_metrics/web/base/2.2.0',
 			contextual_attributes: [
 				'performer_pageview_id',
 				'mediawiki_database'
@@ -77,10 +76,9 @@ QUnit.module( 'ext.testKitchen/Experiment', QUnit.newMwEnvironment( {
 			assigned: 'B',
 			subject_id: '0x0ff1ce',
 			sampling_unit: 'mw-user',
-			coordinator: 'default',
 			phase_index: 1,
 			stream_name: 'product_metrics.web_base',
-			schema_id: '/analytics/product_metrics/web/base/2.1.0',
+			schema_id: '/analytics/product_metrics/web/base/2.2.0',
 			contextual_attributes: [
 				'performer_pageview_id',
 				'mediawiki_database'
@@ -116,11 +114,11 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default',
 				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
-				}
+				},
+				coordinator: 'default'
 			}
 		],
 		[
@@ -130,11 +128,11 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'default',
 				phase_index: 1,
 				other_assigned: {
 					bar: 'baz'
-				}
+				},
+				coordinator: 'default'
 			}
 		]
 	],
@@ -144,7 +142,7 @@ QUnit.test.each(
 		assert.strictEqual( this.newEventStub.callCount, 1 );
 		assert.deepEqual( this.newEventStub.firstCall.args, [
 			'product_metrics.web_base',
-			'/analytics/product_metrics/web/base/2.1.0',
+			'/analytics/product_metrics/web/base/2.2.0',
 			[
 				'performer_pageview_id',
 				'mediawiki_database'
@@ -169,11 +167,11 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default',
 				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
-				}
+				},
+				coordinator: 'default'
 			}
 		],
 		[
@@ -183,11 +181,11 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'default',
 				phase_index: 1,
 				other_assigned: {
 					bar: 'baz'
-				}
+				},
+				coordinator: 'default'
 			}
 		]
 	],
@@ -197,15 +195,15 @@ QUnit.test.each(
 		assert.strictEqual( this.newEventStub.callCount, 1 );
 		assert.deepEqual( this.newEventStub.firstCall.args, [
 			'product_metrics.web_base',
-			'/analytics/product_metrics/web/base/2.1.0',
+			'/analytics/product_metrics/web/base/2.2.0',
 			[
 				'performer_pageview_id',
 				'mediawiki_database'
 			],
 			'Hello, World!',
 			{
-				experiment: expectedExperiment,
-				action_source: 'the-source'
+				action_source: 'the-source',
+				experiment: expectedExperiment
 			}
 		] );
 
@@ -223,11 +221,11 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default',
 				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
-				}
+				},
+				coordinator: 'default'
 			}
 		],
 		[
@@ -237,11 +235,11 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'default',
 				phase_index: 1,
 				other_assigned: {
 					bar: 'baz'
-				}
+				},
+				coordinator: 'default'
 			}
 		]
 	],
@@ -251,7 +249,7 @@ QUnit.test.each(
 		assert.strictEqual( this.newEventStub.callCount, 1 );
 		assert.deepEqual( this.newEventStub.firstCall.args, [
 			'product_metrics.web_base',
-			'/analytics/product_metrics/web/base/2.1.0',
+			'/analytics/product_metrics/web/base/2.2.0',
 			[
 				'performer_pageview_id',
 				'mediawiki_database',
@@ -277,11 +275,11 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default',
 				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
-				}
+				},
+				coordinator: 'default'
 			}
 		],
 		[
@@ -291,11 +289,11 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'default',
 				phase_index: 1,
 				other_assigned: {
 					bar: 'baz'
-				}
+				},
+				coordinator: 'default'
 			}
 		]
 	],
@@ -310,7 +308,7 @@ QUnit.test.each(
 		assert.strictEqual( this.newEventStub.callCount, 1 );
 		assert.deepEqual( this.newEventStub.firstCall.args, [
 			'product_metrics.web_base',
-			'/analytics/product_metrics/web/base/2.1.0',
+			'/analytics/product_metrics/web/base/2.2.0',
 			[
 				'performer_pageview_id',
 				'mediawiki_database',
@@ -319,9 +317,9 @@ QUnit.test.each(
 			],
 			'Hello, World!',
 			{
-				experiment: expectedExperiment,
 				action_source: 'the_source',
-				action_context: 'the_context'
+				action_context: 'the_context',
+				experiment: expectedExperiment
 			}
 		] );
 
@@ -335,11 +333,9 @@ QUnit.test( 'send() - handles undefined/null contextual_attributes', function ( 
 		assigned: 'A',
 		subject_id: 'awaiting',
 		sampling_unit: 'edge-unique',
-		coordinator: 'default',
 		phase_index: 0,
 		stream_name: 'product_metrics.web_base',
-		schema_id: '/analytics/product_metrics/web/base/2.1.0',
-		exposure_version: 'v1'
+		schema_id: '/analytics/product_metrics/web/base/2.2.0'
 	} );
 
 	experiment.send(
@@ -348,7 +344,7 @@ QUnit.test( 'send() - handles undefined/null contextual_attributes', function ( 
 			foo: 'bar'
 		},
 		[
-			'namespace_name',
+			'page_namespace_name',
 			'performer_session_id'
 		]
 	);
@@ -356,9 +352,9 @@ QUnit.test( 'send() - handles undefined/null contextual_attributes', function ( 
 	assert.strictEqual( this.newEventStub.callCount, 1 );
 	assert.deepEqual( this.newEventStub.firstCall.args, [
 		'product_metrics.web_base',
-		'/analytics/product_metrics/web/base/2.1.0',
+		'/analytics/product_metrics/web/base/2.2.0',
 		[
-			'namespace_name',
+			'page_namespace_name',
 			'performer_session_id'
 		],
 		'my-awesome-action',
@@ -369,8 +365,8 @@ QUnit.test( 'send() - handles undefined/null contextual_attributes', function ( 
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default',
-				phase_index: 0
+				phase_index: 0,
+				coordinator: 'default'
 			}
 		}
 	] );
@@ -385,11 +381,10 @@ QUnit.test( 'send() - can\'t override experiment', function ( assert ) {
 			baz: 'qux'
 		}
 	} );
-
 	assert.strictEqual( this.newEventStub.callCount, 1 );
 	assert.deepEqual( this.newEventStub.firstCall.args, [
 		'product_metrics.web_base',
-		'/analytics/product_metrics/web/base/2.1.0',
+		'/analytics/product_metrics/web/base/2.2.0',
 		[
 			'performer_pageview_id',
 			'mediawiki_database'
@@ -409,7 +404,6 @@ QUnit.test( 'send() - can\'t override experiment', function ( assert ) {
 			}
 		}
 	] );
-
 	assert.strictEqual( this.sendEventStub.callCount, 1 );
 } );
 
@@ -432,11 +426,11 @@ QUnit.test( 'send() - overriding schema', function ( assert ) {
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default',
 				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
-				}
+				},
+				coordinator: 'default'
 			}
 		}
 	] );
@@ -455,14 +449,6 @@ QUnit.test.each(
 			assigned: 'B',
 			subject_id: '0x0ff1ce',
 			sampling_unit: 'mw-user',
-			coordinator: 'default',
-			stream_name: 'product_metrics.web_base',
-			schema_id: '/analytics/product_metrics/web/base/2.1.0',
-			contextual_attributes: [
-				'performer_pageview_id',
-				'mediawiki_database'
-			],
-			exposure_version: 'v1',
 			other_assigned: otherAssigned
 		} );
 
@@ -486,11 +472,11 @@ QUnit.test.each(
 				assigned: 'A',
 				subject_id: 'awaiting',
 				sampling_unit: 'edge-unique',
-				coordinator: 'default',
 				phase_index: 0,
 				other_assigned: {
 					foo: 'bar'
-				}
+				},
+				coordinator: 'default'
 			}
 		],
 		[
@@ -500,11 +486,11 @@ QUnit.test.each(
 				assigned: 'B',
 				subject_id: '0x0ff1ce',
 				sampling_unit: 'mw-user',
-				coordinator: 'default',
 				phase_index: 1,
 				other_assigned: {
 					bar: 'baz'
-				}
+				},
+				coordinator: 'default'
 			}
 		]
 	],
@@ -538,7 +524,7 @@ QUnit.test.each(
 			this.newEventStub.firstCall.args,
 			[
 				'product_metrics.web_base',
-				'/analytics/product_metrics/web/base/2.1.0',
+				'/analytics/product_metrics/web/base/2.2.0',
 				[
 					'performer_pageview_id',
 					'mediawiki_database',
@@ -583,7 +569,7 @@ QUnit.test( 'sendExposure() rethrows when sending exposure fails', function ( as
 QUnit.module( 'ext.testKitchen/UnenrolledExperiment' );
 
 QUnit.test( 'setSchema() - doesn\'t trigger an error', ( assert ) => {
-	const e = new mw.testKitchen.UnenrolledExperiment( 'hello_world' );
+	const e = new mw.testKitchen.UnenrolledExperiment();
 
 	assert.strictEqual( e.setSchema( 'my_awesome_stream' ), e );
 } );
@@ -592,11 +578,80 @@ QUnit.test( 'setSchema() - doesn\'t trigger an error', ( assert ) => {
 
 QUnit.module( 'ext.testKitchen/OverriddenExperiment', QUnit.newMwEnvironment( {
 	beforeEach: function () {
-		this.experiment = new mw.testKitchen.OverriddenExperiment( 'hello_world', 'foo ' );
+		const { OverriddenExperiment } = mw.testKitchen;
+
+		// Stubs
+		// =====
+
+		this.expectedEvent = {
+			$schema: '/analytics/product_metrics/web/base/2.2.0',
+			dt: new Date().toISOString(),
+			agent: {
+				client_platform: 'mediawiki_js',
+				client_platform_family: 'desktop_browser'
+			}
+		};
+
+		const eventFactory = {
+			newEvent() {
+			},
+			addContextualAttributes() {
+			}
+		};
+
+		this.newEventStub = this.sandbox.stub( eventFactory, 'newEvent' )
+			.returns( this.expectedEvent );
+		this.addContextualAttributesStub = this.sandbox.stub( eventFactory, 'addContextualAttributes' )
+			.callsFake( ( event ) => {
+				event.agent = {
+					client_platform: 'mediawiki_js',
+					client_platform_family: 'desktop_browser'
+				};
+			} );
+
+		const eventSender = {
+			sendEvent() {
+			}
+		};
+
+		this.sendEventStub = this.sandbox.stub( eventSender, 'sendEvent' );
+
+		/**
+		 * @param {mw.testKitchen.ExperimentConfig} experimentConfig
+		 * @return {mw.testKitchen.OverriddenExperiment}
+		 */
+		this.newOverriddenExperiment = function ( experimentConfig ) {
+			return new OverriddenExperiment(
+				eventFactory,
+				eventSender,
+				'http://foo.bar/baz?qux=quux',
+				experimentConfig
+			);
+		};
+
+		this.overriddenExperiment = this.newOverriddenExperiment( {
+			enrolled: 'my-overridden-experiment',
+			assigned: 'control',
+			subject_id: 'overridden',
+			sampling_unit: 'overridden',
+			phase_index: 0,
+			stream_name: 'product_metrics.web_base',
+			schema_id: '/analytics/product_metrics/web/base/2.2.0',
+			contextual_attributes: [
+				'performer_pageview_id',
+				'mediawiki_database'
+			],
+			exposure_version: 'v1',
+			other_assigned: {
+				bar: 'baz'
+			}
+		} );
 	}
 } ) );
 
-QUnit.test( 'send()', function ( assert ) {
+QUnit.test( 'send() - event is sent when running on beta cluster', function ( assert ) {
+	mw.config.set( 'wgServer', 'https://en.wikipedia.beta.wmcloud.org' );
+
 	const action = 'Hello, World!';
 	const interactionData = {
 		experiment: {
@@ -604,21 +659,44 @@ QUnit.test( 'send()', function ( assert ) {
 			baz: 'qux'
 		}
 	};
+	const contextualAttributes = {
+		agent: {
+			client_platform: 'mediawiki_js',
+			client_platform_family: 'desktop_browser'
+		}
+	};
 
 	const logStub = this.sandbox.stub( console, 'log' );
 
-	this.experiment.send( action, interactionData );
+	this.overriddenExperiment.send( action, interactionData, contextualAttributes );
 
 	assert.strictEqual( logStub.callCount, 1 );
 	assert.deepEqual( logStub.firstCall.args, [
-		'hello_world: The enrollment for this experiment has been overridden. The following event will not be sent:\n',
+		'my-overridden-experiment: The enrollment for this experiment has been overridden. The following event will not be sent:\n',
 		action,
-		JSON.stringify( interactionData, null, 2 )
+		JSON.stringify( interactionData, null, 2 ),
+		JSON.stringify( contextualAttributes, null, 2 )
 	] );
+
+	// The event will be sent (it is running on beta cluster)
+	assert.strictEqual( this.sendEventStub.callCount, 1 );
+} );
+
+QUnit.test( 'send() - event is not sent when running on production', function ( assert ) {
+	mw.config.set( 'wgServer', '//en.wikipedia.org' );
+
+	const logStub = this.sandbox.stub( console, 'log' );
+
+	this.overriddenExperiment.send( 'some action' );
+
+	assert.strictEqual( logStub.callCount, 1 );
+
+	// The event will not be sent (it is running on production)
+	assert.strictEqual( this.sendEventStub.callCount, 0 );
 } );
 
 QUnit.test( 'setSchema() - doesn\'t trigger an error', function ( assert ) {
-	assert.strictEqual( this.experiment.setSchema( 'my_awesome_stream' ), this.experiment );
+	assert.strictEqual( this.overriddenExperiment.setSchema( 'my_awesome_stream' ), this.overriddenExperiment );
 } );
 
 QUnit.test( 'sendExposure()', function ( assert ) {
@@ -628,14 +706,9 @@ QUnit.test( 'sendExposure()', function ( assert ) {
 		.expects( 'log' )
 		.once()
 		.withExactArgs(
-			'hello_world: The enrollment for this experiment has been overridden. The following event will not be sent:\n',
+			'my-overridden-experiment: The enrollment for this experiment has been overridden. The following event will not be sent:\n',
 			'experiment_exposure'
 		);
 
-	const e = new mw.testKitchen.OverriddenExperiment(
-		'hello_world',
-		'foo'
-	);
-
-	e.sendExposure( 'experiment_exposure' );
+	this.overriddenExperiment.sendExposure( 'experiment_exposure' );
 } );

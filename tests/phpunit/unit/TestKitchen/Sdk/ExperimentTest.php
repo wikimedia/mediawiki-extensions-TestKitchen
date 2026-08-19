@@ -26,7 +26,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		'other_assigned' => [ "another_experiment", "yet_another_experiment" ],
 		'coordinator' => "default",
 		'stream_name' => 'product_metrics.web_base',
-		'schema_id' => '/analytics/product_metrics/web/base/2.1.0',
+		'schema_id' => '/analytics/product_metrics/web/base/2.2.0',
 		'contextual_attributes' => [
 			'agent_client_platform',
 			'agent_client_platform_family',
@@ -119,7 +119,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		);
 
 		$expectedEvent = [
-			'$schema' => '/analytics/product_metrics/web/base/2.1.0',
+			'$schema' => '/analytics/product_metrics/web/base/2.2.0',
 			'dt' => ConvertibleTimestamp::now( TimestampFormat::ISO_8601 ),
 		];
 
@@ -127,7 +127,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->method( 'newEvent' )
 			->with(
 				'product_metrics.web_base',
-				'/analytics/product_metrics/web/base/2.1.0',
+				'/analytics/product_metrics/web/base/2.2.0',
 				[
 					'agent_client_platform',
 					'agent_client_platform_family',
@@ -155,7 +155,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 
 	public function testSendArgumentsIncludesPhaseIndex() {
 		$expectedEvent = [
-			'$schema' => '/analytics/product_metrics/web/base/2.1.0',
+			'$schema' => '/analytics/product_metrics/web/base/2.2.0',
 			'dt' => ConvertibleTimestamp::now( TimestampFormat::ISO_8601 ),
 		];
 
@@ -187,7 +187,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		);
 
 		$expectedEvent = [
-			'$schema' => '/analytics/product_metrics/web/base/2.1.0',
+			'$schema' => '/analytics/product_metrics/web/base/2.2.0',
 			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 ),
 		];
 
@@ -195,7 +195,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->method( 'newEvent' )
 			->with(
 				'product_metrics.web_base',
-				'/analytics/product_metrics/web/base/2.1.0',
+				'/analytics/product_metrics/web/base/2.2.0',
 				[
 					'agent_client_platform',
 					'agent_client_platform_family',
@@ -225,7 +225,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		);
 
 		$expectedEvent = [
-			'$schema' => '/analytics/product_metrics/web/base/2.1.0',
+			'$schema' => '/analytics/product_metrics/web/base/2.2.0',
 			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 ),
 		];
 
@@ -233,7 +233,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->method( 'newEvent' )
 			->with(
 				'product_metrics.web_base',
-				'/analytics/product_metrics/web/base/2.1.0',
+				'/analytics/product_metrics/web/base/2.2.0',
 				[
 					'agent_client_platform',
 					'agent_client_platform_family',
@@ -268,7 +268,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		);
 
 		$expectedEvent = [
-			'$schema' => '/analytics/product_metrics/web/base/2.1.0',
+			'$schema' => '/analytics/product_metrics/web/base/2.2.0',
 			'dt' => ConvertibleTimestamp::now( TS_ISO_8601 ),
 		];
 
@@ -276,7 +276,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->method( 'newEvent' )
 			->with(
 				'product_metrics.web_base',
-				'/analytics/product_metrics/web/base/2.1.0',
+				'/analytics/product_metrics/web/base/2.2.0',
 				[
 					'agent_client_platform',
 					'agent_client_platform_family',
@@ -393,7 +393,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		);
 
 		$expectedEvent = [
-			'$schema' => '/analytics/product_metrics/web/base/2.1.0',
+			'$schema' => '/analytics/product_metrics/web/base/2.2.0',
 			'dt' => ConvertibleTimestamp::now( TimestampFormat::ISO_8601 ),
 			'action' => 'experiment_exposure',
 			'experiment' => $expectedExperimentConfig
@@ -420,7 +420,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->method( 'newEvent' )
 			->with(
 				'product_metrics.web_base',
-				'/analytics/product_metrics/web/base/2.1.0',
+				'/analytics/product_metrics/web/base/2.2.0',
 				array_unique(
 					array_merge(
 						$this->experimentConfig[ 'contextual_attributes' ],

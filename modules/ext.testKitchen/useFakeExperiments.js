@@ -1,6 +1,6 @@
 /* eslint-env qunit */
 
-const { OverriddenExperiment, UnenrolledExperiment } = require( './Experiment.js' );
+const { UnenrolledExperiment, OverriddenExperiment } = require( './Experiment.js' );
 
 let globalEventCount;
 
@@ -8,8 +8,18 @@ let globalEventCount;
  * @implements {mw.testKitchen.StubbedExperimentInterface}
  */
 class StubExperiment extends OverriddenExperiment {
-	constructor( name, assigned ) {
-		super( name, assigned );
+	constructor( experimentName, assigned ) {
+		super(
+			undefined,
+			undefined,
+			undefined, {
+				enrolled: experimentName,
+				assigned: assigned,
+				stream_name: 'product_metrics.web_base',
+				schema_id: '/analytics/product_metrics/web/base/2.2.0',
+				contextual_attributes: []
+			}
+		);
 
 		/** @type {mw.testKitchen.TestEvent[]} */
 		this.events = [];

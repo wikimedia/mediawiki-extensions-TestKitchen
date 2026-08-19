@@ -81,7 +81,7 @@ class EventFactory {
 	 * @private
 	 *
 	 * @param {Object} event
-	 * @param {mw.testKitchen.ContextualAttribute[]} requestedContextualAttributes
+	 * @param {string[]} requestedContextualAttributes
 	 */
 	addContextualAttributes( event, requestedContextualAttributes ) {
 		requestedContextualAttributes =

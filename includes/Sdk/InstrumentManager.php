@@ -6,7 +6,7 @@ use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 
 class InstrumentManager implements InstrumentManagerInterface {
 
-	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.1.0';
+	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.2.0';
 
 	private ?array $instrumentConfigs = null;
 

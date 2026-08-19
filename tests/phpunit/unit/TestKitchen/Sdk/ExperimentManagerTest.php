@@ -593,7 +593,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 					'performer_is_temp',
 				],
 				'phase_index' => 0,
-				'schema_id' => '/analytics/product_metrics/web/base/2.1.0',
+				'schema_id' => '/analytics/product_metrics/web/base/2.2.0',
 				'exposure_version' => 'abc123def4567890',
 				'version' => 'abc123def4567890',
 			],
@@ -615,7 +615,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 				'sampling_unit' => 'mw-user',
 				'coordinator' => 'default',
 				'stream_name' => 'product_metrics.web_base',
-				'schema_id' => '/analytics/product_metrics/web/base/2.1.0',
+				'schema_id' => '/analytics/product_metrics/web/base/2.2.0',
 				'contextual_attributes' => [
 					'page_id',
 					'performer_is_temp',

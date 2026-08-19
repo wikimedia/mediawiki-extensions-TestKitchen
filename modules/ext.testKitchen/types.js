@@ -33,6 +33,7 @@
  * @property {string} schema_id The ID of the schema used to validate experiment-related analytics
  *  events with
  * @property {number} phase_index The phase index of the experiment
+ * @property {string} exposure_version
  * @property {string} version The version of the experiment
  * @property {string[]} contextual_attributes
  * @property {Object<string,string>} other_assigned Enrollment information for all other experiments

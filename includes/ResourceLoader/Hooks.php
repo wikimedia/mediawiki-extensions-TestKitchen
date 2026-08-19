@@ -7,8 +7,6 @@ use MediaWiki\Extension\TestKitchen\Services;
 use MediaWiki\ResourceLoader as RL;
 
 class Hooks {
-	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.1.0';
-
 	/**
 	 * Gets the contents of the `config.json` file for the `ext.testKitchen` ResourceLoader module.
 	 *
@@ -22,6 +20,8 @@ class Hooks {
 				$config->get( 'TestKitchenExperimentEventIntakeServiceUrl' ),
 			'LoggedInExperimentEventIntakeServiceUrl' =>
 				$config->get( 'TestKitchenLoggedInExperimentEventIntakeServiceUrl' ),
+			'OverriddenExperimentEventIntakeServiceUrl' =>
+				$config->get( 'TestKitchenOverriddenExperimentEventIntakeServiceUrl' ),
 			'InstrumentEventIntakeServiceUrl' => $config->get( 'TestKitchenInstrumentEventIntakeServiceUrl' ),
 
 			'experimentConfigs' => self::getExperimentConfigs(),

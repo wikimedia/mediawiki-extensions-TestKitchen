@@ -13,6 +13,7 @@ const EXPOSURE_CONTEXTUAL_ATTRIBUTES = [
 const COOKIES_DISABLED = navigator.cookieEnabled !== undefined ? !navigator.cookieEnabled : false;
 
 const COORDINATOR_DEFAULT = 'default';
+const COORDINATOR_FORCED = 'forced';
 
 /**
  * @class
@@ -44,9 +45,9 @@ class Experiment {
 		this.config = config;
 		this.streamName = config.stream_name;
 		this.schemaID = config.schema_id;
-		this.contextualAttributes = config.contextual_attributes;
 		this.tracker = exposureLogTracker;
 		this.exposureVersion = config.exposure_version;
+		this.contextualAttributes = config.contextual_attributes;
 	}
 
 	getAssignedGroup() {
@@ -68,41 +69,11 @@ class Experiment {
 			return;
 		}
 
-		// Extract SDK-specific experiment config
-		const keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'phase_index' ];
-		const experiment = {};
-
-		for ( const key of keys ) {
-			experiment[ key ] = this.config[ key ];
-		}
-
-		if ( this.config.version !== undefined ) {
-			experiment.version = this.config.version;
-		}
-
-		experiment.coordinator = COORDINATOR_DEFAULT;
-
-		// T421152: Include enrollment information about other experiments that the user is enrolled
-		// in.
-		const otherAssigned = this.config.other_assigned;
-
-		if ( otherAssigned && Object.keys( otherAssigned ).length > 0 ) {
-			experiment.other_assigned = otherAssigned;
-		}
-
-		interactionData = Object.assign(
-			{},
-			interactionData,
-			{ experiment }
+		interactionData = prepareInteractionData( this.config, interactionData, COORDINATOR_DEFAULT );
+		const eventContextualAttributes = prepareContextualAttributes(
+			this.contextualAttributes,
+			contextualAttributes
 		);
-
-		// If present, per-event contextual attributes will be added
-		let eventContextualAttributes = this.contextualAttributes || [];
-		if ( contextualAttributes && contextualAttributes.length > 0 ) {
-			eventContextualAttributes = [ ...new Set(
-				eventContextualAttributes.concat( contextualAttributes )
-			) ];
-		}
 
 		const event = this.eventFactory.newEvent(
 			this.streamName,
@@ -194,20 +165,27 @@ class UnenrolledExperiment {
 class OverriddenExperiment {
 
 	/**
-	 * @param {string} name
-	 * @param {string} assigned
+	 * @param {mw.testKitchen.EventFactory} eventFactory
+	 * @param {mw.testKitchen.InternalEventSender} internalEventSender
+	 * @param {string} eventIntakeServiceUrl
+	 * @param {mw.testKitchen.ExperimentConfig} config
 	 */
-	constructor( name, assigned ) {
-		this.name = name;
-		this.assigned = assigned;
+	constructor( eventFactory, internalEventSender, eventIntakeServiceUrl, config ) {
+		this.eventFactory = eventFactory;
+		this.internalEventSender = internalEventSender;
+		this.eventIntakeServiceUrl = eventIntakeServiceUrl;
+		this.streamName = config.stream_name;
+		this.schemaID = config.schema_id;
+		this.config = config;
+		this.contextualAttributes = config.contextual_attributes;
 	}
 
 	getAssignedGroup() {
-		return this.assigned;
+		return this.config.assigned;
 	}
 
 	isAssignedGroup( ...groups ) {
-		return groups.includes( this.assigned );
+		return groups.includes( this.getAssignedGroup() );
 	}
 
 	use( instrumentation ) {
@@ -219,17 +197,39 @@ class OverriddenExperiment {
 	// eslint-disable-next-line no-unused-vars
 	send( action, interactionData, contextualAttributes ) {
 		const message =
-			`${ this.name }: The enrollment for this experiment has been overridden. ` +
+			`${ this.config.enrolled }: The enrollment for this experiment has been overridden. ` +
 			'The following event will not be sent:\n';
 
 		const args = [ message, action ];
-
 		if ( interactionData ) {
 			args.push( JSON.stringify( interactionData, null, 2 ) );
 		}
-
+		if ( contextualAttributes ) {
+			const perEventContextualAttributes = {};
+			this.eventFactory.addContextualAttributes( perEventContextualAttributes, contextualAttributes );
+			args.push( JSON.stringify( perEventContextualAttributes, null, 2 ) );
+		}
 		// eslint-disable-next-line no-console
 		console.log.apply( console, args );
+
+		// An overridden experiment sends events when running in the beta cluster (and to the beta cluster stream)
+		if ( mw.config.get( 'wgServer' ).includes( '.beta.wmcloud.org' ) ) {
+			interactionData = prepareInteractionData( this.config, interactionData, COORDINATOR_FORCED );
+			const eventContextualAttributes = prepareContextualAttributes(
+				this.contextualAttributes,
+				contextualAttributes
+			);
+
+			const event = this.eventFactory.newEvent(
+				this.streamName,
+				this.schemaID,
+				eventContextualAttributes,
+				action,
+				interactionData
+			);
+
+			this.internalEventSender.sendEvent( event, this.eventIntakeServiceUrl );
+		}
 	}
 
 	submitInteraction( action, interactionData, contextualAttributes ) {
@@ -247,6 +247,65 @@ class OverriddenExperiment {
 	setSchema( schemaID ) {
 		return this;
 	}
+}
+
+/**
+ * @private
+ * @ignore
+ *
+ * @param {mw.testKitchen.ExperimentConfig} experimentConfig
+ * @param {Object} interactionData
+ * @param {string} coordinator
+ * @returns {Object}
+ */
+function prepareInteractionData( experimentConfig, interactionData, coordinator ) {
+	// Extract SDK-specific experiment config
+	const keys = [ 'enrolled', 'assigned', 'subject_id', 'sampling_unit', 'phase_index' ];
+	const experiment = {};
+
+	for ( const key of keys ) {
+		experiment[ key ] = experimentConfig[ key ];
+	}
+
+	if ( experimentConfig.version !== undefined ) {
+		experiment.version = experimentConfig.version;
+	}
+
+	experiment.coordinator = coordinator;
+
+	// T421152: Include enrollment information about other experiments that the user is enrolled
+	// in.
+	const otherAssigned = experimentConfig.other_assigned;
+
+	if ( otherAssigned && Object.keys( otherAssigned ).length > 0 ) {
+		experiment.other_assigned = otherAssigned;
+	}
+
+	return Object.assign(
+		{},
+		interactionData,
+		{ experiment }
+	);
+}
+
+/**
+ * @private
+ * @ignore
+ *
+ * Concat per event contextual attributes to the ones defined in the experiment configuration and return the result
+ * @param {string[]} configuredContextualAttributes
+ * @param {string[]} perEventContextualAttributes
+ * @returns {string[]}
+ */
+function prepareContextualAttributes( configuredContextualAttributes, perEventContextualAttributes ) {
+	let contextualAttributes = configuredContextualAttributes || [];
+	if ( perEventContextualAttributes && perEventContextualAttributes.length > 0 ) {
+		contextualAttributes = [ ...new Set(
+			contextualAttributes.concat( perEventContextualAttributes )
+		) ];
+	}
+
+	return contextualAttributes;
 }
 
 module.exports = {

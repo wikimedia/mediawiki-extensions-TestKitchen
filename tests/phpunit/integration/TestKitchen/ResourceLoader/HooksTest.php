@@ -26,6 +26,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 		$this->config = new HashConfig( [
 			'TestKitchenExperimentEventIntakeServiceUrl' => 'http://foo.bar',
 			'TestKitchenLoggedInExperimentEventIntakeServiceUrl' => 'http://baz.qux',
+			'TestKitchenOverriddenExperimentEventIntakeServiceUrl' => 'http://foo.baz',
 			'TestKitchenInstrumentEventIntakeServiceUrl' => 'http://quux.corge',
 			'TestKitchenExperimentStreamNames' => [
 				'product_metrics.web_base',
@@ -132,7 +133,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			]
 		);
 
-		$schemaId = '/analytics/product_metrics/web/base/2.1.0';
+		$schemaId = '/analytics/product_metrics/web/base/2.2.0';
 		$lunchConfig['schema_id'] = $schemaId;
 		$lunchConfig['exposure_version'] = $this->computeExpectedExposureVersion( $lunchConfig, $schemaId );
 		$lunchConfig['version'] = $lunchConfig['exposure_version'];
@@ -164,7 +165,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			[
 				'user_identifier_type' => 'mw-user',
 				'stream_name' => 'product_metrics.web_base',
-				'schema_id' => '/analytics/product_metrics/web/base/2.1.0',
+				'schema_id' => '/analytics/product_metrics/web/base/2.2.0',
 				'contextual_attributes' => [ 'performer_is_logged_in', 'performer_is_temp' ],
 				'phase_index' => 0,
 			],
@@ -175,7 +176,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			[
 				'user_identifier_type' => 'mw-user',
 				'stream_name' => 'product_metrics.web_base',
-				'schema_id' => '/analytics/product_metrics/web/base/2.1.0',
+				'schema_id' => '/analytics/product_metrics/web/base/2.2.0',
 				'contextual_attributes' => [ 'page_id' ],
 				'phase_index' => 0,
 			],

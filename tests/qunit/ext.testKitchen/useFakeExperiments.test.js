@@ -1,4 +1,29 @@
-QUnit.module( 'ext.testKitchen/useFakeExperiments', QUnit.newMwEnvironment() );
+QUnit.module( 'ext.testKitchen/useFakeExperiments', QUnit.newMwEnvironment( {
+	beforeEach: function () {
+		// Stubs
+		// =====
+
+		this.expectedEvent = {
+			$schema: '/analytics/product_metrics/web/base/2.2.0',
+			dt: new Date().toISOString()
+		};
+
+		const eventFactory = {
+			newEvent() {
+			}
+		};
+
+		this.newEventStub = this.sandbox.stub( eventFactory, 'newEvent' )
+			.returns( this.expectedEvent );
+
+		const eventSender = {
+			sendEvent() {
+			}
+		};
+
+		this.sendEventStub = this.sandbox.stub( eventSender, 'sendEvent' );
+	}
+} ) );
 
 QUnit.test( 'it should replace and restore mw.testKitchen.getExperiments', ( assert ) => {
 	const oldGetExperiments = mw.testKitchen.getExperiment;

@@ -20,7 +20,7 @@ use Wikimedia\Stats\StatsFactory;
 
 class ConfigsFetcher {
 	private const VERSION = 2;
-	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.1.0';
+	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.2.0';
 	private const HTTP_TIMEOUT = 1;
 	private const INSTRUMENT = 1;
 	private const EXPERIMENT = 2;

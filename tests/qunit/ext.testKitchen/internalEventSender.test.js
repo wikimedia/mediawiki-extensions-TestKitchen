@@ -3,7 +3,7 @@ function newEvent() {
 		meta: {
 			stream: 'product_metrics.web_base'
 		},
-		$schema: '/analytics/product_metrics/web/base/2.1.0',
+		$schema: '/analytics/product_metrics/web/base/2.2.0',
 		dt: new Date().toISOString()
 	};
 }

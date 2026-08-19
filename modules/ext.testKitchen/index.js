@@ -15,7 +15,7 @@ const {
 	setOverriddenEnrollmentConfigs
 } = require( './enrollmentConfig.js' );
 
-const SCHEMA_ID = '/analytics/product_metrics/web/base/2.1.0';
+const SCHEMA_ID = '/analytics/product_metrics/web/base/2.2.0';
 
 const UINT32_MAX = 4294967295; // (2^32) - 1
 
@@ -23,6 +23,7 @@ const UINT32_MAX = 4294967295; // (2^32) - 1
  * @typedef {Object} ConfigFromServer
  * @property {string} EveryoneExperimentEventIntakeServiceUrl
  * @property {string} LoggedInExperimentEventIntakeServiceUrl
+ * @property {string} OverriddenExperimentEventIntakeServiceUrl
  * @property {string} InstrumentEventIntakeServiceUrl
  * @property {Object.<string,mw.testKitchen.PartialExperimentConfig>} experimentConfigs
  * @property {Object.<string,mw.testKitchen.PartialInstrumentConfig>} instrumentConfigs
@@ -56,14 +57,31 @@ function newExperiment( enrollmentConfig ) {
 	}
 
 	const experimentName = enrollmentConfig.enrolled;
+	const experimentConfig = config.experimentConfigs[ experimentName ];
 
-	if ( enrollmentConfig.is_override ) {
-		return new OverriddenExperiment( experimentName, enrollmentConfig.assigned );
-	} else if ( !config.experimentConfigs[ experimentName ] ) {
+	// It's an overridden experiment with no configuration registered in Test Kitchen. A default config will be used
+	if ( enrollmentConfig.is_override && !experimentConfig ) {
+		return new OverriddenExperiment(
+			eventFactory,
+			internalEventSender,
+			config.OverriddenExperimentEventIntakeServiceUrl,
+			{
+				enrolled: experimentName,
+				assigned: enrollmentConfig.assigned,
+				subject_id: 'overridden',
+				sampling_unit: 'overridden',
+				stream_name: 'product_metrics.web_base',
+				schema_id: SCHEMA_ID,
+				contextual_attributes: [],
+				other_assigned: enrollmentConfig.other_assigned,
+				version: 'v1',
+				phase_index: 0
+			}
+		);
+	} else if ( !experimentConfig ) {
 		return new UnenrolledExperiment();
 	}
 
-	const experimentConfig = config.experimentConfigs[ experimentName ];
 	const isLoggedInExperiment = experimentConfig.user_identifier_type === 'mw-user';
 	const eventIntakeServiceUrl = isLoggedInExperiment ?
 		config.LoggedInExperimentEventIntakeServiceUrl :
@@ -82,6 +100,19 @@ function newExperiment( enrollmentConfig ) {
 		version: experimentConfig.version,
 		phase_index: experimentConfig.phase_index
 	};
+
+	// It's an overridden experiment with a config registered already in Test Kitchen. That one will be used
+	if ( enrollmentConfig.is_override ) {
+		configToPass.subject_id = 'overridden';
+		configToPass.sampling_unit = 'overridden';
+
+		return new OverriddenExperiment(
+			eventFactory,
+			internalEventSender,
+			config.OverriddenExperimentEventIntakeServiceUrl,
+			configToPass
+		);
+	}
 
 	return new Experiment(
 		eventFactory,

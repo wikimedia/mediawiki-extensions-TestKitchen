@@ -18,10 +18,9 @@ class ExperimentManager implements
 	ExperimentCoordinatorInterface
 {
 	private const BASE_STREAM = 'product_metrics.web_base';
-	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.1.0';
+	private const BASE_SCHEMA_ID = '/analytics/product_metrics/web/base/2.2.0';
 
-	// The experiment.sampling_unit field can be one of "mw-user", "edge-unique", or "session" but, because overridden
-	// experiments cannot send events, for clarity we can set "overridden" as the value.
+	// The experiment.sampling_unit field can be one of "mw-user", "edge-unique", "session" or "overridden"
 	private const OVERRIDDEN_EXPERIMENT_SAMPLING_UNIT = 'overridden';
 
 	private const COORDINATOR_FORCED = 'forced';

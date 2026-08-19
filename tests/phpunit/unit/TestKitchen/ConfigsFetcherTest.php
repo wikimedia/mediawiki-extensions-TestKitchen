@@ -307,7 +307,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 
 		$this->assertArrayHasKey( 'lunch', $configs );
 		$this->assertSame(
-			'/analytics/product_metrics/web/base/2.1.0',
+			'/analytics/product_metrics/web/base/2.2.0',
 			$configs['lunch']['schema_id']
 		);
 		$this->assertSame(
@@ -373,7 +373,7 @@ class ConfigsFetcherTest extends MediaWikiUnitTestCase {
 	}
 
 	private function computeExpectedExposureVersion( array $experimentConfig ): string {
-		$schemaId = $experimentConfig['schema_id'] ?? '/analytics/product_metrics/web/base/2.1.0';
+		$schemaId = $experimentConfig['schema_id'] ?? '/analytics/product_metrics/web/base/2.2.0';
 		$groups = $experimentConfig['groups'] ?? [];
 		sort( $groups );
 

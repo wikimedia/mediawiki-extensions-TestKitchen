@@ -22,6 +22,18 @@ QUnit.module( 'ext.testKitchen/EventFactory', QUnit.newMwEnvironment( {
 		// Kitchen is not supported.
 
 		this.eventFactory = new EventFactory( contextualAttributesFactory );
+
+		this.experimentConfig = {
+			enrolled: 'hello_world',
+			assigned: 'A',
+			subject_id: 'awaiting',
+			sampling_unit: 'edge-unique',
+			coordinator: 'default',
+			phase_index: 0,
+			other_assigned: {
+				foo: 'bar'
+			}
+		};
 	}
 } ) );
 
@@ -34,7 +46,18 @@ QUnit.test( 'newEvent()', function ( assert ) {
 			domain: 'my-awesome-server-name',
 			stream: 'my-awesome-stream'
 		},
-		dt: this.expectedDt
+		dt: this.expectedDt,
+		experiment: {
+			enrolled: 'hello_world',
+			assigned: 'A',
+			subject_id: 'awaiting',
+			sampling_unit: 'edge-unique',
+			coordinator: 'default',
+			phase_index: 0,
+			other_assigned: {
+				foo: 'bar'
+			}
+		}
 	};
 
 	assert.deepEqual(
@@ -44,7 +67,18 @@ QUnit.test( 'newEvent()', function ( assert ) {
 			[],
 			'my-awesome-action',
 			{
-				foo: 'bar'
+				foo: 'bar',
+				experiment: {
+					enrolled: 'hello_world',
+					assigned: 'A',
+					subject_id: 'awaiting',
+					sampling_unit: 'edge-unique',
+					coordinator: 'default',
+					phase_index: 0,
+					other_assigned: {
+						foo: 'bar'
+					}
+				}
 			}
 		),
 		expected
@@ -60,7 +94,18 @@ QUnit.test( 'newEvent() - key Event Platform fields aren\'t overridden', functio
 			domain: 'my-awesome-server-name',
 			stream: 'my-awesome-stream'
 		},
-		dt: this.expectedDt
+		dt: this.expectedDt,
+		experiment: {
+			enrolled: 'hello_world',
+			assigned: 'A',
+			subject_id: 'awaiting',
+			sampling_unit: 'edge-unique',
+			coordinator: 'default',
+			phase_index: 0,
+			other_assigned: {
+				foo: 'bar'
+			}
+		}
 	};
 
 	assert.deepEqual(
@@ -72,7 +117,18 @@ QUnit.test( 'newEvent() - key Event Platform fields aren\'t overridden', functio
 			{
 				foo: 'bar',
 				meta: 'meta',
-				dt: new Date().toISOString()
+				dt: new Date().toISOString(),
+				experiment: {
+					enrolled: 'hello_world',
+					assigned: 'A',
+					subject_id: 'awaiting',
+					sampling_unit: 'edge-unique',
+					coordinator: 'default',
+					phase_index: 0,
+					other_assigned: {
+						foo: 'bar'
+					}
+				}
 			}
 		),
 		expected
