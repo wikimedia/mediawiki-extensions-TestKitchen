@@ -1,0 +1,10 @@
+{
+	"@metadata": {
+		"authors": [
+			"Wizzard"
+		]
+	},
+	"testkitchen-desc": "Poskytuje SDK Test Kitchen pre PHP a JS, ktoré vývojári používajú na realizáciu experimentov a zber údajov pre analytiku.",
+	"testkitchen-non-successful-response": "API Test Kitchen vrátilo neúspešnú odpoveď.",
+	"testkitchen-api-empty-response-body": "API Test Kitchen vrátilo odpoveď s prázdnym telom."
+}
