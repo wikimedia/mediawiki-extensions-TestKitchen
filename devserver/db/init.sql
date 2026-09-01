@@ -55,6 +55,38 @@ CREATE TABLE IF NOT EXISTS instrument_contextual_attribute_lookup (
 	PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS experiments_cache (
+	id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	name VARCHAR(255) NOT NULL,
+	slug VARCHAR(255) NOT NULL,
+	phase_index INT UNSIGNED NOT NULL DEFAULT 0,
+	utc_start_dt DATETIME NOT NULL,
+	utc_end_dt DATETIME NULL,
+	user_identifier_type VARCHAR(255) NOT NULL,
+	traffic_split JSON NOT NULL,
+	stream_name VARCHAR(255) NOT NULL,
+	schema_id VARCHAR(255) NULL,
+	contextual_attributes JSON DEFAULT NULL,
+	source VARCHAR(255) NOT NULL,
+	version VARCHAR(64) NOT NULL DEFAULT '',
+	PRIMARY KEY (id),
+	UNIQUE KEY (slug)
+	);
+
+CREATE TABLE IF NOT EXISTS traffic_limit_exceptions (
+	id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	experiment_name VARCHAR(255) NOT NULL,
+	experiment_slug VARCHAR(255) NOT NULL,
+	growthbook_uri VARCHAR(255) NOT NULL,
+	category VARCHAR(64) NOT NULL,
+	traffic INT UNSIGNED NOT NULL,
+	active BOOLEAN NOT NULL DEFAULT TRUE,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	PRIMARY KEY (id),
+	UNIQUE KEY (experiment_slug)
+	);
+
 CREATE TABLE IF NOT EXISTS okrs (
 	id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 	name VARCHAR(255) NOT NULL,
