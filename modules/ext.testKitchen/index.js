@@ -7,12 +7,14 @@ const internalEventSender = require( './internalEventSender.js' );
 const { Instrument, UnsampledInstrument } = require( './Instrument.js' );
 const ExposureLogTracker = require( './ExposureLogTracker.js' );
 const {
+	overrideExperimentGroup,
+	clearExperimentOverride,
+	clearExperimentOverrides,
 	get,
 	getAsync,
 	getMatching,
 	getMatchingAsync,
-	reset: resetEnrollmentConfigs,
-	setOverriddenEnrollmentConfigs
+	reset: resetEnrollmentConfigs
 } = require( './enrollmentConfig.js' );
 
 const SCHEMA_ID = '/analytics/product_metrics/web/base/2.2.0';
@@ -362,7 +364,10 @@ mw.testKitchen = {
 	getExperiment: getExperimentAsync,
 	getExperimentsByPrefix: getExperimentsByPrefixAsync,
 	getAssignments,
-	getInstrument
+	getInstrument,
+	overrideExperimentGroup,
+	clearExperimentOverride,
+	clearExperimentOverrides
 };
 
 /**
@@ -429,7 +434,6 @@ if ( window.QUnit ) {
 		useFakeExperiments,
 		useFakeInstruments,
 
-		resetEnrollmentConfigs,
-		setOverriddenEnrollmentConfigs
+		resetEnrollmentConfigs
 	} );
 }

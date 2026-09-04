@@ -10,12 +10,12 @@ use MediaWiki\Extension\TestKitchen\Hooks;
 use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\MediaWikiEntryPoint;
 use MediaWiki\Output\OutputPage;
-use MediaWiki\Request\FauxRequest;
 use MediaWiki\Skin\Skin;
 use MediaWiki\User\CentralId\CentralIdLookup;
 use MediaWiki\User\User;
 use MediaWikiIntegrationTestCase;
 use MockHttpTrait;
+use Psr\Log\LoggerInterface;
 
 /**
  * @covers \MediaWiki\Extension\TestKitchen\Hooks
@@ -24,7 +24,9 @@ use MockHttpTrait;
  * @covers \MediaWiki\Extension\TestKitchen\Coordination\RequestEnrollmentsProcessor
  * @covers \MediaWiki\Extension\TestKitchen\Coordination\EnrollmentsProcessor
  */
-class HooksTest extends MediaWikiIntegrationTestCase {
+class HooksTest
+	extends MediaWikiIntegrationTestCase
+{
 	use MockHttpTrait;
 
 	private const NO_ENROLLMENTS = [
@@ -38,6 +40,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 	private OutputPage $output;
 	private MediaWikiEntryPoint $entryPoint;
 	private Skin $skin;
+	private LoggerInterface $logger;
 
 	public function setUp(): void {
 		parent::setUp();
@@ -51,13 +54,28 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 		// logged-in-experiment-3 shouldn't be considered (it hasn't started yet)
 		$this->installMockHttp( $this->makeFakeHttpRequest( '[
 			{
-				"name": "experiment_1",
-				"start": "' . $now->modify( '-1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
-				"end": "' . $now->modify( '+1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
-				"user_identifier_type": "edge-unique",
-				"sample_rate": {
-					"default": 1
-				},
+    			"name": "experiment_1",
+    			"start": "' . $now->modify( '-1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"end": "' . $now->modify( '+1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"user_identifier_type": "edge-unique",
+    			"sample_rate": {
+    	  			"default": 1
+     			},
+				"groups": [ "control", "group-something" ],
+				"stream_name": "product_metrics.web_base",
+				"contextual_attributes": [
+					"performer_is_logged_in",
+					"performer_is_temp"
+				]
+			},
+						{
+    			"name": "experiment_2",
+    			"start": "' . $now->modify( '-1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"end": "' . $now->modify( '+1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"user_identifier_type": "edge-unique",
+    			"sample_rate": {
+    	  			"default": 1
+     			},
 				"groups": [ "control", "group-something" ],
 				"stream_name": "product_metrics.web_base",
 				"contextual_attributes": [
@@ -66,13 +84,13 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 				]
 			},
 			{
-				"name": "experiment_2",
-				"start": "' . $now->modify( '-1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
-				"end": "' . $now->modify( '+1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
-				"user_identifier_type": "edge-unique",
-				"sample_rate": {
-					"default": 1
-				},
+    			"name": "logged-in-experiment-1",
+    			"start": "' . $now->modify( '-1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"end": "' . $now->modify( '+1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"user_identifier_type": "mw-user",
+    			"sample_rate": {
+    	  			"default": 1
+     			},
 				"groups": [ "control", "group-something" ],
 				"stream_name": "product_metrics.web_base",
 				"contextual_attributes": [
@@ -81,28 +99,13 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 				]
 			},
 			{
-				"name": "logged-in-experiment-1",
-				"start": "' . $now->modify( '-1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
-				"end": "' . $now->modify( '+1 month' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
-				"user_identifier_type": "mw-user",
-				"sample_rate": {
-					"default": 1
-				},
-				"groups": [ "control", "group-something" ],
-				"stream_name": "product_metrics.web_base",
-				"contextual_attributes": [
-					"performer_is_logged_in",
-					"performer_is_temp"
-				]
-			},
-			{
-				"name": "logged-in-experiment-2",
-				"start": "' . $now->modify( '-1 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
-				"end": "' . $now->modify( '+1 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
-				"user_identifier_type": "mw-user",
-				"sample_rate": {
-					"default": 1
-				},
+    			"name": "logged-in-experiment-2",
+    			"start": "' . $now->modify( '-1 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"end": "' . $now->modify( '+1 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"user_identifier_type": "mw-user",
+    			"sample_rate": {
+    	  			"default": 1
+     			},
 				"groups": [ "control", "group-other-thing" ],
 				"stream_name": "product_metrics.web_base",
 				"contextual_attributes": [
@@ -110,13 +113,13 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 				]
 			},
 			{
-				"name": "logged-in-experiment-3",
-				"start": "' . $now->modify( '+1 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
-				"end": "' . $now->modify( '+2 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
-				"user_identifier_type": "mw-user",
-				"sample_rate": {
-					"default": 1
-				},
+    			"name": "logged-in-experiment-3",
+    			"start": "' . $now->modify( '+1 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"end": "' . $now->modify( '+2 week' )->format( 'Y-m-d\TH:i:s\Z' ) . '",
+    			"user_identifier_type": "mw-user",
+    			"sample_rate": {
+    	  			"default": 1
+     			},
 				"groups": [ "control", "group-another-thing" ],
 				"stream_name": "product_metrics.web_base",
 				"contextual_attributes": [
@@ -189,7 +192,11 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			'overrides' => []
 		];
 
-		$this->assertEnrollmentsEqual( $expected, $actual );
+		$this->assertEquals(
+			$expected,
+			$actual,
+			'X-Experiment-Enrollments header has been parsed correctly'
+		);
 	}
 
 	/**
@@ -257,10 +264,9 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			->with( 'TestUser' )
 			->willReturn( 321 );
 
-		$request = new FauxRequest( [
-			'mpo' => 'logged-in-experiment-3:control'
-		] );
-		$this->context->setRequest( $request );
+		$this->context->getRequest()->setCookie(
+			'mpo', 'logged-in-experiment-3:control'
+		);
 
 		$actual = $this->onBeforeInitialize();
 		$expected = [
@@ -288,7 +294,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 	}
 
 	/**
-	 * Tests the user setting an override for an already enrolled logged-in experiment.
+	 * Tests the user setting an override for an out-sample for a logged-in experiment.
 	 */
 	public function testOverriddenAlreadyEnrolledLoggedInExperiment(): void {
 		// The user is registered (they have a local ID > 0) and they have a central user ID > 0
@@ -304,13 +310,16 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			->with( 'TestUser' )
 			->willReturn( 321 );
 
-		$request = new FauxRequest( [
-			'mpo' => 'logged-in-experiment-2:control'
-		] );
-		$this->context->setRequest( $request );
+		$this->context->getRequest()->setCookie(
+			'mpo', 'logged-in-experiment-2:control'
+		);
 
 		$actual = $this->onBeforeInitialize();
 		$expected = [
+			'active_experiments' => [
+				'logged-in-experiment-1',
+				'logged-in-experiment-2'
+			],
 			'enrolled' => [
 				'logged-in-experiment-1',
 				'logged-in-experiment-2'
@@ -323,8 +332,16 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 				'logged-in-experiment-1' => '9b6a4e7d98cd96a463fbcadb9e9edfdd9e4b5d9560c79b9d16b38599cb23128e',
 				'logged-in-experiment-2' => 'overridden'
 			],
+			'sampling_units' => [
+				'logged-in-experiment-1' => 'mw-user',
+				'logged-in-experiment-2' => 'overridden'
+			],
 			'overrides' => [
 				'logged-in-experiment-2'
+			],
+			'coordinator' => [
+				'logged-in-experiment-1' => 'default',
+				'logged-in-experiment-2' => 'forced'
 			]
 		];
 

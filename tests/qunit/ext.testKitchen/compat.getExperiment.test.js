@@ -64,11 +64,16 @@ QUnit.module( 'ext.testKitchen.compat/getExperiment()', QUnit.newMwEnvironment( 
 				'product_metrics.custom_stream': [ 'page_id', 'page_title' ]
 			}
 		} );
+
+		this.originalMPOCookie = mw.cookie.get( 'mpo' );
+		mw.cookie.set( 'mpo', null );
 	},
 	afterEach() {
+		mw.cookie.set( 'mpo', this.originalMPOCookie );
+
 		mw.testKitchen.resetConfig();
 
-		mw.testKitchen.resetEnrollmentConfigs();
+		require( 'ext.testKitchen/enrollmentConfig.js' ).reset();
 	}
 } ) );
 
@@ -100,9 +105,7 @@ QUnit.test.each(
 );
 
 QUnit.test( 'it handles overridden experiment', ( assert ) => {
-	mw.testKitchen.setOverriddenEnrollmentConfigs( {
-		fruit: 'gooseberry'
-	} );
+	mw.testKitchen.overrideExperimentGroup( 'fruit', 'gooseberry' );
 
 	const e = mw.testKitchen.compat.getExperiment( 'fruit' );
 

@@ -27,7 +27,11 @@ class OverridesEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 		$this->authority = new OverridesEnrollmentAuthority( $this->logger );
 	}
 
-	public function testQueryIsEmpty(): void {
+	public function testCookieAndQueryAreEmpty(): void {
+		$this->request->expects( $this->once() )
+			->method( 'getRawEnrollmentOverridesFromCookie' )
+			->willReturn( '' );
+
 		$this->request->expects( $this->once() )
 			->method( 'getRawEnrollmentOverridesFromQuery' )
 			->willReturn( '' );
@@ -38,12 +42,17 @@ class OverridesEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 	}
 
 	/**
-	 * @dataProvider provideQuery
+	 * @dataProvider provideCookieAndQuery
 	 */
-	public function testQuery(
+	public function testCookieAndQuery(
+		string $rawCookie,
 		string $rawQuery,
 		array $expectedOverrides
 	): void {
+		$this->request->expects( $this->once() )
+			->method( 'getRawEnrollmentOverridesFromCookie' )
+			->willReturn( $rawCookie );
+
 		$this->request->expects( $this->once() )
 			->method( 'getRawEnrollmentOverridesFromQuery' )
 			->willReturn( $rawQuery );
@@ -60,13 +69,28 @@ class OverridesEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 		$this->assertEquals( $expectedResult, $this->result );
 	}
 
-	public static function provideQuery(): Generator {
+	public static function provideCookieAndQuery(): Generator {
 		yield [
+			'foo:bar',
+			'',
+			[ 'foo' => 'bar' ],
+		];
+		yield [
+			'',
 			'qux:quux',
 			[ 'qux' => 'quux' ],
 		];
 		yield [
+			'foo:bar',
+			'qux:quux',
+			[
+				'foo' => 'bar',
+				'qux' => 'quux',
+			],
+		];
+		yield [
 			'foo:bar;qux:quux',
+			'',
 			[
 				'foo' => 'bar',
 				'qux' => 'quux',
@@ -75,6 +99,10 @@ class OverridesEnrollmentAuthorityTest extends MediaWikiUnitTestCase {
 	}
 
 	public function testMalformedQuery(): void {
+		$this->request->expects( $this->once() )
+			->method( 'getRawEnrollmentOverridesFromCookie' )
+			->willReturn( '' );
+
 		$this->request->expects( $this->once() )
 			->method( 'getRawEnrollmentOverridesFromQuery' )
 			->willReturn( '51qdu1' );

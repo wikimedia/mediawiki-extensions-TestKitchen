@@ -16,7 +16,7 @@ use MediaWiki\User\UserIdentity;
 class EnrollmentRequest {
 
 	/**
-	 * The name of the querystring parameter to get experiment enrollment overrides from.
+	 * The name of the querystring parameter or cookie to get experiment enrollment overrides from.
 	 */
 	private const OVERRIDES_PARAM_NAME = 'mpo';
 
@@ -46,5 +46,9 @@ class EnrollmentRequest {
 		$queryValues = $this->request->getQueryValues();
 
 		return $queryValues[self::OVERRIDES_PARAM_NAME] ?? '';
+	}
+
+	public function getRawEnrollmentOverridesFromCookie(): string {
+		return $this->request->getCookie( self::OVERRIDES_PARAM_NAME, null, '' );
 	}
 }
