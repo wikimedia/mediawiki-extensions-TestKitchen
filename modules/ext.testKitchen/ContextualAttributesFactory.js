@@ -1,10 +1,5 @@
 const c = mw.config.get.bind( mw.config );
 
-// Module-local cache for the result of ContextualAttributesFactory::newContextualAttributes().
-// Since the result of ::newContextualAttributes() does not vary by instance, it is safe to cache
-// the result at this level.
-let contextAttributes = null;
-
 /**
  * @classdesc This class and supporting code is the same as
  *  [`repos/data-engineering/metrics-platform/js/src/DefaultEventSubmitter.js`][0]. That class was
@@ -19,6 +14,10 @@ let contextAttributes = null;
  */
 class ContextualAttributesFactory {
 
+	constructor() {
+		this.contextualAttributes = null;
+	}
+
 	/**
 	 * Gets the values of all contextual attributes.
 	 *
@@ -31,8 +30,8 @@ class ContextualAttributesFactory {
 	 * @return {Object}
 	 */
 	newContextualAttributes() {
-		if ( contextAttributes ) {
-			return contextAttributes;
+		if ( this.contextualAttributes ) {
+			return this.contextualAttributes;
 		}
 
 		// This used to be determined by checking whether <body> had the "mw-mf" class. However,
@@ -48,6 +47,11 @@ class ContextualAttributesFactory {
 		const userIsLoggedIn = !mw.user.isAnon();
 		const userGroups = c( 'wgUserGroups', [] );
 
+		// For special pages, use the canonical (English) special page name rather than the
+		// localized title so that data is comparable across wikis of different languages.
+		// See https://phabricator.wikimedia.org/T436850.
+		const pageTitle = c( 'wgCanonicalSpecialPageName' ) || c( 'wgTitle' );
+
 		const result = {
 			agent: {
 				client_platform: 'mediawiki_js',
@@ -56,7 +60,7 @@ class ContextualAttributesFactory {
 			},
 			page: {
 				id: c( 'wgArticleId' ),
-				title: c( 'wgTitle' ),
+				title: pageTitle,
 				namespace_id: c( 'wgNamespaceNumber' ),
 				namespace_name: c( 'wgCanonicalNamespace' ),
 				revision_id: c( 'wgRevisionId' ),
@@ -120,7 +124,7 @@ class ContextualAttributesFactory {
 			}
 		} );
 
-		contextAttributes = result;
+		this.contextualAttributes = result;
 
 		return result;
 	}

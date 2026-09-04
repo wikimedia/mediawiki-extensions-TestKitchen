@@ -406,6 +406,7 @@ if ( window.QUnit ) {
 	const useFakeInstruments = require( './useFakeInstruments.js' );
 
 	mw.testKitchen = Object.assign( mw.testKitchen, {
+		ContextualAttributesFactory,
 		EventFactory,
 		internalEventSender,
 		Experiment,

@@ -9,6 +9,7 @@ use MediaWiki\Language\LanguageConverterFactory;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Permissions\RestrictionStore;
 use MediaWiki\Registration\ExtensionRegistry;
+use MediaWiki\SpecialPage\SpecialPageFactory;
 use MediaWiki\Title\NamespaceInfo;
 use MediaWiki\User\Options\UserOptionsLookup;
 use MediaWiki\User\UserGroupManager;
@@ -34,7 +35,8 @@ class ContextualAttributesFactory {
 		private readonly Language $contentLanguage,
 		private readonly UserGroupManager $userGroupManager,
 		private readonly LanguageConverterFactory $languageConverterFactory,
-		private readonly UserEditCountService $userEditCountService
+		private readonly UserEditCountService $userEditCountService,
+		private readonly SpecialPageFactory $specialPageFactory
 	) {
 	}
 
@@ -97,17 +99,34 @@ class ContextualAttributesFactory {
 
 		$namespaceId = $title->getNamespace();
 
-		return $result + [
-				'page_id' => $title->getArticleID(),
-				'page_title' => $title->getDBkey(),
-				'page_namespace_id' => $namespaceId,
-				'page_namespace_name' => $this->namespaceInfo->getCanonicalName( $namespaceId ),
-				'page_revision_id' => $title->getLatestRevID(),
-				'page_content_language' => $title->getPageLanguage()->getCode(),
-				'page_is_redirect' => $title->isRedirect(),
-				'page_groups_allowed_to_move' => $this->restrictionStore->getRestrictions( $title, 'move' ),
-				'page_groups_allowed_to_edit' => $this->restrictionStore->getRestrictions( $title, 'edit' ),
-			];
+		$result += [
+			'page_id' => $title->getArticleID(),
+			'page_namespace_id' => $namespaceId,
+			'page_namespace_name' => $this->namespaceInfo->getCanonicalName( $namespaceId ),
+			'page_revision_id' => $title->getLatestRevID(),
+			'page_content_language' => $title->getPageLanguage()->getCode(),
+			'page_is_redirect' => $title->isRedirect(),
+			'page_groups_allowed_to_move' => $this->restrictionStore->getRestrictions( $title, 'move' ),
+			'page_groups_allowed_to_edit' => $this->restrictionStore->getRestrictions( $title, 'edit' ),
+		];
+
+		// For special pages, use the canonical (English) special page name rather than the
+		// localized title so that data is comparable across wikis of different languages.
+		// See https://phabricator.wikimedia.org/T436850.
+		$pageTitle = $title->getDBkey();
+
+		if ( $title->isSpecialPage() ) {
+			[ $pageTitle, ] = $this->specialPageFactory->resolveAlias( $pageTitle );
+		}
+
+		// resolveAlias() returns null for the resolved name when the special page does not exist.
+		// Test Kitchen omits contextual attributes that are null to minimise bytes transferred, so
+		// only set page_title when it has a value.
+		if ( $pageTitle !== null ) {
+			$result['page_title'] = $pageTitle;
+		}
+
+		return $result;
 	}
 
 	private function getMediaWikiContextAttributes( IContextSource $contextSource ): array {

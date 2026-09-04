@@ -5,6 +5,7 @@ use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\UserEditCountService;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Registration\ExtensionRegistry;
+use MediaWiki\SpecialPage\SpecialPageFactory;
 use MediaWiki\Title\Title;
 use MediaWiki\User\User;
 
@@ -32,6 +33,7 @@ class ContextualAttributesFactoryTest extends MediaWikiLangTestCase {
 			'userGroupManager' => $services->getUserGroupManager(),
 			'languageConverterFactory' => $services->getLanguageConverterFactory(),
 			'userEditCountService' => new UserEditCountService(),
+			'specialPageFactory' => $services->getSpecialPageFactory(),
 		];
 
 		// Unit Under Test
@@ -108,6 +110,66 @@ class ContextualAttributesFactoryTest extends MediaWikiLangTestCase {
 		$this->assertSame( false, $contextAttributes['page_is_redirect'] );
 		$this->assertSame( [], $contextAttributes['page_groups_allowed_to_move'] );
 		$this->assertSame( [], $contextAttributes['page_groups_allowed_to_edit'] );
+	}
+
+	/**
+	 * Builds a factory using the real services from setUp() but with the given SpecialPageFactory,
+	 * so that special-page canonicalisation can be exercised deterministically.
+	 */
+	private function newFactoryWithSpecialPageFactory(
+		SpecialPageFactory $specialPageFactory
+	): ContextualAttributesFactory {
+		$services = $this->services;
+		$services['specialPageFactory'] = $specialPageFactory;
+
+		return new ContextualAttributesFactory( ...array_values( $services ) );
+	}
+
+	public function testPageTitleForSpecialPageIsCanonicalized(): void {
+		$specialPageFactory = $this->createMock( SpecialPageFactory::class );
+		$specialPageFactory->method( 'resolveAlias' )
+			->with( 'MyLocalizedSpecialPage' )
+			->willReturn( [ 'Homepage', null ] );
+
+		$factory = $this->newFactoryWithSpecialPageFactory( $specialPageFactory );
+
+		$title = Title::makeTitle( NS_SPECIAL, 'MyLocalizedSpecialPage' );
+		$contextSource = RequestContext::newExtraneousContext( $title );
+
+		$contextAttributes = $factory->newContextAttributes( $contextSource );
+
+		$this->assertSame( 'Homepage', $contextAttributes['page_title'] );
+	}
+
+	public function testPageTitleOmittedForUnknownSpecialPage(): void {
+		$specialPageFactory = $this->createMock( SpecialPageFactory::class );
+		$specialPageFactory->method( 'resolveAlias' )
+			->willReturn( [ null, null ] );
+
+		$factory = $this->newFactoryWithSpecialPageFactory( $specialPageFactory );
+
+		$title = Title::makeTitle( NS_SPECIAL, 'ThisSpecialPageDoesNotExist' );
+		$contextSource = RequestContext::newExtraneousContext( $title );
+
+		$contextAttributes = $factory->newContextAttributes( $contextSource );
+
+		// Test Kitchen omits null contextual attributes to minimise bytes transferred.
+		$this->assertArrayNotHasKey( 'page_title', $contextAttributes );
+	}
+
+	public function testPageTitleForContentPageUsesDbKey(): void {
+		$specialPageFactory = $this->createMock( SpecialPageFactory::class );
+		$specialPageFactory->expects( $this->never() )
+			->method( 'resolveAlias' );
+
+		$factory = $this->newFactoryWithSpecialPageFactory( $specialPageFactory );
+
+		$title = Title::makeTitle( NS_MAIN, 'Foo_Bar' );
+		$contextSource = RequestContext::newExtraneousContext( $title );
+
+		$contextAttributes = $factory->newContextAttributes( $contextSource );
+
+		$this->assertSame( 'Foo_Bar', $contextAttributes['page_title'] );
 	}
 
 	public function testPageWikidataIdHandlesNull(): void {

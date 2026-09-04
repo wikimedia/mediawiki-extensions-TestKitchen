@@ -95,7 +95,8 @@ return [
 				$services->getContentLanguage(),
 				$services->getUserGroupManager(),
 				$services->getLanguageConverterFactory(),
-				new UserEditCountService()
+				new UserEditCountService(),
+				$services->getSpecialPageFactory()
 			);
 		},
 	'TestKitchen.EventFactory' => static function ( MediaWikiServices $services ): EventFactory {
