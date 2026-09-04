@@ -5,11 +5,7 @@ use MediaWiki\Context\RequestContext;
 use MediaWiki\Extension\EventBus\EventBus;
 use MediaWiki\Extension\TestKitchen\ConfigsFetcher;
 use MediaWiki\Extension\TestKitchen\Coordination\Coordinator;
-use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentAuthority;
 use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentsProcessor;
-use MediaWiki\Extension\TestKitchen\Coordination\EveryoneExperimentsEnrollmentAuthority;
-use MediaWiki\Extension\TestKitchen\Coordination\LoggedInExperimentsEnrollmentAuthority;
-use MediaWiki\Extension\TestKitchen\Coordination\OverridesEnrollmentAuthority;
 use MediaWiki\Extension\TestKitchen\Coordination\RequestEnrollmentsProcessor;
 use MediaWiki\Extension\TestKitchen\Coordination\UserSplitterInstrumentation;
 use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
@@ -51,39 +47,6 @@ return [
 	'TestKitchen.Logger' => static function (): LoggerInterface {
 		return LoggerFactory::getInstance( 'TestKitchen' );
 	},
-
-	// @deprecated
-	'TestKitchen.EveryoneExperimentsEnrollmentAuthority' =>
-		static function ( MediaWikiServices $services ): EveryoneExperimentsEnrollmentAuthority {
-			return new EveryoneExperimentsEnrollmentAuthority(
-				$services->getService( 'TestKitchen.Logger' )
-			);
-		},
-
-	// @deprecated
-	'TestKitchen.LoggedInExperimentsEnrollmentAuthority' =>
-		static function ( MediaWikiServices $services ): LoggedInExperimentsEnrollmentAuthority {
-			return new LoggedInExperimentsEnrollmentAuthority( $services->getCentralIdLookup() );
-		},
-
-	// @deprecated
-	'TestKitchen.OverridesEnrollmentAuthority' =>
-		static function ( MediaWikiServices $services ): OverridesEnrollmentAuthority {
-			return new OverridesEnrollmentAuthority(
-				$services->getService( 'TestKitchen.Logger' )
-			);
-		},
-
-	// @deprecated
-	'TestKitchen.EnrollmentAuthority' =>
-		static function ( MediaWikiServices $services ): EnrollmentAuthority {
-			return new EnrollmentAuthority(
-				$services->getService( 'TestKitchen.EveryoneExperimentsEnrollmentAuthority' ),
-				$services->getService( 'TestKitchen.LoggedInExperimentsEnrollmentAuthority' ),
-				$services->getService( 'TestKitchen.OverridesEnrollmentAuthority' )
-			);
-		},
-
 	'TestKitchen.ContextualAttributesFactory' =>
 		static function ( MediaWikiServices $services ): ContextualAttributesFactory {
 			return new ContextualAttributesFactory(

@@ -47,21 +47,6 @@ class ExperimentManager implements
 		$this->exposureLogTracker = $exposureLogTracker;
 	}
 
-	/**
-	 * This method SHOULD NOT be called by code outside the TestKitchen extension (or the Test Kitchen codebase). As an
-	 * interim solution, GrowthExperiments uses it on account creation until T405074 is resolved.
-	 *
-	 * Don't use this unless you've spoken with Experiment Platform team.
-	 *
-	 * @param array $enrollmentResult
-	 *
-	 * @deprecated Use {@link ExperimentCoordinatorInterface::updateUser() or
-	 *  {@link ExperimentCoordinatorInterface::updateIdentifier()} instead
-	 */
-	public function initialize( array $enrollmentResult ): void {
-		$this->enrollmentResult = $enrollmentResult;
-	}
-
 	public function setRequest( WebRequest $request ): void {
 		$this->enrollments = $this->requestEnrollmentsProcessor->process( $request, $this->enrollments );
 
