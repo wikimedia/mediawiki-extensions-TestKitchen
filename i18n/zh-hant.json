@@ -1,10 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"Kly"
+			"Kly",
+			"LowensteinYang"
 		]
 	},
-	"testkitchen-desc": "此為 Test Kitchen 的擴充功能",
+	"testkitchen-desc": "提供PHP和JS Test Kitchen SDK，開發人員可藉此實作實驗並進行分析所需的資料蒐集。",
 	"testkitchen-non-successful-response": "Test Kitchen API 回傳了不成功的回應。",
 	"testkitchen-api-empty-response-body": "Test Kitchen API 回傳了空主體的回應。"
 }
