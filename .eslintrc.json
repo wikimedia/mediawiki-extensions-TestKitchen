@@ -11,6 +11,14 @@
 			{
 				"properties": "never"
 			}
+		],
+		"jsdoc/check-tag-names": [
+			"warn",
+			{
+				"definedTags": [
+					"experimental"
+				]
+			}
 		]
 	},
 	"ignorePatterns": [

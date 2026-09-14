@@ -118,6 +118,10 @@ class Experiment {
 
 		return this;
 	}
+
+	getStartDate() {
+		return new Date( this.config.start_date_utc );
+	}
 }
 
 /**
@@ -153,6 +157,10 @@ class UnenrolledExperiment {
 	// eslint-disable-next-line no-unused-vars
 	setSchema( schemaID ) {
 		return this;
+	}
+
+	getStartDate() {
+		return null;
 	}
 }
 
@@ -246,6 +254,10 @@ class OverriddenExperiment {
 	// eslint-disable-next-line no-unused-vars
 	setSchema( schemaID ) {
 		return this;
+	}
+
+	getStartDate() {
+		return this.config.start_date_utc ? new Date( this.config.start_date_utc ) : null;
 	}
 }
 

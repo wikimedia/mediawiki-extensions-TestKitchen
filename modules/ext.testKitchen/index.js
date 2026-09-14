@@ -89,6 +89,7 @@ function newExperiment( enrollmentConfig ) {
 		config.LoggedInExperimentEventIntakeServiceUrl :
 		config.EveryoneExperimentEventIntakeServiceUrl;
 
+	/** @type {mw.testKitchen.ExperimentConfig} */
 	const configToPass = {
 		enrolled: experimentName,
 		assigned: enrollmentConfig.assigned,
@@ -100,7 +101,8 @@ function newExperiment( enrollmentConfig ) {
 		exposure_version: experimentConfig.exposure_version,
 		other_assigned: enrollmentConfig.other_assigned,
 		version: experimentConfig.version,
-		phase_index: experimentConfig.phase_index
+		phase_index: experimentConfig.phase_index,
+		start_date_utc: experimentConfig.start_date_utc
 	};
 
 	// It's an overridden experiment with a config registered already in Test Kitchen. That one will be used
@@ -280,7 +282,7 @@ function getExperimentsByPrefixAsync( experimentNamePrefix ) {
  * Currently, this method is only used by
  * [the Client Error Logging instrument in WikimediaEvents][0].
  *
- * @internal
+ * @package
  *
  * [0]: https://gerrit.wikimedia.org/r/plugins/gitiles/mediawiki/extensions/WikimediaEvents/+/refs/heads/master/OWNERS.md#client-error-logging
  *

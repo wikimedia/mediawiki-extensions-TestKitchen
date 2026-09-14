@@ -168,6 +168,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 				'schema_id' => '/analytics/product_metrics/web/base/2.2.0',
 				'contextual_attributes' => [ 'performer_is_logged_in', 'performer_is_temp' ],
 				'phase_index' => 0,
+				'start_date_utc' => '2026-03-20T14:30:00Z',
 			],
 			$this->withoutVersionFields( $lunch )
 		);
@@ -179,6 +180,7 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 				'schema_id' => '/analytics/product_metrics/web/base/2.2.0',
 				'contextual_attributes' => [ 'page_id' ],
 				'phase_index' => 0,
+				'start_date_utc' => '2026-03-20T14:30:00Z',
 			],
 			$this->withoutVersionFields( $supper )
 		);

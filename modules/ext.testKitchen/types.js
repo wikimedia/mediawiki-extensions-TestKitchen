@@ -40,6 +40,7 @@
  *  that the user is enrolled in expressed as a map of experiment name (enrolled) to group
  *  (assigned). This parameter is used as the value for the `experiment.other_assigned` field in all
  *  experiment-related analytics events. It is defined [here](https://gitlab.wikimedia.org/repos/data-engineering/schemas-event-secondary/-/blame/201ad8db1c4b7a0250646bfaf04817458728d8ed/jsonschema/fragment/analytics/product_metrics/experiment/latest.yaml#L35).
+ * @property {string} [start_date_utc] The UTC start date of the experiment
  *
  * @package
  */
@@ -192,6 +193,19 @@
  *
  * @param {string} schemaID
  * @return {mw.testKitchen.ExperimentInterface}
+ */
+
+/**
+ * Gets the UTC start date of the experiment.
+ *
+ * @method getStartDate
+ * @instance
+ * @memberof mw.testKitchen.ExperimentInterface
+ *
+ * @experimental This method is experimental and may change or be removed in future
+ *
+ * @return {Date|null} If the experiment is configured, the UTC start date of the experiment; `null`
+ *  otherwise
  */
 
 // ---

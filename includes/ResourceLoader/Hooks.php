@@ -53,6 +53,7 @@ class Hooks {
 				'exposure_version' => $experimentConfig['exposure_version'],
 				'version' => $experimentConfig['version'],
 				'phase_index' => $experimentConfig['phase_index'],
+				'start_date_utc' => $experimentConfig['start'],
 			];
 		}
 		return $result;
