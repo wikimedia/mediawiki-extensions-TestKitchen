@@ -2,6 +2,8 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Wikimedia\Stats\StatsFactory;
 
 /**
@@ -17,16 +19,13 @@ class Experiment implements ExperimentInterface {
 		'mediawiki_database'
 	];
 
-	protected array $experimentConfig;
-
 	public function __construct(
 		private readonly EventSender $eventSender,
 		private readonly EventFactory $eventFactory,
 		private readonly StatsFactory $statsFactory,
 		protected ExposureLogTracker $exposureLogTracker,
-		array $experimentConfig
+		protected array $experimentConfig
 	) {
-		$this->experimentConfig = $experimentConfig;
 	}
 
 	/**
@@ -164,5 +163,10 @@ class Experiment implements ExperimentInterface {
 			);
 			$this->exposureLogTracker->addLog( $key );
 		}
+	}
+
+	public function getStartDate(): ?DateTimeInterface {
+		return isset( $this->experimentConfig['start_date_utc'] ) ?
+			new DateTimeImmutable( $this->experimentConfig['start_date_utc'] ) : null;
 	}
 }

@@ -2,6 +2,8 @@
 
 namespace MediaWiki\Extension\TestKitchen\Sdk;
 
+use DateTimeInterface;
+
 interface ExperimentInterface {
 
 	/**
@@ -48,4 +50,14 @@ interface ExperimentInterface {
 	 * already in the stream configuration of the current experiment
 	 */
 	public function sendExposure(): void;
+
+	/**
+	 * Gets the UTC start date of the experiment.
+	 *
+	 * NOTE: This method is experimental and may change or be removed in future
+	 *
+	 * @return DateTimeInterface|null If the experiment is configured, the UTC start date of the experiment; otherwise,
+	 * 	null
+	 */
+	public function getStartDate(): ?DateTimeInterface;
 }

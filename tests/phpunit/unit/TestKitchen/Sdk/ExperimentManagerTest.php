@@ -252,27 +252,29 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			->with( $request )
 			->willReturn( $enrollments );
 
+		$this->experimentManager->setRequest( $request );
+
 		// Code Under Test
 		// ---------------
 
-		$this->experimentManager->setRequest( $request );
+		$actual = $this->experimentManager->getExperiment( $experimentName );
 
 		// Assertions
 		// ----------
 
-		$actual = $this->experimentManager->getExperiment( $experimentName );
-
 		$expectedConfig = $this->makeExpectedSdkConfig(
 			$experimentName,
 			[
+				'contextual_attributes' => [
+					'page_title',
+					'performer_is_logged_in',
+				],
 				'assigned' => 'control',
 				'subject_id' => 'overridden',
-				'sampling_unit' => 'overridden',
+				'sampling_unit' => 'mw-user',
 				'coordinator' => 'forced',
-				'contextual_attributes' => [],
 			]
 		);
-		unset( $expectedConfig['version'] );
 
 		$expected = new OverriddenExperiment(
 			$this->eventSender,
@@ -340,7 +342,10 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->exposureLogTracker
+			$this->exposureLogTracker,
+			[
+				'start_date_utc' => '2026-09-22T10:00:00Z',
+			]
 		);
 
 		$this->assertEquals( $expected, $actual );
@@ -438,7 +443,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 		// Mocks
 		// -----
 
-		$this->configsFetcher->expects( $this->any() )
+		$this->configsFetcher->expects( $this->once() )
 			->method( 'getExperimentConfigs' )
 			->willReturn( $experimentConfigs );
 
@@ -448,18 +453,24 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 			->with( $request )
 			->willReturn( $enrollments );
 
-		// Assertions
-		// ----------
-
 		$this->experimentManager->setRequest( $request );
 
+		// Code Under Test
+		// ---------------
+
 		$actual = $this->experimentManager->getExperiment( $experimentName );
+
+		// Assertions
+		// ----------
 
 		$expected = new UnenrolledExperiment(
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->exposureLogTracker
+			$this->exposureLogTracker,
+			[
+				'start_date_utc' => '2026-09-22T10:00:00Z',
+			]
 		);
 
 		$this->assertEquals( $expected, $actual );
@@ -596,6 +607,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 				'schema_id' => '/analytics/product_metrics/web/base/2.2.0',
 				'exposure_version' => 'abc123def4567890',
 				'version' => 'abc123def4567890',
+				'start' => '2026-09-22T10:00:00Z',
 			],
 			$overrides
 		);
@@ -622,6 +634,7 @@ class ExperimentManagerTest extends MediaWikiUnitTestCase {
 				],
 				'phase_index' => 0,
 				'version' => 'abc123def4567890',
+				'start_date_utc' => '2026-09-22T10:00:00Z'
 			],
 			$overrides
 		);

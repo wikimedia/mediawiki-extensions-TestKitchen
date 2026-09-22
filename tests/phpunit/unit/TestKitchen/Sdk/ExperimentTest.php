@@ -2,6 +2,7 @@
 
 namespace MediaWiki\Extension\TestKitchen\Tests\Unit\TestKitchen\Sdk;
 
+use DateTimeImmutable;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\Experiment;
@@ -469,5 +470,40 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 			->method( 'newEvent' );
 
 		$experiment->sendExposure();
+	}
+
+	public function testGetDateWithInvalidExperimentConfig(): void {
+		$experiment = new Experiment(
+			$this->eventSender,
+			$this->eventFactory,
+			$this->statsFactory,
+			$this->exposureLogTracker,
+			[]
+		);
+
+		$this->assertSame( null, $experiment->getStartDate() );
+	}
+
+	public function testGetDateWithNoStartDate(): void {
+		$this->assertSame( null, $this->experiment->getStartDate() );
+	}
+
+	public function testGetDateWithStartDate(): void {
+		$rawStartDate = '2026-09-22T10:00:00Z';
+
+		$experiment = new Experiment(
+			$this->eventSender,
+			$this->eventFactory,
+			$this->statsFactory,
+			$this->exposureLogTracker,
+			[
+				'start_date_utc' => $rawStartDate,
+			]
+		);
+
+		$this->assertEquals(
+			new DateTimeImmutable( $rawStartDate ),
+			$experiment->getStartDate()
+		);
 	}
 }

@@ -107,16 +107,19 @@ class ExperimentManager implements
 	 * @inheritDoc
 	 */
 	public function getExperiment( string $experimentName ): ExperimentInterface {
+		$experiments = $this->configsFetcher->getExperimentConfigs();
+
+		$enrolledExperiments = $this->enrollmentResult['enrolled'] ?? [];
+		$isEnrolled = in_array( $experimentName, $enrolledExperiments, true );
+
 		$overriddenExperiments = $this->enrollmentResult['overrides'] ?? [];
-		$isOverridden = in_array( $experimentName, $overriddenExperiments );
+		$isOverridden = in_array( $experimentName, $overriddenExperiments, true );
+
+		$experimentConfig = $experiments[$experimentName] ?? null;
 
 		if ( $isOverridden ) {
-			return $this->newOverriddenExperiment( $experimentName );
+			return $this->newOverriddenExperiment( $experimentName, $experimentConfig );
 		}
-
-		// Get experiment configs from Test Kitchen UI.
-		$experiments = $this->configsFetcher->getExperimentConfigs();
-		$enrolledExperiments = $this->enrollmentResult['enrolled'] ?? [];
 
 		// The experiment enrollment hasn't been overridden and we don't have a config for it? Treat the user as
 		// unenrolled.
@@ -124,14 +127,11 @@ class ExperimentManager implements
 		// However, in the case of everyone experiments, this could indicate that the everyone experiment enrollment
 		// authority config has drifted from the config fetched via ConfigsFetcher. Increment a counter so
 		// that this can be monitored.
-		if ( !isset( $experiments[ $experimentName ] ) ) {
+		if ( !$experimentConfig ) {
 			$this->statsFactory->withComponent( 'TestKitchen' )
 				->getCounter( 'experiment_unknown' )
 				->setLabel( 'experiment', $experimentName )
-				->setLabel(
-					'enrolled',
-					in_array( $experimentName, $enrolledExperiments, true ) ? 'true' : 'false'
-				)
+				->setLabel( 'enrolled', $isEnrolled ? 'true' : 'false' )
 				->increment();
 
 			return $this->newUnenrolledExperiment();
@@ -142,14 +142,14 @@ class ExperimentManager implements
 			->setLabel( 'experiment', $experimentName )
 			->increment();
 
-		if ( !in_array( $experimentName, $enrolledExperiments, true ) ) {
+		if ( !$isEnrolled ) {
 			if ( $experiments[$experimentName]['user_identifier_type'] === 'mw-user' ) {
 				// For logged-in experiments we know whether the experiment is active, but the current user is not
 				// enrolled in it.
 				$this->logger->info( 'The current user is not enrolled in the ' . $experimentName . ' experiment' );
 			}
 
-			return $this->newUnenrolledExperiment();
+			return $this->newUnenrolledExperiment( $experimentConfig );
 		}
 
 		$experimentConfig = $experiments[ $experimentName ];
@@ -161,45 +161,61 @@ class ExperimentManager implements
 		return $this->enrollments;
 	}
 
-	private function newUnenrolledExperiment(): UnenrolledExperiment {
+	private function newUnenrolledExperiment( ?array $experimentConfig = null ): UnenrolledExperiment {
+		$configArray = [];
+
+		if ( $experimentConfig ) {
+			$configArray['start_date_utc'] = $experimentConfig['start'];
+		}
+
 		// TODO: In the JS SDK, UnenrolledExperiment and OverriddenExperiment don't inherit from Experiment because of
 		//  the large number of dependencies. Do the same in the PHP SDK.
 		return new UnenrolledExperiment(
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
-			$this->exposureLogTracker
+			$this->exposureLogTracker,
+			$configArray
 		);
 	}
 
-	private function newOverriddenExperiment( string $experimentName ): OverriddenExperiment {
+	private function newOverriddenExperiment( string $experimentName, ?array $experimentConfig ): OverriddenExperiment {
+		$configArray = [
+			'enrolled' => $experimentName,
+			'assigned' => $this->enrollmentResult['assigned'][ $experimentName ],
+			'subject_id' => $this->enrollmentResult['subject_ids'][ $experimentName ],
+			'sampling_unit' => self::OVERRIDDEN_EXPERIMENT_SAMPLING_UNIT,
+			'coordinator' => self::COORDINATOR_FORCED,
+			'stream_name' => self::BASE_STREAM,
+			'schema_id' => self::BASE_SCHEMA_ID,
+			'contextual_attributes' => [],
+			'phase_index' => 0,
+			// TODO: 'version' => ???
+		];
+
+		if ( $experimentConfig ) {
+			$configArray = array_merge( $configArray, [
+				'sampling_unit' => $experimentConfig['user_identifier_type'],
+				'stream_name' => $experimentConfig[ 'stream_name' ],
+				'schema_id' => $experimentConfig['schema_id'] ?? self::BASE_SCHEMA_ID,
+				'contextual_attributes' => $experimentConfig['contextual_attributes'] ?? [],
+				'phase_index' => $experimentConfig['phase_index'],
+				'version' => $experimentConfig['version'],
+				'start_date_utc' => $experimentConfig['start'],
+			] );
+		}
+
 		return new OverriddenExperiment(
 			$this->eventSender,
 			$this->eventFactory,
 			$this->statsFactory,
 			$this->logger,
 			$this->exposureLogTracker,
-			[
-				'enrolled' => $experimentName,
-				'assigned' => $this->enrollmentResult['assigned'][ $experimentName ],
-				'subject_id' => $this->enrollmentResult['subject_ids'][ $experimentName ],
-				'sampling_unit' => self::OVERRIDDEN_EXPERIMENT_SAMPLING_UNIT,
-				'coordinator' => self::COORDINATOR_FORCED,
-				'stream_name' => self::BASE_STREAM,
-				'schema_id' => self::BASE_SCHEMA_ID,
-				'contextual_attributes' => [],
-				'phase_index' => 0,
-			]
+			$configArray
 		);
 	}
 
 	private function newExperiment( string $experimentName, array $experimentConfig ): Experiment {
-		// Until we pass schema IDs in the Test Kitchen API response, we will default to web base.
-		// In the interim, experiment owners can set schema id with Experiment::setSchema().
-		$schemaID = $experimentConfig['schema_id'] ?? self::BASE_SCHEMA_ID;
-
-		$contextualAttributes = $experimentConfig['contextual_attributes'] ?? [];
-
 		$configArray = [
 			'enrolled' => $experimentName,
 			'assigned' => $this->enrollmentResult['assigned'][ $experimentName ],
@@ -207,10 +223,11 @@ class ExperimentManager implements
 			'sampling_unit' => $experimentConfig['user_identifier_type'],
 			'coordinator' => self::COORDINATOR_DEFAULT,
 			'stream_name' => $experimentConfig[ 'stream_name' ],
-			'schema_id' => $schemaID,
-			'contextual_attributes' => $contextualAttributes,
+			'schema_id' => $experimentConfig['schema_id'] ?? self::BASE_SCHEMA_ID,
+			'contextual_attributes' => $experimentConfig['contextual_attributes'] ?? [],
 			'phase_index' => $experimentConfig['phase_index'],
-			'version' => $experimentConfig['version']
+			'version' => $experimentConfig['version'],
+			'start_date_utc' => $experimentConfig['start'],
 		];
 
 		return new Experiment(
