@@ -103,4 +103,31 @@ class EnrollmentResultBuilderTest extends MediaWikiUnitTestCase {
 		);
 		$this->assertSame( [ 'experiment2' ], $enrollmentsWithoutSubjectIds[ 'overrides' ] );
 	}
+
+	public function testOverrideAssignmentIsNotWipedByNonOverrideAssignment() {
+		$resultBuilder = new EnrollmentResultBuilder();
+		$resultBuilder->addExperiment( 'experiment1', 'overridden' );
+		$resultBuilder->addAssignment( 'experiment1', 'treatment', true );
+
+		// Simulate a non-override assignment
+		$resultBuilder->addAssignment( 'experiment1', 'control' );
+
+		$result = $resultBuilder->build();
+
+		$this->assertSame( [ 'experiment1' ], $result[ 'overrides' ] );
+		$this->assertSame( 'treatment', $result[ 'assigned' ][ 'experiment1' ],
+			'Existing override should not be wiped by non-override assignment.' );
+	}
+
+	public function testOverrideAssignmentCanOverrideNonOverrideAssignment() {
+		$resultBuilder = new EnrollmentResultBuilder();
+		$resultBuilder->addExperiment( 'experiment1', 'awaiting' );
+		$resultBuilder->addAssignment( 'experiment1', 'control' );
+
+		$resultBuilder->addAssignment( 'experiment1', 'treatment', true );
+		$result = $resultBuilder->build();
+
+		$this->assertSame( [ 'experiment1' ], $result[ 'overrides' ] );
+		$this->assertSame( 'treatment', $result[ 'assigned' ][ 'experiment1' ] );
+	}
 }
