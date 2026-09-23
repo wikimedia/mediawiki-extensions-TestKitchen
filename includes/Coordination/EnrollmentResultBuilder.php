@@ -17,6 +17,11 @@ class EnrollmentResultBuilder {
 	}
 
 	public function addAssignment( string $experimentName, string $groupName, bool $isOverride = false ): void {
+		// Preempt letting a non-override assignment take precedence over an explicit override.
+		if ( !$isOverride && isset( $this->overrides[ $experimentName ] ) ) {
+			return;
+		}
+
 		$this->enrolled[ $experimentName ] = true;
 		$this->assigned[ $experimentName ] = $groupName;
 

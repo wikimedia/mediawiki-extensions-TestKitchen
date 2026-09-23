@@ -121,7 +121,7 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 		$this->logger->expects( $this->once() )
 			->method( 'error' )
 			->with(
-				'The X-Experiment-Enrollments header could not be parsed properly. The header is malformed.'
+				'The X-Experiment-Enrollments header could not be parsed. Header is malformed.'
 			);
 
 		$expected = new EnrollmentResultBuilder();
@@ -233,5 +233,61 @@ class RequestEnrollmentsProcessorTest extends MediaWikiIntegrationTestCase {
 			$this->processor->process( $request, new EnrollmentResultBuilder() ),
 			'If the query is malformed, then it isn\'t processed'
 		);
+	}
+
+	public function testWikimediaDebugHeaderWithNoExperiments(): void {
+		$request = new FauxRequest();
+		$request->setHeader( 'X-Wikimedia-Debug', 'backend=k8s-mwdebug;' );
+
+		$this->logger->expects( $this->never() )->method( 'error' );
+
+		$expected = new EnrollmentResultBuilder();
+
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
+	}
+
+	public function testWikimediaDebugHeaderWithSingleExperiment(): void {
+		$request = new FauxRequest();
+		$request->setHeader( 'X-Wikimedia-Debug', 'backend=k8s-mwdebug; experiments=foo_experiment:bar' );
+
+		$this->logger->expects( $this->never() )->method( 'error' );
+
+		$expected = new EnrollmentResultBuilder();
+		$expected->addExperiment( 'foo_experiment', 'overridden' );
+		$expected->addAssignment( 'foo_experiment', 'bar', true );
+
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
+	}
+
+	public function testWikimediaDebugHeaderWithMultipleExperiments(): void {
+		$request = new FauxRequest();
+		$request->setHeader(
+			'X-Wikimedia-Debug',
+			'backend=k8s-mwdebug; experiments=foo_experiment:bar,qux_experiment:quux'
+		);
+
+		$this->logger->expects( $this->never() )->method( 'error' );
+
+		$expected = new EnrollmentResultBuilder();
+		$expected->addExperiment( 'foo_experiment', 'overridden' );
+		$expected->addAssignment( 'foo_experiment', 'bar', true );
+		$expected->addExperiment( 'qux_experiment', 'overridden' );
+		$expected->addAssignment( 'qux_experiment', 'quux', true );
+
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
+	}
+
+	public function testWikimediaDebugHeaderWithMalformedExperiments(): void {
+		$request = new FauxRequest();
+		// A pair with no colon is malformed (can't be split into name:group).
+		$request->setHeader( 'X-Wikimedia-Debug', 'backend=k8s-mwdebug; experiments=foo_experiment' );
+
+		$this->logger->expects( $this->once() )
+			->method( 'error' )
+			->with( 'The X-Wikimedia-Debug header could not be parsed. Header is malformed.' );
+
+		$expected = new EnrollmentResultBuilder();
+
+		$this->assertEquals( $expected, $this->processor->process( $request, new EnrollmentResultBuilder() ) );
 	}
 }
