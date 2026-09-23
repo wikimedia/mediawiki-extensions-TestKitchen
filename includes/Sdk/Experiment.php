@@ -107,18 +107,6 @@ class Experiment implements ExperimentInterface {
 	}
 
 	/**
-	 * Sets the ID of the schema used to validate analytics events sent.
-	 *
-	 * @param string $schemaId
-	 * @return $this
-	 * @deprecated
-	 */
-	public function setSchema( string $schemaId ): self {
-		$this->experimentConfig['schema_id'] = $schemaId;
-		return $this;
-	}
-
-	/**
 	 * Checks if the user is enrolled in an experiment group.
 	 *
 	 * @return bool

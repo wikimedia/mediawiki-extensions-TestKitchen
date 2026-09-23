@@ -110,15 +110,6 @@ class Experiment {
 		} );
 	}
 
-	/**
-	 * @deprecated
-	 */
-	setSchema( schemaID ) {
-		this.schemaID = schemaID;
-
-		return this;
-	}
-
 	getStartDate() {
 		return new Date( this.config.start_date_utc );
 	}
@@ -150,14 +141,6 @@ class UnenrolledExperiment {
 	submitInteraction( action, interactionData, contextualAttributes ) {}
 
 	sendExposure() {}
-
-	/**
-	 * @deprecated
-	 */
-	// eslint-disable-next-line no-unused-vars
-	setSchema( schemaID ) {
-		return this;
-	}
 
 	getStartDate() {
 		return null;
@@ -246,14 +229,6 @@ class OverriddenExperiment {
 
 	sendExposure() {
 		this.send( 'experiment_exposure' );
-	}
-
-	/**
-	 * @deprecated
-	 */
-	// eslint-disable-next-line no-unused-vars
-	setSchema( schemaID ) {
-		return this;
 	}
 
 	getStartDate() {

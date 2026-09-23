@@ -330,63 +330,6 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 		);
 	}
 
-	public function testSetSchema(): void {
-		$newSchema = '/analytics/product_metrics/web/custom/1.0.0';
-
-		$return = $this->experiment->setSchema( $newSchema );
-
-		$this->assertSame( $this->experiment, $return );
-		$this->assertSame(
-			$newSchema,
-			$this->experiment->getExperimentConfig()['schema_id']
-		);
-	}
-
-	public function testSetSchemaAndSend(): void {
-		$newSchema = '/analytics/product_metrics/web/custom/1.0.0';
-
-		$expectedEvent = [
-			'$schema' => $newSchema,
-			'dt' => ConvertibleTimestamp::now( TimestampFormat::ISO_8601 ),
-		];
-
-		$return = $this->experiment->setSchema( $newSchema );
-		$this->assertSame( $this->experiment, $return );
-
-		$this->assertSame(
-			$newSchema,
-			$this->experiment->getExperimentConfig()['schema_id'] ?? null,
-			'setSchema() should update experimentConfig schema_id'
-		);
-
-		$expectedExperimentConfig = array_intersect_key(
-			$this->experiment->getExperimentConfig(),
-			array_fill_keys( $this->keys, true )
-		);
-
-		$this->eventFactory->expects( $this->once() )
-			->method( 'newEvent' )
-			->with(
-				$this->experimentConfig['stream_name'],
-				$newSchema,
-				$this->experimentConfig['contextual_attributes'],
-				$this->action,
-				array_merge( $this->interactionData, [ 'experiment' => $expectedExperimentConfig ] )
-			)
-			->willReturn( $expectedEvent );
-
-		$this->eventSender->expects( $this->once() )
-			->method( 'sendEvent' )
-			->with( $expectedEvent );
-
-		$this->experiment->send( $this->action, $this->interactionData );
-
-		$this->assertSame(
-			[ 'mediawiki.TestKitchen.experiment_events_sent_total:1|c|#experiment:test_experiment' ],
-			$this->statsHelper->consumeAllFormatted()
-		);
-	}
-
 	public function testSendExposure(): void {
 		$expectedExperimentConfig = array_intersect_key(
 			$this->experimentConfig,

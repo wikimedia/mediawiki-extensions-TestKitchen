@@ -181,21 +181,6 @@
  */
 
 /**
- * Sets the ID of the schema used to validate analytics events sent with
- * {@link mw.testKitchen.ExperimentInterface#send}.
- *
- * This method is chainable.
- *
- * @deprecated
- * @method setSchema
- * @instance
- * @memberof mw.testKitchen.ExperimentInterface
- *
- * @param {string} schemaID
- * @return {mw.testKitchen.ExperimentInterface}
- */
-
-/**
  * Gets the UTC start date of the experiment.
  *
  * @method getStartDate

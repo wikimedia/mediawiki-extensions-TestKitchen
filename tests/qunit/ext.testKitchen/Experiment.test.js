@@ -407,35 +407,6 @@ QUnit.test( 'send() - can\'t override experiment', function ( assert ) {
 	assert.strictEqual( this.sendEventStub.callCount, 1 );
 } );
 
-QUnit.test( 'send() - overriding schema', function ( assert ) {
-	this.everyoneExperiment.setSchema( '/my/awesome/schema/0.0.1' )
-		.send( 'Hello, World!' );
-
-	assert.strictEqual( this.newEventStub.callCount, 1 );
-	assert.deepEqual( this.newEventStub.firstCall.args, [
-		'product_metrics.web_base',
-		'/my/awesome/schema/0.0.1',
-		[
-			'performer_pageview_id',
-			'mediawiki_database'
-		],
-		'Hello, World!',
-		{
-			experiment: {
-				enrolled: 'hello_world',
-				assigned: 'A',
-				subject_id: 'awaiting',
-				sampling_unit: 'edge-unique',
-				phase_index: 0,
-				other_assigned: {
-					foo: 'bar'
-				},
-				coordinator: 'default'
-			}
-		}
-	] );
-} );
-
 QUnit.test.each(
 	'send() - doesn\'t set other_assigned if it\'s empty',
 	[
@@ -566,16 +537,6 @@ QUnit.test( 'sendExposure() rethrows when sending exposure fails', function ( as
 
 // ---
 
-QUnit.module( 'ext.testKitchen/UnenrolledExperiment' );
-
-QUnit.test( 'setSchema() - doesn\'t trigger an error', ( assert ) => {
-	const e = new mw.testKitchen.UnenrolledExperiment();
-
-	assert.strictEqual( e.setSchema( 'my_awesome_stream' ), e );
-} );
-
-// ---
-
 QUnit.module( 'ext.testKitchen/OverriddenExperiment', QUnit.newMwEnvironment( {
 	beforeEach: function () {
 		const { OverriddenExperiment } = mw.testKitchen;
@@ -693,10 +654,6 @@ QUnit.test( 'send() - event is not sent when running on production', function ( 
 
 	// The event will not be sent (it is running on production)
 	assert.strictEqual( this.sendEventStub.callCount, 0 );
-} );
-
-QUnit.test( 'setSchema() - doesn\'t trigger an error', function ( assert ) {
-	assert.strictEqual( this.overriddenExperiment.setSchema( 'my_awesome_stream' ), this.overriddenExperiment );
 } );
 
 QUnit.test( 'sendExposure()', function ( assert ) {
