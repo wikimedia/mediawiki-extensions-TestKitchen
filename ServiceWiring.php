@@ -8,6 +8,7 @@ use MediaWiki\Extension\TestKitchen\Coordination\Coordinator;
 use MediaWiki\Extension\TestKitchen\Coordination\EnrollmentsProcessor;
 use MediaWiki\Extension\TestKitchen\Coordination\RequestEnrollmentsProcessor;
 use MediaWiki\Extension\TestKitchen\Coordination\UserSplitterInstrumentation;
+use MediaWiki\Extension\TestKitchen\Sdk\BaseEventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\DisabledEventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
@@ -19,6 +20,7 @@ use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManagerInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\ExposureLogTracker;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManager;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManagerInterface;
+use MediaWiki\Extension\TestKitchen\Sdk\StandaloneEventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\UserEditCountService;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
@@ -75,19 +77,27 @@ return [
 			$options
 		);
 	},
-	'TestKitchen.EventSender' => static function ( MediaWikiServices $services ): EventSender {
+	'TestKitchen.EventSender' => static function ( MediaWikiServices $services ): BaseEventSender {
 		if ( defined( 'MW_PHPUNIT_TEST' ) ) {
 			return new DisabledEventSender();
 		}
 
+		$extensionRegistry = $services->getExtensionRegistry();
 		$config = $services->getMainConfig();
 
-		// Fall back to $wgEventServiceDefault to allow developers to update their development environments seamlessly
-		// and for integration tests to pass.
-		$eventServiceName =
-			$config->get( 'TestKitchenEventIntakeServiceName' ) ?: $config->get( 'EventServiceDefault' );
+		if ( $extensionRegistry->isLoaded( 'EventBus' ) ) {
+			// Fall back to $wgEventServiceDefault to allow developers to update their development environments
+			// seamlessly and for integration tests to pass.
+			$eventServiceName =
+				$config->get( 'TestKitchenEventIntakeServiceName' ) ?: $config->get( 'EventServiceDefault' );
 
-		return new EventSender( EventBus::getInstance( $eventServiceName ) );
+			return new EventSender( EventBus::getInstance( $eventServiceName ) );
+		}
+
+		return new StandaloneEventSender(
+			$services->getHttpRequestFactory(),
+			new ServiceOptions( StandaloneEventSender::CONSTRUCTOR_OPTIONS, $config )
+		);
 	},
 	'TestKitchen.EnrollmentsProcessor' => static function ( MediaWikiServices $services ): EnrollmentsProcessor {
 		return new EnrollmentsProcessor(

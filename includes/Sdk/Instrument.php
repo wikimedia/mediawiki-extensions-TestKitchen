@@ -10,7 +10,7 @@ class Instrument implements InstrumentInterface {
 	private int $eventSequencePosition;
 
 	public function __construct(
-		private readonly EventSender $eventSender,
+		private readonly BaseEventSender $eventSender,
 		private readonly EventFactory $eventFactory,
 		private array $instrumentConfig
 	) {

@@ -11,7 +11,9 @@
 	"license-name": "GPL-2.0-or-later",
 	"type": "other",
 	"requires": {
-		"MediaWiki": ">= 1.47.0",
+		"MediaWiki": ">= 1.47.0"
+	},
+	"suggests": {
 		"extensions": {
 			"EventBus": "*"
 		}
@@ -38,6 +40,10 @@
 		"TestKitchenEventIntakeServiceName": {
 			"description": "The name of the event intake service that server-side instruments and experiments send events to. The value must be a key in $wgEventServices.",
 			"value": ""
+		},
+		"TestKitchenInternalEventIntakeServiceUrl": {
+			"description": "The URL of the EventGate instance to send events to that originate from the PHP SDK.",
+			"value": "http://eventlogging:8192/v1/events?hasty=true"
 		},
 		"TestKitchenExperimentEventIntakeServiceUrl": {
 			"description": "The URL of the EventGate instance to send events to that originate from everyone experiments.",

@@ -8,10 +8,13 @@ namespace MediaWiki\Extension\TestKitchen\Sdk;
  *
  * @internal
  */
-class DisabledEventSender extends EventSender {
+class DisabledEventSender extends BaseEventSender {
 	public function __construct() {
 	}
 
 	public function sendEvent( array $event ): void {
+	}
+
+	protected function doSendEvents( array $events ): void {
 	}
 }

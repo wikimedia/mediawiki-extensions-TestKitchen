@@ -11,7 +11,7 @@ use Wikimedia\Stats\StatsFactory;
 class OverriddenExperiment extends Experiment {
 
 	public function __construct(
-		EventSender $eventSender,
+		BaseEventSender $eventSender,
 		EventFactory $eventFactory,
 		StatsFactory $statsFactory,
 		private readonly LoggerInterface $logger,

@@ -11,7 +11,7 @@ class InstrumentManager implements InstrumentManagerInterface {
 	private ?array $instrumentConfigs = null;
 
 	public function __construct(
-		private readonly EventSender $eventSender,
+		private readonly BaseEventSender $eventSender,
 		private readonly EventFactory $eventFactory,
 		private readonly ConfigsFetcher $configsFetcher
 	) {

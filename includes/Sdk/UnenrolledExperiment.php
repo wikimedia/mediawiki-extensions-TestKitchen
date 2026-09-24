@@ -11,7 +11,7 @@ class UnenrolledExperiment extends Experiment {
 	private const EMPTY_EXPERIMENT_CONFIG = [];
 
 	public function __construct(
-		EventSender $eventSender,
+		BaseEventSender $eventSender,
 		EventFactory $eventFactory,
 		StatsFactory $statsFactory,
 		ExposureLogTracker $exposureLogTracker,
