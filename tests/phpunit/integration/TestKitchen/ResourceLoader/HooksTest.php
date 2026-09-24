@@ -28,11 +28,6 @@ class HooksTest extends MediaWikiIntegrationTestCase {
 			'TestKitchenLoggedInExperimentEventIntakeServiceUrl' => 'http://baz.qux',
 			'TestKitchenOverriddenExperimentEventIntakeServiceUrl' => 'http://foo.baz',
 			'TestKitchenInstrumentEventIntakeServiceUrl' => 'http://quux.corge',
-			'TestKitchenExperimentStreamNames' => [
-				'product_metrics.web_base',
-				'foo.bar',
-				'baz.qux',
-			],
 			'TestKitchenExposureResetEpoch' => 0,
 		] );
 	}
