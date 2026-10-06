@@ -185,7 +185,6 @@ class OverriddenExperiment {
 		return this;
 	}
 
-	// eslint-disable-next-line no-unused-vars
 	send( action, interactionData, contextualAttributes ) {
 		const message =
 			`${ this.config.enrolled }: The enrollment for this experiment has been overridden. ` +
@@ -243,7 +242,7 @@ class OverriddenExperiment {
  * @param {mw.testKitchen.ExperimentConfig} experimentConfig
  * @param {Object} interactionData
  * @param {string} coordinator
- * @returns {Object}
+ * @return {Object}
  */
 function prepareInteractionData( experimentConfig, interactionData, coordinator ) {
 	// Extract SDK-specific experiment config
@@ -282,7 +281,7 @@ function prepareInteractionData( experimentConfig, interactionData, coordinator 
  * Concat per event contextual attributes to the ones defined in the experiment configuration and return the result
  * @param {string[]} configuredContextualAttributes
  * @param {string[]} perEventContextualAttributes
- * @returns {string[]}
+ * @return {string[]}
  */
 function prepareContextualAttributes( configuredContextualAttributes, perEventContextualAttributes ) {
 	let contextualAttributes = configuredContextualAttributes || [];
