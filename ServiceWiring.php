@@ -14,6 +14,7 @@ use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentCoordinatorInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManager;
+use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManagerFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\ExperimentManagerInterface;
 use MediaWiki\Extension\TestKitchen\Sdk\ExposureLogTracker;
 use MediaWiki\Extension\TestKitchen\Sdk\InstrumentManager;
@@ -88,24 +89,20 @@ return [
 
 		return new EventSender( EventBus::getInstance( $eventServiceName ) );
 	},
-	'TestKitchen.RequestEnrollmentsProcessor' =>
-		static function ( MediaWikiServices $services ): RequestEnrollmentsProcessor {
-			return new RequestEnrollmentsProcessor(
-				$services->getService( 'TestKitchen.Logger' ),
-			);
-		},
 	'TestKitchen.EnrollmentsProcessor' => static function ( MediaWikiServices $services ): EnrollmentsProcessor {
 		return new EnrollmentsProcessor(
 			new UserSplitterInstrumentation()
 		);
 	},
 	'TestKitchen.ExperimentManager' => static function ( MediaWikiServices $services ): ExperimentManagerInterface {
+		$logger = $services->getService( 'TestKitchen.Logger' );
+
 		return new ExperimentManager(
-			$services->getService( 'TestKitchen.Logger' ),
+			$logger,
 			$services->getService( 'TestKitchen.EventSender' ),
 			$services->getService( 'TestKitchen.EventFactory' ),
 			$services->getStatsFactory(),
-			$services->getService( 'TestKitchen.RequestEnrollmentsProcessor' ),
+			new RequestEnrollmentsProcessor( $logger ),
 			$services->getService( 'TestKitchen.EnrollmentsProcessor' ),
 			$services->getCentralIdLookup(),
 			$services->getService( 'TestKitchen.ConfigsFetcher' ),
@@ -135,4 +132,17 @@ return [
 	'TestKitchen.ExposureLogTracker' => static function (): ExposureLogTracker {
 		return new ExposureLogTracker();
 	},
+	'TestKitchen.ExperimentManagerFactory' =>
+		static function ( MediaWikiServices $services ): ExperimentManagerFactory {
+			return new ExperimentManagerFactory(
+				$services->getService( 'TestKitchen.Logger' ),
+				$services->getService( 'TestKitchen.EventSender' ),
+				$services->getService( 'TestKitchen.EventFactory' ),
+				$services->getStatsFactory(),
+				$services->getService( 'TestKitchen.EnrollmentsProcessor' ),
+				$services->getCentralIdLookup(),
+				$services->getService( 'TestKitchen.ConfigsFetcher' ),
+				$services->getService( 'TestKitchen.ExposureLogTracker' )
+			);
+		}
 ];

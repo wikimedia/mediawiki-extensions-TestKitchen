@@ -29,8 +29,6 @@ class ExperimentManager implements
 	private EnrollmentResultBuilder $enrollments;
 	private array $enrollmentResult;
 
-	private ExposureLogTracker $exposureLogTracker;
-
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly EventSender $eventSender,
@@ -40,11 +38,10 @@ class ExperimentManager implements
 		private readonly EnrollmentsProcessor $enrollmentsProcessor,
 		private readonly CentralIdLookup $centralIdLookup,
 		private readonly ConfigsFetcher $configsFetcher,
-		ExposureLogTracker $exposureLogTracker
+		private readonly ExposureLogTracker $exposureLogTracker
 	) {
 		$this->enrollmentResult = [];
 		$this->enrollments = new EnrollmentResultBuilder();
-		$this->exposureLogTracker = $exposureLogTracker;
 	}
 
 	public function setRequest( WebRequest $request ): void {

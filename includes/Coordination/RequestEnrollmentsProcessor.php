@@ -25,7 +25,10 @@ class RequestEnrollmentsProcessor {
 	private const WIKIMEDIA_DEBUG_HEADER_NAME = 'X-Wikimedia-Debug';
 	private const WIKIMEDIA_DEBUG_EXPERIMENTS_DIRECTIVE = 'experiments';
 
-	public function __construct( private readonly LoggerInterface $logger ) {
+	public function __construct(
+		private readonly LoggerInterface $logger,
+		private readonly bool $processEveryoneExperimentsEnrollments = true
+	) {
 	}
 
 	/**
@@ -34,7 +37,10 @@ class RequestEnrollmentsProcessor {
 	 * @param WebRequest $request
 	 */
 	public function process( WebRequest $request, EnrollmentResultBuilder $result ): EnrollmentResultBuilder {
-		$this->getEveryoneExperimentsEnrollments( $request, $result );
+		if ( $this->processEveryoneExperimentsEnrollments ) {
+			$this->getEveryoneExperimentsEnrollments( $request, $result );
+		}
+
 		$this->getOverriddenEnrollments( $request, $result );
 		$this->getWikimediaDebugEnrollments( $request, $result );
 
