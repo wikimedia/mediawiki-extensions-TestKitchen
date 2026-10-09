@@ -127,6 +127,43 @@ QUnit.test( 'it should log an error if processing the cookie value fails', funct
 	assert.strictEqual( args[ 1 ], 'error.test_kitchen.process_raw_override_value.cookie' );
 } );
 
+QUnit.test( 'it should process the value sent from the server', function ( assert ) {
+	const fromServer = {
+		overrides: [ 'foo', 'bar' ],
+		assigned: {
+			foo: 'control',
+			bar: 'treatment'
+		}
+	};
+
+	assert.deepEqual(
+		this.enrollmentConfig.getOverriddenEnrollments( fromServer ),
+		{
+			foo: 'control',
+			bar: 'treatment'
+		}
+	);
+} );
+
+QUnit.test( 'it should process the values in order', function ( assert ) {
+	mw.cookie.set( 'mpo', 'foo:bar;baz:qux' );
+
+	const fromServer = {
+		overrides: [ 'foo' ],
+		assigned: {
+			foo: 'control'
+		}
+	};
+
+	assert.deepEqual(
+		this.enrollmentConfig.getOverriddenEnrollments( fromServer ),
+		{
+			foo: 'bar',
+			baz: 'qux'
+		}
+	);
+} );
+
 QUnit.module(
 	'ext.testKitchen/enrollmentConfig/getHeaderEnrollments()',
 	QUnit.newMwEnvironment( {

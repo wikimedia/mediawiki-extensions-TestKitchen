@@ -171,16 +171,31 @@ function processRawOverrideValue( acc, rawValue, type ) {
 /**
  * This function is memoized and returns the same value for the lifetime of the module.
  *
+ * @param {mw.testKitchen.wgTestKitchenUserExperiments} [fromServer]
  * @return {Object<string, string>}
  *
  * @ignore
  */
-function getOverriddenEnrollments() {
+function getOverriddenEnrollments( fromServer ) {
 	if ( overriddenEnrollmentConfigs ) {
 		return overriddenEnrollmentConfigs;
 	}
 
 	overriddenEnrollmentConfigs = {};
+
+	// In order of increasing priority, process and reconcile overridden enrollments from the
+	// server, the cookie, and then the querystring.
+	//
+	// We process the cookie here because the server may not have been involved in processing the
+	// request and therefore the overridden enrollments in the cookie may not be represented in
+	// those sent by the server.
+	//
+	// We process the querystring here for completeness.
+	if ( fromServer ) {
+		fromServer.overrides.forEach( ( experimentName ) => {
+			overriddenEnrollmentConfigs[ experimentName ] = fromServer.assigned[ experimentName ];
+		} );
+	}
 
 	processRawOverrideValue(
 		overriddenEnrollmentConfigs,
@@ -188,7 +203,6 @@ function getOverriddenEnrollments() {
 		'cookie'
 	);
 
-	// Process the querystring second so that it takes priority.
 	processRawOverrideValue(
 		overriddenEnrollmentConfigs,
 		new URLSearchParams( window.location.search ).get( OVERRIDE_PARAM_NAME ),
@@ -307,8 +321,8 @@ function has( obj, prop ) {
  * @ignore
  */
 function getInternal( experimentName, fromHeader ) {
-	const fromOverrides = getOverriddenEnrollments();
 	const fromServer = mw.config.get( 'wgTestKitchenUserExperiments' );
+	const fromOverrides = getOverriddenEnrollments( fromServer );
 
 	const otherAssigned = Object.assign(
 		{},

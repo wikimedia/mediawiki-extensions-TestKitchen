@@ -1,4 +1,14 @@
 /**
+ * @typedef {Object} mw.testKitchen.wgTestKitchenUserExperiments
+ * @property {string[]} overrides
+ * @property {string[]} enrolled
+ * @property {Object<string,string>} assigned
+ * @property {Object<string,string>} subject_ids
+ */
+
+// ---
+
+/**
  * @typedef {mw.testKitchen.PartialInstrumentConfig} mw.testKitchen.PartialExperimentConfig
  * @property {string} user_identifier_type
  * @property {string} schema_id
