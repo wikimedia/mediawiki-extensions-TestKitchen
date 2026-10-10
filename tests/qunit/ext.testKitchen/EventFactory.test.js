@@ -198,3 +198,38 @@ QUnit.test( 'newEvent() - mixes in available contextual attributes', function ( 
 		}
 	);
 } );
+
+QUnit.test( 'newEvent() - non-string action_context is converted to JSON string', function ( assert ) {
+	const eventWithObject = this.eventFactory.newEvent(
+		'my-awesome-stream',
+		'/my/awesome/schema/1.0.0',
+		[],
+		'my-awesome-action',
+		{
+			action_context: { foo: 'bar' }
+		}
+	);
+	assert.strictEqual( eventWithObject.action_context, '{"foo":"bar"}' );
+
+	const eventWithArray = this.eventFactory.newEvent(
+		'my-awesome-stream',
+		'/my/awesome/schema/1.0.0',
+		[],
+		'my-awesome-action',
+		{
+			action_context: [ 'a', 'b' ]
+		}
+	);
+	assert.strictEqual( eventWithArray.action_context, '["a","b"]' );
+
+	const eventWithString = this.eventFactory.newEvent(
+		'my-awesome-stream',
+		'/my/awesome/schema/1.0.0',
+		[],
+		'my-awesome-action',
+		{
+			action_context: 'already_a_string'
+		}
+	);
+	assert.strictEqual( eventWithString.action_context, 'already_a_string' );
+} );

@@ -74,6 +74,10 @@ class EventFactory {
 
 		this.addContextualAttributes( event, contextualAttributes );
 
+		if ( !!event.action_context && typeof event.action_context !== 'string' ) {
+			event.action_context = JSON.stringify( event.action_context );
+		}
+
 		return event;
 	}
 

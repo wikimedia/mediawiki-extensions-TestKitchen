@@ -144,4 +144,28 @@ class EventFactoryTest extends MediaWikiUnitTestCase {
 			$event['agent']
 		);
 	}
+
+	public function testNewEventConvertsActionContextToString(): void {
+		$eventWithArray = $this->eventFactory->newEvent(
+			'foo_stream',
+			'/foo/bar/1.0.0',
+			[],
+			'foo',
+			[
+				'action_context' => [ 'foo' => 'bar' ],
+			]
+		);
+		$this->assertSame( '{"foo":"bar"}', $eventWithArray['action_context'] );
+
+		$eventWithString = $this->eventFactory->newEvent(
+			'foo_stream',
+			'/foo/bar/1.0.0',
+			[],
+			'foo',
+			[
+				'action_context' => 'already_a_string',
+			]
+		);
+		$this->assertSame( 'already_a_string', $eventWithString['action_context'] );
+	}
 }

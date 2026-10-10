@@ -80,7 +80,13 @@ class EventFactory {
 			'dt' => $this->getTimestamp(),
 		];
 
-		return $this->addContextualAttributes( $event, $contextualAttributes );
+		$event = $this->addContextualAttributes( $event, $contextualAttributes );
+
+		if ( isset( $event['action_context'] ) && !is_string( $event['action_context'] ) ) {
+			$event['action_context'] = json_encode( $event['action_context'] );
+		}
+
+		return $event;
 	}
 
 	private function addContextualAttributes( array $event, array $requestedContextualAttributes ): array {
