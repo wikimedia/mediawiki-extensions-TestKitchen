@@ -113,8 +113,6 @@
 		"remoteExtPath": "TestKitchen/tests/qunit",
 		"scripts": [
 			"ext.testKitchen/index.test.js",
-			"ext.testKitchen/compat.getExperiment.test.js",
-			"ext.testKitchen/compat.getExperimentsByPrefix.test.js",
 			"ext.testKitchen/getInstrument.test.js",
 			"ext.testKitchen/ContextualAttributesFactory.test.js",
 			"ext.testKitchen/EventFactory.test.js",

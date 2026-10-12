@@ -10,9 +10,7 @@ const {
 	overrideExperimentGroup,
 	clearExperimentOverride,
 	clearExperimentOverrides,
-	get,
 	getAsync,
-	getMatching,
 	getMatchingAsync,
 	reset: resetEnrollmentConfigs
 } = require( './enrollmentConfig.js' );
@@ -130,46 +128,6 @@ function newExperiment( enrollmentConfig ) {
 /**
  * Gets the details of an experiment.
  *
- * This method is provided for backwards compatibility with existing experiments. Please use
- * {@link mw.testKitchen.getExperiment} instead.
- *
- * This method **will not** work for non-cache-splitting experiments and will always return an
- * instance of {@link mw.testKitchen.UnenrolledExperiment}.
- *
- * This method always returns an instance of {@link mw.testKitchen.ExperimentInterface} that can:
- *
- * 1. Get information about the user's (more precisely, the subject's) enrollment in the experiment
- * 2. Send analytics events relating to the experiment
- *
- * @example
- * const e = mw.testKitchen.compat.getExperiment( 'my-awesome-experiment' );
- * const myAwesomeDialog = require( 'my.awesome.dialog' );
- *
- * [
- *   'open',
- *   'default-action',
- *   'primary-action'
- * ].forEach( ( event ) => {
- *   myAwesomeDialog.on( event, () => e.send( event ) );
- * } );
- *
- * // Was the current user assigned to the treatment group?
- * if ( e.isAssignedGroup( 'treatment' ) ) {
- *   myAwesomeDialog.primaryAction.label = 'Awesome!';
- * }
- *
- * @memberof mw.testKitchen.compat
- *
- * @param {string} experimentName The experiment name
- * @return {mw.testKitchen.ExperimentInterface}
- */
-function getExperiment( experimentName ) {
-	return newExperiment( get( experimentName ) );
-}
-
-/**
- * Gets the details of an experiment.
- *
  * This method returns a promise that will always resolve with an instance of
  * {@link mw.testKitchen.ExperimentInterface} that can:
  *
@@ -179,7 +137,7 @@ function getExperiment( experimentName ) {
  * @example
  * const myAwesomeDialog = require( 'my.awesome.dialog' );
  *
- * mw.testKitchen.async.getExperiment( 'my-awesome-non-cache-splitting-experiment' )
+ * mw.testKitchen.getExperiment( 'my-awesome-non-cache-splitting-experiment' )
  *   .then( ( e ) => {
  *     [
  *       'open',
@@ -201,44 +159,8 @@ function getExperiment( experimentName ) {
  * @param {string} experimentName The experiment name
  * @return {Promise<mw.testKitchen.ExperimentInterface>}
  */
-function getExperimentAsync( experimentName ) {
+function getExperiment( experimentName ) {
 	return getAsync( experimentName ).then( newExperiment );
-}
-
-/**
- * Gets the details of all experiments with names that start with the given prefix.
- *
- * This method is provided for backwards compatibility with existing experiment code. Please use
- * {@link mw.testKitchen.getExperimentsByPrefix} instead.
- *
- * This method should only be used for experiments that repeat, e.g. a data collection activity that
- * lasts three weeks and repeats every week, and therefore usage is expected to be rare. In these
- * cases, this method can be used to minimize the number of code changes in the experiment.
- *
- * Note well that the details are returned in any order.
- *
- * @see mw.testKitchen.compat.getExperiment
- *
- * @example
- * // The user is enrolled in the following experiments:
- * //
- * // - my-awesome-experiment-1
- * // - my-awesome-experiment-2
- * // - my-other-awesome-experiment
- *
- * // Gets the details of the "my-awesome-experiment-1" and "my-awesome-experiment-2" experiments
- * mw.testKitchen.getExperimentByPrefix( 'my-awesome-experiment-' );
- *
- * @memberof mw.testKitchen.compat
- *
- * @package
- *
- * @param {string} experimentNamePrefix
- * @return {mw.testKitchen.ExperimentInterface[]}
- */
-function getExperimentsByPrefix( experimentNamePrefix ) {
-	return getMatching( experimentNamePrefix )
-		.map( newExperiment );
 }
 
 /**
@@ -270,7 +192,7 @@ function getExperimentsByPrefix( experimentNamePrefix ) {
  * @param {string} experimentNamePrefix
  * @return {Promise<mw.testKitchen.ExperimentInterface[]>}
  */
-function getExperimentsByPrefixAsync( experimentNamePrefix ) {
+function getExperimentsByPrefix( experimentNamePrefix ) {
 	return getMatchingAsync( experimentNamePrefix )
 		.then( ( matching ) => matching.map( newExperiment ) );
 }
@@ -363,21 +285,13 @@ function getInstrument( instrumentName ) {
  * @namespace mw.testKitchen
  */
 mw.testKitchen = {
-	getExperiment: getExperimentAsync,
-	getExperimentsByPrefix: getExperimentsByPrefixAsync,
+	getExperiment,
+	getExperimentsByPrefix,
 	getAssignments,
 	getInstrument,
 	overrideExperimentGroup,
 	clearExperimentOverride,
 	clearExperimentOverrides
-};
-
-/**
- * @namespace mw.testKitchen.compat
- */
-mw.testKitchen.compat = {
-	getExperiment,
-	getExperimentsByPrefix
 };
 
 /**
@@ -393,13 +307,6 @@ mw.testKitchen.compat = {
  * @borrows mw.testKitchen.useFakeInstruments as useFakeInstruments
  */
 mw.tk = mw.testKitchen;
-
-/**
- * @namespace mw.tk.compat
- * @borrows mw.testKitchen.compat.getExperiment as getExperiment
- * @borrows mw.testKitchen.compat.getExperimentsByPrefix as getExperimentsByPrefix
- */
-mw.tk.compat = mw.testKitchen.compat;
 
 // JS overriding experimentation feature
 if ( window.QUnit ) {
