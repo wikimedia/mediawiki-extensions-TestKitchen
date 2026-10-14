@@ -124,7 +124,8 @@ INSERT INTO contextual_attributes (contextual_attribute_name) VALUES
 	('performer_edit_count'),
 	('performer_edit_count_bucket'),
 	('performer_registration_dt'),
-	('agent_ua_string');
+	('agent_ua_string'),
+	('agent_geo_ip_country');
 
 INSERT INTO okrs (name, description) VALUES
 	('FY24/25 SDS 2.4', 'FY24/25 SDS 2.4'),
