@@ -45,7 +45,7 @@ class ContextualAttributesFactory {
 	 */
 	public function newContextAttributes( IContextSource $contextSource ): array {
 		$contextAttributes = [];
-		$contextAttributes += $this->getAgentContextAttributes();
+		$contextAttributes += $this->getAgentContextAttributes( $contextSource );
 		$contextAttributes += $this->getPageContextAttributes( $contextSource );
 		$contextAttributes += $this->getMediaWikiContextAttributes( $contextSource );
 		$contextAttributes += $this->getPerformerContextAttributes( $contextSource );
@@ -65,13 +65,16 @@ class ContextualAttributesFactory {
 		return false;
 	}
 
-	private function getAgentContextAttributes(): array {
+	private function getAgentContextAttributes( IContextSource $contextSource ): array {
+		$request = $contextSource->getRequest();
+
 		return [
 			'agent_app_install_id' => null,
 			'agent_client_platform' => 'mediawiki_php',
 			'agent_client_platform_family' =>
 				$this->shouldDisplayMobileView() ? 'mobile_browser' : 'desktop_browser',
-			'agent_ua_string' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+			'agent_ua_string' => $request->getHeader( 'User-Agent' ),
+			'agent_geo_ip_country' => $request->getHeader( 'X-GeoIP-Country' ),
 		];
 	}
 

@@ -56,7 +56,8 @@ class ContextualAttributesFactory {
 			agent: {
 				client_platform: 'mediawiki_js',
 				client_platform_family: isMobileFrontendActive ? 'mobile_browser' : 'desktop_browser',
-				ua_string: navigator.userAgent
+				ua_string: navigator.userAgent,
+				geo_ip_country: 'awaiting'
 			},
 			page: {
 				id: c( 'wgArticleId' ),

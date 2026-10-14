@@ -5,6 +5,7 @@ use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\UserEditCountService;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Registration\ExtensionRegistry;
+use MediaWiki\Request\FauxRequest;
 use MediaWiki\SpecialPage\SpecialPageFactory;
 use MediaWiki\Title\Title;
 use MediaWiki\User\User;
@@ -59,19 +60,22 @@ class ContextualAttributesFactoryTest extends MediaWikiLangTestCase {
 	 * @dataProvider provideAgentContextAttributes
 	 */
 	public function testAgentContextAttributes( $shouldDisplayMobileView, $expectedClientPlatformFamily ): void {
+		$title = Title::makeTitle( NS_SPECIAL, 'Blankpage' );
+
 		$user = $this->createMock( User::class );
 		$user->method( 'getName' )->willReturn( 'TestUser' );
 		$user->method( 'getEditCount' )->willReturn( 42 );
 
-		$title = Title::makeTitle( NS_SPECIAL, 'Blankpage' );
+		$request = new FauxRequest();
+		$request->setHeader( 'User-Agent', 'ContextualAttributesFactoryTest/1.0.0' );
+		$request->setHeader( 'X-GeoIP-Country', 'US' );
+
 		$contextSource = RequestContext::newExtraneousContext( $title );
 		$contextSource->setUser( $user );
+		$contextSource->setRequest( $request );
 
 		$this->contextualAttributesFactory->method( 'shouldDisplayMobileView' )
 			->willReturn( $shouldDisplayMobileView );
-
-		$originalHttpUserAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-		$_SERVER['HTTP_USER_AGENT'] = 'ContextualAttributesFactoryTest/1.0.0';
 
 		$contextAttributes = $this->contextualAttributesFactory->newContextAttributes( $contextSource );
 
@@ -81,13 +85,8 @@ class ContextualAttributesFactoryTest extends MediaWikiLangTestCase {
 			$expectedClientPlatformFamily,
 			$contextAttributes['agent_client_platform_family']
 		);
-		$this->assertSame( 'ContextualAttributesFactoryTest/1.0.0', $_SERVER['HTTP_USER_AGENT'] );
-
-		if ( $originalHttpUserAgent ) {
-			$_SERVER['HTTP_USER_AGENT'] = $originalHttpUserAgent;
-		} else {
-			unset( $_SERVER['HTTP_USER_AGENT'] );
-		}
+		$this->assertSame( 'ContextualAttributesFactoryTest/1.0.0', $contextAttributes['agent_ua_string'] );
+		$this->assertSame( 'US', $contextAttributes['agent_geo_ip_country'] );
 	}
 
 	public function testPageContextAttributes(): void {
