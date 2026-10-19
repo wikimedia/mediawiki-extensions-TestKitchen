@@ -8,13 +8,13 @@ namespace MediaWiki\Extension\TestKitchen\Sdk;
 class UnsampledInstrument extends Instrument {
 
 	public function __construct(
-		private readonly BaseEventSender $eventSender,
-		private readonly EventFactory $eventFactory,
-		private array $instrumentConfig
+		BaseEventSender $eventSender,
+		EventFactory $eventFactory,
+		array $instrumentConfig,
 	) {
 		parent::__construct(
-			$this->eventSender,
-			$this->eventFactory,
+			$eventSender,
+			$eventFactory,
 			$instrumentConfig
 		);
 	}
