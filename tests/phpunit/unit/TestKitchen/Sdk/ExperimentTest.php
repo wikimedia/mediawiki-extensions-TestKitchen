@@ -369,6 +369,7 @@ class ExperimentTest extends MediaWikiUnitTestCase {
 					array_merge(
 						$this->experimentConfig[ 'contextual_attributes' ],
 						[
+							'agent_geo_ip_country',
 							'performer_is_logged_in',
 							'performer_is_temp',
 							'performer_is_bot',

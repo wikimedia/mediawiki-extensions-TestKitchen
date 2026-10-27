@@ -499,6 +499,7 @@ QUnit.test.each(
 				[
 					'performer_pageview_id',
 					'mediawiki_database',
+					'agent_geo_ip_country',
 					'performer_is_logged_in',
 					'performer_is_temp',
 					'performer_is_bot',

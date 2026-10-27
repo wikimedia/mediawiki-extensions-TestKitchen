@@ -43,11 +43,18 @@ interface ExperimentInterface {
 						  array $contextualAttributes = [] ): void;
 
 	/**
-	 * Sends an exposure event
+	 * Sends an exposure event for this experiment with {@link ExperimentInterface::send()}.
 	 *
-	 * `performer_is_logged_in`, `performer_is_temp`, `performer_is_bot`, `performer_edit_count` and
-	 * `mediawiki_database` contextual attributes are needed in exposure events, so they will be added if not included
-	 * already in the stream configuration of the current experiment
+	 * The exposure event will always have:
+	 *
+	 * 1. `action=experiment_exposure`
+	 * 2. The following contextual attributes:
+	 *    * `agent_geo_ip_country`
+	 *    * `performer_is_logged_in`
+	 *    * `performer_is_temp`
+	 *    * `performer_is_bot`
+	 *    * `performer_edit_count`
+	 *    * `mediawiki_database`
 	 */
 	public function sendExposure(): void;
 

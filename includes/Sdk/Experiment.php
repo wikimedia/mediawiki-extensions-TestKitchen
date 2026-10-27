@@ -12,11 +12,12 @@ use Wikimedia\Stats\StatsFactory;
 class Experiment implements ExperimentInterface {
 
 	private const EXPOSURE_CONTEXTUAL_ATTRIBUTES = [
+		'agent_geo_ip_country',
 		'performer_is_logged_in',
 		'performer_is_temp',
 		'performer_is_bot',
 		'performer_edit_count',
-		'mediawiki_database'
+		'mediawiki_database',
 	];
 
 	public function __construct(
