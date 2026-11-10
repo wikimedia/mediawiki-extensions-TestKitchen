@@ -68,13 +68,18 @@ class ContextualAttributesFactory {
 	private function getAgentContextAttributes( IContextSource $contextSource ): array {
 		$request = $contextSource->getRequest();
 
+		// getHeader() returns false for absent headers, but EventFactory only omits null.
+		// False gets sent and rejected as a non-string. Force to null so it's omitted.
+		$uaString = $request->getHeader( 'User-Agent' );
+		$geoIpCountry = $request->getHeader( 'X-GeoIP-Country' );
+
 		return [
 			'agent_app_install_id' => null,
 			'agent_client_platform' => 'mediawiki_php',
 			'agent_client_platform_family' =>
 				$this->shouldDisplayMobileView() ? 'mobile_browser' : 'desktop_browser',
-			'agent_ua_string' => $request->getHeader( 'User-Agent' ),
-			'agent_geo_ip_country' => $request->getHeader( 'X-GeoIP-Country' ),
+			'agent_ua_string' => $uaString === false ? null : $uaString,
+			'agent_geo_ip_country' => $geoIpCountry === false ? null : $geoIpCountry,
 		];
 	}
 

@@ -89,6 +89,28 @@ class ContextualAttributesFactoryTest extends MediaWikiLangTestCase {
 		$this->assertSame( 'US', $contextAttributes['agent_geo_ip_country'] );
 	}
 
+	/**
+	 * Absent headers must send null to be omitted, not the false that getHeader()
+	 * returns which would be sent and rejected as a non-string.
+	 */
+	public function testAgentContextAttributesWithMissingHeaders(): void {
+		$title = Title::makeTitle( NS_SPECIAL, 'Blankpage' );
+
+		// FauxRequest with no User-Agent or X-GeoIP-Country header set.
+		$request = new FauxRequest();
+
+		$contextSource = RequestContext::newExtraneousContext( $title );
+		$contextSource->setRequest( $request );
+
+		$this->contextualAttributesFactory->method( 'shouldDisplayMobileView' )
+			->willReturn( false );
+
+		$contextAttributes = $this->contextualAttributesFactory->newContextAttributes( $contextSource );
+
+		$this->assertNull( $contextAttributes['agent_ua_string'] );
+		$this->assertNull( $contextAttributes['agent_geo_ip_country'] );
+	}
+
 	public function testPageContextAttributes(): void {
 		$title = Title::makeTitle( NS_SPECIAL, 'Blankpage' );
 		$contextSource = RequestContext::newExtraneousContext( $title );
