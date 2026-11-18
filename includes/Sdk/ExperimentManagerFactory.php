@@ -11,7 +11,7 @@ use MediaWiki\User\UserIdentity;
 use Psr\Log\LoggerInterface;
 use Wikimedia\Stats\StatsFactory;
 
-readonly class ExperimentManagerFactory {
+class ExperimentManagerFactory {
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly EventSender $eventSender,
