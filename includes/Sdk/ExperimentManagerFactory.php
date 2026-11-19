@@ -14,7 +14,7 @@ use Wikimedia\Stats\StatsFactory;
 class ExperimentManagerFactory {
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly EventSender $eventSender,
+		private readonly BaseEventSender $eventSender,
 		private readonly EventFactory $eventFactory,
 		private readonly StatsFactory $statsFactory,
 		private readonly EnrollmentsProcessor $enrollmentsProcessor,
