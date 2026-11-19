@@ -1,5 +1,7 @@
 <?php
 
+use GeoIp2\Database\Reader;
+use MaxMind\Db\Reader\InvalidDatabaseException;
 use MediaWiki\Config\ServiceOptions;
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Extension\EventBus\EventBus;
@@ -10,6 +12,7 @@ use MediaWiki\Extension\TestKitchen\Coordination\RequestEnrollmentsProcessor;
 use MediaWiki\Extension\TestKitchen\Coordination\UserSplitterInstrumentation;
 use MediaWiki\Extension\TestKitchen\Sdk\BaseEventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
+use MediaWiki\Extension\TestKitchen\Sdk\CountryLookup;
 use MediaWiki\Extension\TestKitchen\Sdk\DisabledEventSender;
 use MediaWiki\Extension\TestKitchen\Sdk\EventFactory;
 use MediaWiki\Extension\TestKitchen\Sdk\EventSender;
@@ -50,6 +53,24 @@ return [
 	'TestKitchen.Logger' => static function (): LoggerInterface {
 		return LoggerFactory::getInstance( 'TestKitchen' );
 	},
+	'TestKitchen.CountryLookup' => static function ( MediaWikiServices $services ): CountryLookup {
+		// Build a GeoIP2 reader for the server-side country lookup. Nullable - the
+		// mmdb is absent in CI and non-WMF installs.
+		$geoIPReader = null;
+		try {
+			$geoIP2Path = $services->getMainConfig()->get( 'TestKitchenGeoIP2Path' );
+			if ( $geoIP2Path ) {
+				$geoIPReader = new Reader( $geoIP2Path );
+			}
+		} catch ( InvalidDatabaseException | InvalidArgumentException $e ) {
+			$services->getService( 'TestKitchen.Logger' )->error( $e->getMessage() );
+		}
+
+		return new CountryLookup(
+			$services->getService( 'TestKitchen.Logger' ),
+			$geoIPReader
+		);
+	},
 	'TestKitchen.ContextualAttributesFactory' =>
 		static function ( MediaWikiServices $services ): ContextualAttributesFactory {
 			return new ContextualAttributesFactory(
@@ -62,7 +83,8 @@ return [
 				$services->getUserGroupManager(),
 				$services->getLanguageConverterFactory(),
 				new UserEditCountService(),
-				$services->getSpecialPageFactory()
+				$services->getSpecialPageFactory(),
+				$services->getService( 'TestKitchen.CountryLookup' )
 			);
 		},
 	'TestKitchen.EventFactory' => static function ( MediaWikiServices $services ): EventFactory {

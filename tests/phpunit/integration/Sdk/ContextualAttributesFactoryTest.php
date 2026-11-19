@@ -2,6 +2,7 @@
 
 use MediaWiki\Context\RequestContext;
 use MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory;
+use MediaWiki\Extension\TestKitchen\Sdk\CountryLookup;
 use MediaWiki\Extension\TestKitchen\Sdk\UserEditCountService;
 use MediaWiki\MainConfigNames;
 use MediaWiki\Registration\ExtensionRegistry;
@@ -9,6 +10,7 @@ use MediaWiki\Request\FauxRequest;
 use MediaWiki\SpecialPage\SpecialPageFactory;
 use MediaWiki\Title\Title;
 use MediaWiki\User\User;
+use Psr\Log\NullLogger;
 
 /**
  * @covers \MediaWiki\Extension\TestKitchen\Sdk\ContextualAttributesFactory
@@ -35,6 +37,9 @@ class ContextualAttributesFactoryTest extends MediaWikiLangTestCase {
 			'languageConverterFactory' => $services->getLanguageConverterFactory(),
 			'userEditCountService' => new UserEditCountService(),
 			'specialPageFactory' => $services->getSpecialPageFactory(),
+			// No GeoIP cookie or reader, so agent_geo_ip_country resolves to null here.
+			// CountryLookup's own resolution is covered by CountryLookupTest.
+			'countryLookup' => new CountryLookup( new NullLogger(), null ),
 		];
 
 		// Unit Under Test
@@ -68,7 +73,6 @@ class ContextualAttributesFactoryTest extends MediaWikiLangTestCase {
 
 		$request = new FauxRequest();
 		$request->setHeader( 'User-Agent', 'ContextualAttributesFactoryTest/1.0.0' );
-		$request->setHeader( 'X-GeoIP-Country', 'US' );
 
 		$contextSource = RequestContext::newExtraneousContext( $title );
 		$contextSource->setUser( $user );
@@ -86,17 +90,20 @@ class ContextualAttributesFactoryTest extends MediaWikiLangTestCase {
 			$contextAttributes['agent_client_platform_family']
 		);
 		$this->assertSame( 'ContextualAttributesFactoryTest/1.0.0', $contextAttributes['agent_ua_string'] );
-		$this->assertSame( 'US', $contextAttributes['agent_geo_ip_country'] );
+		// No GeoIP cookie and a null-reader CountryLookup, so the country is unresolved.
+		// CountryLookup's own resolution is covered by CountryLookupTest.
+		$this->assertNull( $contextAttributes['agent_geo_ip_country'] );
 	}
 
 	/**
-	 * Absent headers must send null to be omitted, not the false that getHeader()
-	 * returns which would be sent and rejected as a non-string.
+	 * An absent User-Agent must send null to be omitted, not the false that getHeader()
+	 * returns which would be sent and rejected as a non-string. With no GeoIP cookie and
+	 * no reader, agent_geo_ip_country is likewise null.
 	 */
 	public function testAgentContextAttributesWithMissingHeaders(): void {
 		$title = Title::makeTitle( NS_SPECIAL, 'Blankpage' );
 
-		// FauxRequest with no User-Agent or X-GeoIP-Country header set.
+		// FauxRequest with no User-Agent header and no GeoIP cookie set.
 		$request = new FauxRequest();
 
 		$contextSource = RequestContext::newExtraneousContext( $title );

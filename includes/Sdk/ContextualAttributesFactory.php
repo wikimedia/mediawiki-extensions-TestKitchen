@@ -36,7 +36,8 @@ class ContextualAttributesFactory {
 		private readonly UserGroupManager $userGroupManager,
 		private readonly LanguageConverterFactory $languageConverterFactory,
 		private readonly UserEditCountService $userEditCountService,
-		private readonly SpecialPageFactory $specialPageFactory
+		private readonly SpecialPageFactory $specialPageFactory,
+		private readonly CountryLookup $countryLookup
 	) {
 	}
 
@@ -71,7 +72,6 @@ class ContextualAttributesFactory {
 		// getHeader() returns false for absent headers, but EventFactory only omits null.
 		// False gets sent and rejected as a non-string. Force to null so it's omitted.
 		$uaString = $request->getHeader( 'User-Agent' );
-		$geoIpCountry = $request->getHeader( 'X-GeoIP-Country' );
 
 		return [
 			'agent_app_install_id' => null,
@@ -79,7 +79,7 @@ class ContextualAttributesFactory {
 			'agent_client_platform_family' =>
 				$this->shouldDisplayMobileView() ? 'mobile_browser' : 'desktop_browser',
 			'agent_ua_string' => $uaString === false ? null : $uaString,
-			'agent_geo_ip_country' => $geoIpCountry === false ? null : $geoIpCountry,
+			'agent_geo_ip_country' => $this->countryLookup->lookupCountry( $request ),
 		];
 	}
 

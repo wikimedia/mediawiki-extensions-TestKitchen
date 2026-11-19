@@ -68,6 +68,10 @@
 		"TestKitchenExposureResetEpoch": {
 			"description": "The epoch (in seconds) at which the exposure log will be reset. This is used to ensure that the exposure log is reset at the same time for all users.",
 			"value": 0
+		},
+		"TestKitchenGeoIP2Path": {
+			"description": "Path to the GeoIP2 country database, used to fill the agent_geo_ip_country contextual attribute server-side when the X-GeoIP-Country header is absent (e.g. on page views). For Wikimedia production, suggested value is '/usr/share/GeoIP/GeoIP2-Country.mmdb'. Null disables the GeoIP2 fallback.",
+			"value": "/usr/share/GeoIP/GeoIP2-Country.mmdb"
 		}
 	},
 	"HookHandlers": {

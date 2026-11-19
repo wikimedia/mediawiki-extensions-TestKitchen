@@ -3,6 +3,9 @@
 	"type": "mediawiki-extension",
 	"description": "Provides Test Kitchen instrument configs from an API endpoint and merges them into event stream configs.",
 	"license": "GPL-2.0-or-later",
+	"require": {
+		"geoip2/geoip2": "^3.2.0"
+	},
 	"require-dev": {
 		"mediawiki/mediawiki-codesniffer": "52.0.0",
 		"mediawiki/mediawiki-phan-config": "0.20.0",
