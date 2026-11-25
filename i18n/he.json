@@ -1,10 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"Amire80"
+			"Amire80",
+			"A100Star"
 		]
 	},
-	"testkitchen-desc": "זוהי הרחבת Test Kitchen",
+	"testkitchen-desc": "מספקת את ערכות פיתוח התוכנה (SDK) של Test Kitchen עבור PHP ו־JavaScript, שבהן מפתחים משתמשים כדי ליישם ניסויים ולאסוף נתונים לצורכי ניתוח.",
 	"testkitchen-non-successful-response": "ה־API של Test Kitchen החזיר תשובה של כישלון.",
 	"testkitchen-api-empty-response-body": "ה־API של Test Kitchen החזיר תשובה עם גוף ריק."
 }
